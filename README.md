@@ -1,45 +1,89 @@
-# GPS Anywhere
+# GPS Anywhere（GPS Anywhere）
 
-An Android app for setting a mock GPS location or simulating a walking route, built entirely without Google Play Services.
+**A powerful GPS spoofing and route simulation tool for Android developers and testers.**  
+**一款強大的 Android GPS 模擬與路線模擬工具，專為開發者與測試人員設計。**
 
 > **For development & testing use only.** GPS spoofing may violate the terms of service of other apps and local laws. Use responsibly.
 
 ---
 
-## Features
+## ✨ Screenshots / 應用介面展示
 
-| # | Feature | Status |
-|---|---------|--------|
-| 1 | Master spoof toggle (ON/OFF) | ✅ Done |
-| 2 | Set mock location — map tap, manual input, paste from Google Maps | ✅ Done |
-| 3 | Walk route simulation (manual pins, OSRM auto-route, coordinate list) | 🔄 Planned |
-| 4 | Saved routes with Room database | 🔄 Planned |
-| 5 | Background foreground service + notification | ✅ Basic |
-| 6 | Light / Dark / System theme toggle | ✅ Done |
+### 📸 App Screenshots / 實際應用截圖
+
+Real captures from the running app.
+
+<p align="center">
+  <img src="docs/screenshots/location-screen.png" width="45%" alt="Location screen — map, coordinate input, and recent locations history">
+</p>
 
 ---
 
-## Tech Stack
+### 🎨 UI Design Mockups / 介面設計稿
+
+> These are the target mockups. Screens marked 🔄 are not yet implemented.
+
+| Home | Location | Route | Saved Routes |
+|------|----------|-------|--------------|
+| ✅ Built | ✅ Built | 🔄 Planned | 🔄 Planned |
+
+<p align="center">
+  <img src="docs/ui-mock-up/iMlXF.jpg" width="22%" alt="Home screen — master spoof toggle">
+  <img src="docs/ui-mock-up/S7N89.jpg" width="22%" alt="Location screen — tap-to-pin map and coordinate input">
+  <img src="docs/ui-mock-up/7uvcV.jpg" width="22%" alt="Route screen — manual pin route building">
+  <img src="docs/ui-mock-up/ua4Rp.jpg" width="22%" alt="Saved routes screen">
+</p>
+
+**Home** — Big power toggle, live coordinate card, theme switcher.  
+**Location** — OSMDroid map, tap-to-pin, paste from Google Maps, Start / Pause / Stop, location history.  
+**Route** *(coming in Session 3)* — Manual numbered pins, OSRM auto-route, walking speed slider.  
+**Saved Routes** *(coming in Session 4)* — Named routes with map thumbnail, distance, Play / Edit / Delete.
+
+---
+
+## 📋 Features / 主要功能
+
+### English
+- **Master Spoofing Toggle** — One-tap enable/disable GPS spoofing with large prominent button.
+- **Set Mock Location** — Tap on map, paste from Google Maps, or manually input coordinates.
+- **Recent Locations** — Auto-saved history with swipe-to-delete, rename, and quick restore.
+- **Walk Route Simulation** *(planned)* — Manual waypoints, OSRM auto-route (free), adjustable speed.
+- **Saved Routes** *(planned)* — Save, edit, and replay custom routes.
+- **Background Service** — Persistent notification with stop control.
+- **Modern UI** — Material You design with Light/Dark/System theme support.
+
+### 繁體中文
+- **主要模擬開關** — 大型醒目的一鍵啟停按鈕。
+- **設定模擬位置** — 點擊地圖、從 Google Maps 貼上，或手動輸入經緯度。
+- **最近位置記錄** — 自動儲存歷史，支援滑動刪除、重新命名與快速還原。
+- **步行路線模擬** *(開發中)* — 手動標點、OSRM 自動路線生成（免費）、可調整步行速度。
+- **已儲存路線** *(開發中)* — 儲存、編輯與快速載入路線。
+- **背景服務** — 前台通知欄常駐，可直接停止。
+- **現代介面** — 採用 Material You 設計，支援 Light / Dark / System 模式。
+
+---
+
+## 🛠 Tech Stack / 技術堆疊
 
 | Layer | Library |
 |-------|---------|
-| Language | Kotlin |
-| UI | Jetpack Compose + Material 3 |
-| Maps | OSMDroid (no Google Play Services) |
-| Routing | OSRM public server — free, no API key |
-| Storage | Room (KSP) |
-| Mock GPS | `LocationManager.addTestProvider()` |
-| Background | Android Foreground Service |
-| Theme | AppCompat `setDefaultNightMode` + Compose |
+| **Language / 程式語言** | Kotlin |
+| **UI Framework / 介面框架** | Jetpack Compose + Material 3 |
+| **Map / 地圖** | OSMDroid (no Google Play Services) |
+| **Routing / 路線生成** | OSRM (Open Source Routing Machine) — free, no API key |
+| **Database / 資料庫** | Room (KSP) |
+| **Mock Location / 模擬定位** | `LocationManager.addTestProvider()` |
+| **Background / 背景服務** | Android Foreground Service |
+| **Theme / 主題** | AppCompat `setDefaultNightMode` + Compose |
 
 **Min SDK:** API 24 (Android 7.0)  
 **Package:** `com.gpsanywhere.app`
 
 ---
 
-## Getting Started
+## 🚀 Getting Started / 快速開始
 
-### 1. Clone and open
+### 1. Clone and open / 複製與開啟專案
 
 ```bash
 git clone <your-repo-url>
@@ -47,7 +91,7 @@ git clone <your-repo-url>
 
 Open the project in Android Studio (Ladybug or later recommended).
 
-### 2. Device setup — required before the app works
+### 2. Device setup — required before the app works / 裝置設定（必要步驟）
 
 The app uses Android's mock location API. You **must** configure your device first:
 
@@ -60,7 +104,7 @@ The app uses Android's mock location API. You **must** configure your device fir
 
 > Without this step the app installs but spoofing will silently do nothing.
 
-### 3. Build and run
+### 3. Build and run / 編譯與執行
 
 ```bash
 ./gradlew assembleDebug
@@ -70,9 +114,9 @@ Or press **Run** in Android Studio.
 
 ---
 
-## How to Use
+## 📖 How to Use / 使用說明
 
-### Set a Fixed Location
+### Set a Fixed Location / 設定固定位置
 
 1. Open the **Location** tab
 2. Pick a location — any of three ways:
@@ -83,7 +127,7 @@ Or press **Run** in Android Studio.
 4. Use **Pause** to temporarily restore real GPS without ending the session
 5. Tap **Stop** to restore real GPS permanently
 
-### Recent Locations
+### Recent Locations / 最近位置
 
 - Every successfully started location is saved to a history list at the bottom of the Location tab
 - **Tap** any entry to load it back into the map and fields
@@ -91,7 +135,7 @@ Or press **Run** in Android Studio.
 - Tap the **pencil icon** to give it a name (e.g. "Home", "Office")
 - **Clear all** removes the full history
 
-### Home Screen
+### Home Screen / 首頁畫面
 
 - The big **power button** toggles spoofing on/off
 - When active, the current spoofed coordinates are shown
@@ -99,7 +143,7 @@ Or press **Run** in Android Studio.
 
 ---
 
-## Project Structure
+## 📁 Project Structure / 專案結構
 
 ```
 app/src/main/java/com/gpsanywhere/app/
@@ -136,7 +180,7 @@ app/src/main/java/com/gpsanywhere/app/
 
 ---
 
-## Permissions
+## 🔐 Permissions / 權限說明
 
 The app requests the following Android permissions:
 
@@ -153,7 +197,7 @@ The app requests the following Android permissions:
 
 ---
 
-## Known Build Notes (AGP 9 + Kotlin 2.0)
+## ⚙️ Known Build Notes (AGP 9 + Kotlin 2.0) / 已知建置注意事項
 
 - Do **not** add `org.jetbrains.kotlin.android` plugin — AGP 9 bundles Kotlin and will error
 - Compose requires `org.jetbrains.kotlin.plugin.compose` as a separate plugin
@@ -163,9 +207,20 @@ The app requests the following Android permissions:
 
 ---
 
-## Roadmap
+## 🗺 Roadmap / 開發路線圖
 
 - [ ] **Session 3** — Walk route simulation with smooth GPS interpolation
 - [ ] **Session 4** — Saved routes with static map thumbnails
 - [ ] **Session 5** — Polished background notification with live progress
 - [ ] **Session 6** — Settings/About screen, final light/dark polish
+
+---
+
+## 📄 License
+
+This project is for **educational and development testing purposes only**.  
+本專案僅供教育與開發測試用途。
+
+---
+
+*Built with ❤️ using Jetpack Compose and OSMDroid.*
