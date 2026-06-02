@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">GPS Anywhere</string>
+
+    <!-- Master Toggle -->
+    <string name="status_active">Spoofing Active</string>
+    <string name="status_inactive">Using Real GPS</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_set_location">Set Location</string>
+    <string name="nav_walk_route">Walk Route</string>
+    <string name="nav_saved_routes">Saved Routes</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title">Setup Required</string>
+    <string name="onboarding_message">To use GPS Anywhere, you need to:\n\n1. Enable Developer Options on your phone\n   (Settings → About Phone → tap Build Number 7 times)\n\n2. Go to Developer Options → Select Mock Location App → choose GPS Anywhere</string>
+    <string name="onboarding_ok">Got it</string>
+
+    <!-- Theme -->
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+
+    <!-- General -->
+    <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+</resources>
