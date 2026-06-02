@@ -14,6 +14,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.gpsanywhere.app.MainActivity
 import com.gpsanywhere.app.R
+import kotlinx.coroutines.*
+import kotlin.random.Random
 
 class SpoofService : Service() {
 
@@ -75,9 +77,11 @@ class SpoofService : Service() {
     }
 
     private var locationManager: LocationManager? = null
-    private val testProviderName = LocationManager.GPS_PROVIDER
+    private val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
     private var lastLat = 0.0
     private var lastLng = 0.0
+    private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var pushJob: Job? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -94,7 +98,7 @@ class SpoofService : Service() {
                 lastLng = lng
                 startForeground(NOTIFICATION_ID, buildNotification("Spoofing: $lat, $lng"))
                 setupTestProvider()
-                setMockLocation(lat, lng)
+                startPushLoop()
                 _isRunning.postValue(true)
                 _isPaused.postValue(false)
                 _currentLat.postValue(lat)
@@ -102,6 +106,7 @@ class SpoofService : Service() {
             }
             ACTION_PAUSE -> {
                 if (_isRunning.value == true && _isPaused.value == false) {
+                    pushJob?.cancel()
                     cleanupTestProvider()
                     _isPaused.postValue(true)
                     val nm = getSystemService(NotificationManager::class.java)
@@ -111,7 +116,7 @@ class SpoofService : Service() {
             ACTION_RESUME -> {
                 if (_isRunning.value == true && _isPaused.value == true) {
                     setupTestProvider()
-                    setMockLocation(lastLat, lastLng)
+                    startPushLoop()
                     _isPaused.postValue(false)
                     val nm = getSystemService(NotificationManager::class.java)
                     nm.notify(NOTIFICATION_ID, buildNotification("Spoofing: $lastLat, $lastLng"))
@@ -127,6 +132,8 @@ class SpoofService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        pushJob?.cancel()
+        serviceScope.cancel()
         cleanupTestProvider()
         _isRunning.postValue(false)
         _isPaused.postValue(false)
@@ -134,55 +141,80 @@ class SpoofService : Service() {
     }
 
     private fun setupTestProvider() {
-        try {
-            locationManager?.removeTestProvider(testProviderName)
-        } catch (_: Exception) {}
+        for (provider in providers) {
+            try {
+                locationManager?.removeTestProvider(provider)
+            } catch (_: Exception) {}
 
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                locationManager?.addTestProvider(
-                    testProviderName,
-                    false, false, false, false, false,
-                    true, true,
-                    ProviderProperties.POWER_USAGE_LOW,
-                    ProviderProperties.ACCURACY_FINE
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                locationManager?.addTestProvider(
-                    testProviderName,
-                    false, false, false, false, false,
-                    true, true, 1, 1
-                )
-            }
-            locationManager?.setTestProviderEnabled(testProviderName, true)
-        } catch (e: SecurityException) {
-            stopSpoofing()
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    locationManager?.addTestProvider(
+                        provider,
+                        false, false, false, false, true,
+                        true, true,
+                        ProviderProperties.POWER_USAGE_LOW,
+                        ProviderProperties.ACCURACY_FINE
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    locationManager?.addTestProvider(
+                        provider,
+                        false, false, false, false, true,
+                        true, true, 1, 1
+                    )
+                }
+                locationManager?.setTestProviderEnabled(provider, true)
+            } catch (e: SecurityException) {
+                stopSpoofing()
+                return
+            } catch (_: Exception) {}
         }
     }
 
-    private fun setMockLocation(lat: Double, lng: Double) {
-        try {
-            val location = Location(testProviderName).apply {
-                latitude = lat
-                longitude = lng
-                accuracy = 3.0f
-                altitude = 0.0
-                time = System.currentTimeMillis()
-                elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+    private fun startPushLoop() {
+        pushJob?.cancel()
+        pushJob = serviceScope.launch {
+            while (isActive) {
+                pushMockLocation(lastLat, lastLng)
+                delay(1000)
             }
-            locationManager?.setTestProviderLocation(testProviderName, location)
-        } catch (_: Exception) {}
+        }
+    }
+
+    private fun pushMockLocation(lat: Double, lng: Double) {
+        for (provider in providers) {
+            try {
+                val location = Location(provider).apply {
+                    latitude = lat
+                    longitude = lng
+                    accuracy = 1.0f
+                    altitude = 0.0
+                    bearing = 0.0f
+                    speed = 0.0f
+                    time = System.currentTimeMillis()
+                    elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        bearingAccuracyDegrees = 0.1f
+                        speedAccuracyMetersPerSecond = 0.01f
+                        verticalAccuracyMeters = 0.1f
+                    }
+                }
+                locationManager?.setTestProviderLocation(provider, location)
+            } catch (_: Exception) {}
+        }
     }
 
     private fun cleanupTestProvider() {
-        try {
-            locationManager?.setTestProviderEnabled(testProviderName, false)
-            locationManager?.removeTestProvider(testProviderName)
-        } catch (_: Exception) {}
+        for (provider in providers) {
+            try {
+                locationManager?.setTestProviderEnabled(provider, false)
+                locationManager?.removeTestProvider(provider)
+            } catch (_: Exception) {}
+        }
     }
 
     private fun stopSpoofing() {
+        pushJob?.cancel()
         cleanupTestProvider()
         _isRunning.postValue(false)
         _isPaused.postValue(false)
