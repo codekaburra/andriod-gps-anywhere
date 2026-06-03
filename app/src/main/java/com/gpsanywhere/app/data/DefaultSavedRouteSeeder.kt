@@ -5,11 +5,14 @@ import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.gpsanywhere.app.routes.LocationPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 object DefaultSavedRouteSeeder {
     private const val PREFS_NAME = "gpsanywhere_default_saved_routes"
-    private const val KEY_SEEDED = "seeded_v7" // bumped: added HK Fanling route
+    private const val KEY_SEEDED = "seeded_v8" // bumped: mutex fix + dedup re-run
+    private val mutex = Mutex()
     private const val DEFAULT_ROUTE_METHOD = "MANUAL_MAP"
     const val ASSET_FOLDER = "saved_routes"
 
@@ -49,9 +52,12 @@ object DefaultSavedRouteSeeder {
     }
 
     suspend fun seedIfNeeded(context: Context, routeDao: RouteDao) = withContext(Dispatchers.IO) {
+        // Mutex ensures concurrent ViewModel inits (WalkViewModel + SavedRoutesViewModel)
+        // don't both pass the prefs check and double-seed simultaneously.
+        mutex.withLock {
         val appContext = context.applicationContext
         val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        if (prefs.getBoolean(KEY_SEEDED, false)) return@withContext
+        if (prefs.getBoolean(KEY_SEEDED, false)) return@withLock
 
         val assets = loadAllAssets(appContext)
 
@@ -94,6 +100,7 @@ object DefaultSavedRouteSeeder {
         }
 
         prefs.edit().putBoolean(KEY_SEEDED, true).apply()
+        } // end mutex.withLock
     }
 
     private fun estimateDistance(points: List<LocationPoint>): Double {
