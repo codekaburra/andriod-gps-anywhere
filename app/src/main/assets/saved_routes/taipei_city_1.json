@@ -1,0 +1,48 @@
+{
+  "route_id": "taipei-city-1",
+  "route_name": "台北市區1",
+  "version": 1,
+  "speed_kmh": 4.0,
+  "coordinates": [
+    {
+      "name": "台北101",
+      "latitude": 25.0339808,
+      "longitude": 121.5644722
+    },
+    {
+      "name": "國父紀念館",
+      "latitude": 25.0401139,
+      "longitude": 121.5601749
+    },
+    {
+      "name": "大安森林公園",
+      "latitude": 25.0299419,
+      "longitude": 121.5354574
+    },
+    {
+      "name": "台北市立動物園",
+      "latitude": 24.9996607,
+      "longitude": 121.5810507
+    },
+    {
+      "name": "象山自然步道入口",
+      "latitude": 25.0274796,
+      "longitude": 121.5766667
+    },
+    {
+      "name": "饒河街夜市",
+      "latitude": 25.0506056,
+      "longitude": 121.5773972
+    },
+    {
+      "name": "松山文創園區",
+      "latitude": 25.0447639,
+      "longitude": 121.5603278
+    },
+    {
+      "name": "台北市政府",
+      "latitude": 25.0376,
+      "longitude": 121.5647
+    }
+  ]
+}
