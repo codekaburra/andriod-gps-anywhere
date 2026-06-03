@@ -213,11 +213,15 @@ fun WalkScreen(
                     .navigationBarsPadding(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Pause / Resume
-                OutlinedButton(
+                // Pause / Resume — yellow at 50% alpha
+                Button(
                     onClick = { if (isPaused) viewModel.resume() else viewModel.pause() },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = androidx.compose.ui.graphics.Color(0xFFFFD700).copy(alpha = 0.5f),
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
                 ) {
                     Icon(
                         if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
