@@ -223,7 +223,9 @@ class SpoofService : Service() {
             }
             ACTION_UPDATE_SPEED -> {
                 val speedKmh = intent.getFloatExtra(EXTRA_SPEED_KMH, 4f)
-                currentSpeedMps = speedKmh * 1000f / 3600f
+                baseSpeedMps = speedKmh * 1000f / 3600f
+                currentSpeedMps = baseSpeedMps
+                _currentSpeedKmh.postValue(speedKmh)
                 val nm = getSystemService(NotificationManager::class.java)
                 nm.notify(NOTIFICATION_ID, buildNotification("Walking @ ${"%.1f".format(speedKmh)} km/h"))
             }
