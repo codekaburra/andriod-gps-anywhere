@@ -13,12 +13,24 @@
 
 ### 📸 App Screenshots 實際應用截圖
 
-Current screenshot from the running app. More screens will be added as development progresses.  
-目前為實際執行中的 App 截圖，後續會隨開發進度加入更多畫面。
+Screenshots from the running app (June 2026).  
+以下為實際執行中的 App 截圖。
+
+| Location 位置 | Walk — route list 路線列表 | Walk — route detail 路線詳情 |
+|---------------|------------------------------|--------------------------------|
+| Regional saved locations, map preview, Jump to spoof | Saved routes with distance and stops | Waypoint list, speed controls, Start walk |
 
 <p align="center">
-  <img src="docs/screenshots/location-screen.png" width="45%" alt="Location screen — map, coordinate input, and recent locations history">
+  <img src="docs/screenshots/Screenshot_20260603_233437.png" width="30%" alt="Location screen — regional saved locations and map preview">
+  <img src="docs/screenshots/Screenshot_20260603_233446.png" width="30%" alt="Walk screen — saved routes list">
+  <img src="docs/screenshots/Screenshot_20260603_233457.png" width="30%" alt="Walk screen — route detail with waypoints and Start">
 </p>
+
+**Location 位置** — Map preview, bundled locations by region (Hong Kong, Taiwan, Japan), custom locations, **Jump** to spoof, yellow highlight for active GPS match.  
+地圖預覽、依地區分類的內建位置、自訂位置、**Jump** 跳轉模擬、黃色標示目前 GPS 對應位置。
+
+**Walk 步行** — Pick a saved or default route, adjust speed, start route simulation.  
+選擇已儲存或預設路線、調整速度、開始路線模擬。
 
 ---
 
