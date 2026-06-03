@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 
 object DefaultLocationSeeder {
     private const val PREFS_NAME = "gpsanywhere_default_locations"
-    private const val KEY_SEEDED = "seeded_v1"
+    private const val KEY_SEEDED = "seeded_v6" // bumped: add Kai Tak Sports Park
     private const val ASSET_FOLDER = "saved_locations"
 
     private val gson = Gson()
