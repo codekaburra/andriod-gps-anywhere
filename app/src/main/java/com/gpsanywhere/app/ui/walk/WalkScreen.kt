@@ -74,8 +74,8 @@ fun WalkScreen(
     val vary by viewModel.varyKmh.collectAsState()
     val liveSpeed by viewModel.currentSpeedKmh.observeAsState(0f)
     val activeRoute by viewModel.activeRoute.collectAsState()
-    val currentLat by viewModel.currentLat.observeAsState(0.0)
-    val currentLng by viewModel.currentLng.observeAsState(0.0)
+    val mapCenterLat by viewModel.mapCenterLat.observeAsState()
+    val mapCenterLng by viewModel.mapCenterLng.observeAsState()
 
     var minText by remember { mutableStateOf("0") }
     var maxText by remember { mutableStateOf("20") }
@@ -89,13 +89,13 @@ fun WalkScreen(
     // The route to display (prefer the live active route while walking)
     val displayRoute = activeRoute ?: selectedRoute
 
-    // Map centre: use live GPS if available, else Taipei as fallback
-    val mapCenter = if (currentLat != 0.0 || currentLng != 0.0)
-        GeoPoint(currentLat, currentLng)
-    else
-        GeoPoint(25.0330, 121.5654)
-
-    val currentPin = listOf(LocationPoint(mapCenter.latitude, mapCenter.longitude, "Current position"))
+    val positionLat = mapCenterLat
+    val positionLng = mapCenterLng
+    val currentPin = if (positionLat != null && positionLng != null) {
+        listOf(LocationPoint(positionLat, positionLng, "Current position"))
+    } else {
+        emptyList()
+    }
 
     // Height reserved for the floating bottom button bar
     val bottomBarHeight = 80.dp
@@ -150,14 +150,16 @@ fun WalkScreen(
 
                 // ── Live map ──────────────────────────────────────────────────
                 item {
-                    MapViewComposable(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp),
-                        center = mapCenter,
-                        zoom = 16.0,
-                        waypoints = currentPin
-                    )
+                    if (positionLat != null && positionLng != null) {
+                        MapViewComposable(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp),
+                            center = GeoPoint(positionLat, positionLng),
+                            zoom = 16.0,
+                            waypoints = currentPin
+                        )
+                    }
                 }
 
                 // ── Current Speed (large, live, centred) ──────────────────────
@@ -218,8 +220,10 @@ fun WalkScreen(
                 item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
 
                 itemsIndexed(waypoints) { index, point ->
-                    val dist = distanceBetween(currentLat, currentLng, point.latitude, point.longitude)
-                    val isNearest = findNearestIndex(waypoints, currentLat, currentLng) == index
+                    val lat = positionLat ?: 0.0
+                    val lng = positionLng ?: 0.0
+                    val dist = distanceBetween(lat, lng, point.latitude, point.longitude)
+                    val isNearest = findNearestIndex(waypoints, lat, lng) == index
                     WaypointProgressRow(index = index, point = point, distanceKm = dist, isNearest = isNearest)
                 }
             }
@@ -294,14 +298,16 @@ fun WalkScreen(
 
             // ── Current location map ──────────────────────────────────────────
             item {
-                MapViewComposable(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp),
-                    center = mapCenter,
-                    zoom = 15.0,
-                    waypoints = currentPin
-                )
+                if (positionLat != null && positionLng != null) {
+                    MapViewComposable(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp),
+                        center = GeoPoint(positionLat, positionLng),
+                        zoom = 15.0,
+                        waypoints = currentPin
+                    )
+                }
             }
 
             // ── Speed settings ────────────────────────────────────────────────

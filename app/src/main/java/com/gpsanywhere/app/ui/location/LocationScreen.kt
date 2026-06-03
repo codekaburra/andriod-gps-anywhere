@@ -52,6 +52,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.data.SavedLocation
+import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.settings.HistoryEntry
@@ -72,10 +73,9 @@ fun LocationScreen(
     val history by viewModel.history.collectAsState()
     val routeHints by viewModel.routeHints.collectAsState()
 
-    // Walk-mode awareness
-    val isWalking by SpoofService.isRunning.observeAsState(false)
-    val fakeLat by SpoofService.currentLat.observeAsState(0.0)
-    val fakeLng by SpoofService.currentLng.observeAsState(0.0)
+    val isSpoofing by viewModel.isSpoofing.observeAsState(false)
+    val currentLat by CurrentLocationProvider.latitude.observeAsState()
+    val currentLng by CurrentLocationProvider.longitude.observeAsState()
 
     var showAddSheet by remember { mutableStateOf(false) }
     var confirmLocation by remember { mutableStateOf<SavedLocation?>(null) }
@@ -87,23 +87,29 @@ fun LocationScreen(
     var clearHistory by remember { mutableStateOf(false) }
     var selectedLocation by remember(locations) { mutableStateOf(locations.firstOrNull()) }
 
-    // When walking, map follows the live fake location; otherwise show selected/history
-    val mapCenter = if (isWalking && (fakeLat != 0.0 || fakeLng != 0.0)) {
-        GeoPoint(fakeLat, fakeLng)
-    } else {
-        val fallback = selectedLocation?.let {
-            LocationPoint(it.latitude, it.longitude, it.name)
-        } ?: history.firstOrNull()?.let {
-            LocationPoint(it.lat, it.lng, it.label)
-        } ?: LocationPoint(22.9747562, 120.2215652, "台南市文化中心")
-        GeoPoint(fallback.latitude, fallback.longitude)
+    val mapCenter: GeoPoint? = when {
+        isSpoofing && currentLat != null && currentLng != null ->
+            GeoPoint(currentLat!!, currentLng!!)
+        selectedLocation != null ->
+            GeoPoint(selectedLocation!!.latitude, selectedLocation!!.longitude)
+        history.isNotEmpty() ->
+            GeoPoint(history.first().lat, history.first().lng)
+        currentLat != null && currentLng != null ->
+            GeoPoint(currentLat!!, currentLng!!)
+        else -> null
     }
 
-    val previewPoint = selectedLocation?.let {
-        LocationPoint(it.latitude, it.longitude, it.name)
-    } ?: history.firstOrNull()?.let {
-        LocationPoint(it.lat, it.lng, it.label)
-    } ?: LocationPoint(22.9747562, 120.2215652, "台南市文化中心")
+    val previewPoint: LocationPoint? = when {
+        isSpoofing && currentLat != null && currentLng != null ->
+            LocationPoint(currentLat!!, currentLng!!, "Current position")
+        selectedLocation != null ->
+            LocationPoint(selectedLocation!!.latitude, selectedLocation!!.longitude, selectedLocation!!.name)
+        history.isNotEmpty() ->
+            LocationPoint(history.first().lat, history.first().lng, history.first().label)
+        currentLat != null && currentLng != null ->
+            LocationPoint(currentLat!!, currentLng!!, "Current position")
+        else -> null
+    }
 
     Scaffold(
         modifier = modifier,
@@ -126,7 +132,7 @@ fun LocationScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // ── Walk-mode banner ──────────────────────────────────────────────
-            if (isWalking) {
+            if (isSpoofing) {
                 item {
                     Surface(
                         color = MaterialTheme.colorScheme.primaryContainer,
@@ -153,16 +159,17 @@ fun LocationScreen(
                 }
             }
 
-            item {
-                MapViewComposable(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    center = mapCenter,
-                    zoom = 15.0,
-                    waypoints = if (isWalking) listOf(LocationPoint(fakeLat, fakeLng, "Current position"))
-                                else listOf(previewPoint)
-                )
+            if (mapCenter != null) {
+                item {
+                    MapViewComposable(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
+                        center = mapCenter,
+                        zoom = 15.0,
+                        waypoints = previewPoint?.let { listOf(it) } ?: emptyList()
+                    )
+                }
             }
 
             item {
@@ -188,7 +195,7 @@ fun LocationScreen(
                         },
                         onClick = {
                             selectedLocation = loc
-                            if (isWalking) walkBreakLocation = loc else confirmLocation = loc
+                            if (isSpoofing) walkBreakLocation = loc else confirmLocation = loc
                         },
                         onDelete = if (!loc.isPreinstalled) {
                             { deleteLocation = loc }
@@ -226,7 +233,7 @@ fun LocationScreen(
                 items(history, key = { "${it.lat}-${it.lng}-${it.timestamp}" }) { entry ->
                     HistoryCard(
                         entry = entry,
-                        onClick = { if (isWalking) walkBreakHistory = entry else confirmHistory = entry },
+                        onClick = { if (isSpoofing) walkBreakHistory = entry else confirmHistory = entry },
                         onDelete = { deleteHistory = entry }
                     )
                 }
@@ -566,7 +573,7 @@ private fun AddLocationSheet(
                     value = lngText,
                     onValueChange = { lngText = it; error = null },
                     label = { Text("Longitude") },
-                    placeholder = { Text("120.2215652") },
+                    placeholder = { Text("Longitude") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
@@ -575,7 +582,7 @@ private fun AddLocationSheet(
                     value = latText,
                     onValueChange = { latText = it; error = null },
                     label = { Text("Latitude") },
-                    placeholder = { Text("22.9747562") },
+                    placeholder = { Text("Latitude") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.weight(1f)

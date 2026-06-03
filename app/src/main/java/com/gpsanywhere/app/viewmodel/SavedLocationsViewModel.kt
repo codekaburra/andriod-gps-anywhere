@@ -8,6 +8,7 @@ import com.gpsanywhere.app.data.AppDatabase
 import com.gpsanywhere.app.data.DefaultLocationSeeder
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
 import com.gpsanywhere.app.data.SavedLocation
+import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.settings.HistoryEntry
 import com.gpsanywhere.app.settings.LocationHistoryStore
@@ -31,6 +32,7 @@ class SavedLocationsViewModel(application: Application) : AndroidViewModel(appli
     val routeHints: StateFlow<Map<String, String>> = _routeHints.asStateFlow()
 
     init {
+        CurrentLocationProvider.ensureStarted(getApplication())
         viewModelScope.launch {
             DefaultLocationSeeder.seedIfNeeded(getApplication(), dao)
             _routeHints.value = buildRouteHints()

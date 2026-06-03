@@ -23,7 +23,7 @@ import org.osmdroid.views.overlay.Polyline
 @Composable
 fun MapViewComposable(
     modifier: Modifier = Modifier,
-    center: GeoPoint = GeoPoint(25.0330, 121.5654),
+    center: GeoPoint? = null,
     zoom: Double = 14.0,
     waypoints: List<LocationPoint> = emptyList(),
     showNumberedPins: Boolean = false,
@@ -39,7 +39,7 @@ fun MapViewComposable(
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             controller.setZoom(zoom)
-            controller.setCenter(center)
+            center?.let { controller.setCenter(it) }
         }
     }
 
@@ -112,7 +112,7 @@ fun MapViewComposable(
         },
         modifier = modifier,
         update = { view ->
-            view.controller.setCenter(center)
+            center?.let { view.controller.setCenter(it) }
         }
     )
 }

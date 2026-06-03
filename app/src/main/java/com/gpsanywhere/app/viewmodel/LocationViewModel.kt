@@ -6,7 +6,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.gpsanywhere.app.directions.NominatimClient
 import com.gpsanywhere.app.directions.NominatimResult
+import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.service.SpoofService
+import androidx.lifecycle.Observer
 import com.gpsanywhere.app.settings.HistoryEntry
 import com.gpsanywhere.app.settings.LocationHistoryStore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,16 +25,47 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private val nominatimClient = NominatimClient()
 
     private val _latitude = MutableStateFlow(
-        SpoofService.currentLat.value?.takeIf { it != 0.0 }
-            ?.toBigDecimal()?.stripTrailingZeros()?.toPlainString() ?: "25.0330"
+        CurrentLocationProvider.formatLatitude(
+            SpoofService.currentLat.value?.takeIf { it != 0.0 }
+        ) ?: ""
     )
     val latitude: StateFlow<String> = _latitude.asStateFlow()
 
     private val _longitude = MutableStateFlow(
-        SpoofService.currentLng.value?.takeIf { it != 0.0 }
-            ?.toBigDecimal()?.stripTrailingZeros()?.toPlainString() ?: "121.5654"
+        CurrentLocationProvider.formatLongitude(
+            SpoofService.currentLng.value?.takeIf { it != 0.0 }
+        ) ?: ""
     )
     val longitude: StateFlow<String> = _longitude.asStateFlow()
+
+    private val locationObserver = Observer<Double?> {
+        seedCoordinatesFromProviderIfEmpty()
+    }
+
+    init {
+        CurrentLocationProvider.ensureStarted(getApplication())
+        seedCoordinatesFromProviderIfEmpty()
+        CurrentLocationProvider.latitude.observeForever(locationObserver)
+        CurrentLocationProvider.longitude.observeForever(locationObserver)
+    }
+
+    override fun onCleared() {
+        CurrentLocationProvider.latitude.removeObserver(locationObserver)
+        CurrentLocationProvider.longitude.removeObserver(locationObserver)
+        super.onCleared()
+    }
+
+    private fun seedCoordinatesFromProviderIfEmpty() {
+        if (_latitude.value.isNotEmpty() && _longitude.value.isNotEmpty()) return
+        val lat = CurrentLocationProvider.latitude.value ?: return
+        val lng = CurrentLocationProvider.longitude.value ?: return
+        if (_latitude.value.isEmpty()) {
+            _latitude.value = CurrentLocationProvider.formatLatitude(lat) ?: return
+        }
+        if (_longitude.value.isEmpty()) {
+            _longitude.value = CurrentLocationProvider.formatLongitude(lng) ?: return
+        }
+    }
 
     private val _inputError = MutableStateFlow<String?>(null)
     val inputError: StateFlow<String?> = _inputError.asStateFlow()

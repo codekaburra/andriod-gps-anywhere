@@ -8,6 +8,7 @@ import com.gpsanywhere.app.data.AppDatabase
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
 import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
+import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.service.SpoofService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,9 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
     val currentLat: LiveData<Double> = SpoofService.currentLat
     val currentLng: LiveData<Double> = SpoofService.currentLng
     val currentSpeedKmh: LiveData<Float> = SpoofService.currentSpeedKmh
+
+    val mapCenterLat: LiveData<Double?> = CurrentLocationProvider.latitude
+    val mapCenterLng: LiveData<Double?> = CurrentLocationProvider.longitude
 
     private val _speedKmh = MutableStateFlow(4f)
     val speedKmh: StateFlow<Float> = _speedKmh
@@ -40,6 +44,7 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
     val activeRoute: StateFlow<SavedRoute?> = _activeRoute
 
     init {
+        CurrentLocationProvider.ensureStarted(getApplication())
         viewModelScope.launch {
             DefaultSavedRouteSeeder.seedIfNeeded(getApplication(), routeDao)
         }
