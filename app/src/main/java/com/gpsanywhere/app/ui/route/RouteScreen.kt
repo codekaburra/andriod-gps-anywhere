@@ -330,8 +330,10 @@ fun RouteScreen(
                                 .height(80.dp)
                         ) {
                             itemsIndexed(waypoints) { index, point ->
+                                val label = point.name?.takeIf { it.isNotBlank() }
+                                    ?: "${"%.4f".format(point.latitude)}, ${"%.4f".format(point.longitude)}"
                                 Text(
-                                    text = "${index + 1}. ${"%.4f".format(point.latitude)}, ${"%.4f".format(point.longitude)}",
+                                    text = "${index + 1}. $label",
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
