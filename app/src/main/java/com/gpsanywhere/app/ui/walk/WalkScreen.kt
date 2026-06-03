@@ -28,6 +28,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,9 +57,17 @@ fun WalkScreen(
     val routes by viewModel.routes.observeAsState(emptyList())
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
     val speed by viewModel.speedKmh.collectAsState()
+    val minSpeed by viewModel.minSpeedKmh.collectAsState()
+    val maxSpeed by viewModel.maxSpeedKmh.collectAsState()
+    val vary by viewModel.varyKmh.collectAsState()
+    val liveSpeed by viewModel.currentSpeedKmh.observeAsState(0f)
     val activeRoute by viewModel.activeRoute.collectAsState()
     val currentLat by viewModel.currentLat.observeAsState(0.0)
     val currentLng by viewModel.currentLng.observeAsState(0.0)
+
+    var minText by remember { mutableStateOf("0") }
+    var maxText by remember { mutableStateOf("20") }
+    var varyText by remember { mutableStateOf("1") }
 
     var confirmRoute by remember { mutableStateOf<SavedRoute?>(null) }
 
@@ -102,38 +111,38 @@ fun WalkScreen(
                 }
             }
 
-            // ── Current Speed (large) ─────────────────────────────────────────
+            // ── Current Speed (large, live, centred) ─────────────────────────
             item {
-                Column {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         "Current Speed",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
-                    Row(
-                        verticalAlignment = Alignment.Bottom
-                    ) {
+                    Spacer(Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            "${"%.1f".format(speed)}",
+                            "${"%.1f".format(liveSpeed)}",
                             style = MaterialTheme.typography.displayLarge.copy(
-                                fontSize = 56.sp,
+                                fontSize = 80.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
                             "km/h",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            modifier = Modifier.padding(bottom = 10.dp)
+                            modifier = Modifier.padding(bottom = 14.dp)
                         )
                     }
-                    Slider(
-                        value = speed,
-                        onValueChange = viewModel::setSpeed,
-                        valueRange = 4f..20f,
-                        steps = 15,
-                        modifier = Modifier.fillMaxWidth()
+                    Text(
+                        "Base ${speed.toInt()} km/h · vary ±${vary.toInt()} · range ${minSpeed.toInt()}–${maxSpeed.toInt()} km/h",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -189,37 +198,94 @@ fun WalkScreen(
                 Text("Walk", style = MaterialTheme.typography.headlineMedium)
             }
 
-            // ── Speed ─────────────────────────────────────────────────────────
+            // ── Speed settings ────────────────────────────────────────────────
             item {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "Speed",
+                        "Base Speed",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            "${"%.1f".format(speed)}",
+                            "—",
                             style = MaterialTheme.typography.displayLarge.copy(
                                 fontSize = 48.sp,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                             )
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
                             "km/h",
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
                     Slider(
                         value = speed,
                         onValueChange = viewModel::setSpeed,
-                        valueRange = 4f..20f,
-                        steps = 15,
+                        valueRange = 1f..20f,
+                        steps = 18,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    // Tick labels: 1, 5, 10, 15, 20
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        listOf("1", "5", "10", "15", "20").forEach { label ->
+                            Text(
+                                label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                            )
+                        }
+                    }
+
+                    Text(
+                        "Speed Variation",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = minText,
+                            onValueChange = { v ->
+                                minText = v
+                                v.toFloatOrNull()?.let { viewModel.setMinSpeed(it) }
+                            },
+                            label = { Text("Min (km/h)") },
+                            placeholder = { Text("0") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = maxText,
+                            onValueChange = { v ->
+                                maxText = v
+                                v.toFloatOrNull()?.let { viewModel.setMaxSpeed(it) }
+                            },
+                            label = { Text("Max (km/h)") },
+                            placeholder = { Text("20") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = varyText,
+                            onValueChange = { v ->
+                                varyText = v
+                                v.toFloatOrNull()?.let { viewModel.setVary(it) }
+                            },
+                            label = { Text("Vary ±N") },
+                            placeholder = { Text("1") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
 
@@ -276,7 +342,7 @@ fun WalkScreen(
         AlertDialog(
             onDismissRequest = { confirmRoute = null },
             title = { Text("Start walk?") },
-            text = { Text("Walk \"${route.name}\" at ${"%.1f".format(speed)} km/h?") },
+            text = { Text("Walk \"${route.name}\" at ${"%.1f".format(speed)} ±${vary.toInt()} km/h (${minSpeed.toInt()}–${maxSpeed.toInt()} km/h)?") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.startWalk(route)

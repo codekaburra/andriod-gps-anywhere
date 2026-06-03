@@ -21,9 +21,19 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
     val isSpoofing: LiveData<Boolean> = SpoofService.isRunning
     val currentLat: LiveData<Double> = SpoofService.currentLat
     val currentLng: LiveData<Double> = SpoofService.currentLng
+    val currentSpeedKmh: LiveData<Float> = SpoofService.currentSpeedKmh
 
     private val _speedKmh = MutableStateFlow(4f)
     val speedKmh: StateFlow<Float> = _speedKmh
+
+    private val _minSpeedKmh = MutableStateFlow(0f)
+    val minSpeedKmh: StateFlow<Float> = _minSpeedKmh
+
+    private val _maxSpeedKmh = MutableStateFlow(20f)
+    val maxSpeedKmh: StateFlow<Float> = _maxSpeedKmh
+
+    private val _varyKmh = MutableStateFlow(1f)
+    val varyKmh: StateFlow<Float> = _varyKmh
 
     private val _activeRoute = MutableStateFlow<SavedRoute?>(null)
     val activeRoute: StateFlow<SavedRoute?> = _activeRoute
@@ -34,19 +44,23 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setSpeed(speed: Float) {
-        _speedKmh.value = speed
-        if (SpoofService.isRunning.value == true && _activeRoute.value != null) {
-            SpoofService.updateSpeed(getApplication(), speed)
-        }
-    }
+    fun setSpeed(speed: Float) { _speedKmh.value = speed }
+    fun setMinSpeed(v: Float) { _minSpeedKmh.value = v.coerceIn(0f, 20f) }
+    fun setMaxSpeed(v: Float) { _maxSpeedKmh.value = v.coerceIn(0f, 20f) }
+    fun setVary(v: Float) { _varyKmh.value = v.coerceAtLeast(0f) }
 
     fun startWalk(route: SavedRoute) {
         val points = WaypointJson.fromJson(route.waypointsJson)
         if (points.size >= 2) {
             val lats = points.map { it.latitude }.toDoubleArray()
             val lngs = points.map { it.longitude }.toDoubleArray()
-            SpoofService.startWalk(getApplication(), lats, lngs, _speedKmh.value)
+            SpoofService.startWalk(
+                getApplication(), lats, lngs,
+                speedKmh = _speedKmh.value,
+                minSpeedKmh = _minSpeedKmh.value,
+                maxSpeedKmh = _maxSpeedKmh.value,
+                varyKmh = _varyKmh.value
+            )
             _activeRoute.value = route
         } else if (points.size == 1) {
             SpoofService.startFixed(getApplication(), points[0].latitude, points[0].longitude)

@@ -35,6 +35,9 @@ class SpoofService : Service() {
         const val EXTRA_LATS = "extra_lats"
         const val EXTRA_LNGS = "extra_lngs"
         const val EXTRA_SPEED_KMH = "extra_speed_kmh"
+        const val EXTRA_MIN_SPEED_KMH = "extra_min_speed_kmh"
+        const val EXTRA_MAX_SPEED_KMH = "extra_max_speed_kmh"
+        const val EXTRA_VARY_KMH = "extra_vary_kmh"
         const val EXTRA_LOOP = "extra_loop"
 
         private val _isRunning = MutableLiveData(false)
@@ -48,6 +51,9 @@ class SpoofService : Service() {
 
         private val _currentLng = MutableLiveData(0.0)
         val currentLng: LiveData<Double> = _currentLng
+
+        private val _currentSpeedKmh = MutableLiveData(0f)
+        val currentSpeedKmh: LiveData<Float> = _currentSpeedKmh
 
         fun startFixed(context: Context, lat: Double, lng: Double) {
             val intent = Intent(context, SpoofService::class.java).apply {
@@ -79,6 +85,9 @@ class SpoofService : Service() {
             lats: DoubleArray,
             lngs: DoubleArray,
             speedKmh: Float,
+            minSpeedKmh: Float = 0f,
+            maxSpeedKmh: Float = 20f,
+            varyKmh: Float = 0f,
             loop: Boolean = false
         ) {
             val intent = Intent(context, SpoofService::class.java).apply {
@@ -86,6 +95,9 @@ class SpoofService : Service() {
                 putExtra(EXTRA_LATS, lats)
                 putExtra(EXTRA_LNGS, lngs)
                 putExtra(EXTRA_SPEED_KMH, speedKmh)
+                putExtra(EXTRA_MIN_SPEED_KMH, minSpeedKmh)
+                putExtra(EXTRA_MAX_SPEED_KMH, maxSpeedKmh)
+                putExtra(EXTRA_VARY_KMH, varyKmh)
                 putExtra(EXTRA_LOOP, loop)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -119,6 +131,10 @@ class SpoofService : Service() {
     private var walkJob: Job? = null
     private var currentBearing: Float = 0f
     private var currentSpeedMps: Float = 0f
+    private var baseSpeedMps: Float = 0f
+    private var minSpeedMps: Float = 0f
+    private var maxSpeedMps: Float = 20f * 1000f / 3600f
+    private var varyMps: Float = 0f
 
     override fun onCreate() {
         super.onCreate()
@@ -148,15 +164,23 @@ class SpoofService : Service() {
                 val lats = intent.getDoubleArrayExtra(EXTRA_LATS) ?: DoubleArray(0)
                 val lngs = intent.getDoubleArrayExtra(EXTRA_LNGS) ?: DoubleArray(0)
                 val speedKmh = intent.getFloatExtra(EXTRA_SPEED_KMH, 4f)
+                val minKmh = intent.getFloatExtra(EXTRA_MIN_SPEED_KMH, 0f)
+                val maxKmh = intent.getFloatExtra(EXTRA_MAX_SPEED_KMH, 20f)
+                val varyKmh = intent.getFloatExtra(EXTRA_VARY_KMH, 0f)
                 val loop = intent.getBooleanExtra(EXTRA_LOOP, false)
                 if (lats.size < 2 || lats.size != lngs.size) return START_NOT_STICKY
                 lastLat = lats[0]
                 lastLng = lngs[0]
-                currentSpeedMps = speedKmh * 1000f / 3600f
-                startForeground(NOTIFICATION_ID, buildNotification("Walking @ ${speedKmh} km/h"))
+                baseSpeedMps = speedKmh * 1000f / 3600f
+                minSpeedMps = minKmh * 1000f / 3600f
+                maxSpeedMps = minOf(maxKmh, 20f) * 1000f / 3600f
+                varyMps = varyKmh * 1000f / 3600f
+                currentSpeedMps = baseSpeedMps
+                _currentSpeedKmh.postValue(speedKmh)
+                startForeground(NOTIFICATION_ID, buildNotification("Walking @ ${"%.1f".format(speedKmh)} km/h"))
                 setupTestProvider()
                 startPushLoop()
-                startWalkJob(lats, lngs, speedKmh, loop)
+                startWalkJob(lats, lngs, loop)
                 _isRunning.postValue(true)
                 _isPaused.postValue(false)
                 _currentLat.postValue(lastLat)
@@ -237,10 +261,22 @@ class SpoofService : Service() {
         }
     }
 
-    private fun startWalkJob(lats: DoubleArray, lngs: DoubleArray, speedKmh: Float, loop: Boolean) {
+    private fun startWalkJob(lats: DoubleArray, lngs: DoubleArray, loop: Boolean) {
         walkJob?.cancel()
         val tickMs = 500L
         walkJob = serviceScope.launch {
+            // Speed variation coroutine: every random 1–3 s, nudge speed by ±varyMps
+            launch {
+                while (isActive) {
+                    delay(Random.nextLong(1000L, 3001L))
+                    if (varyMps > 0f) {
+                        val delta = (Random.nextFloat() * 2f - 1f) * varyMps
+                        currentSpeedMps = (baseSpeedMps + delta).coerceIn(minSpeedMps, maxSpeedMps)
+                        _currentSpeedKmh.postValue(currentSpeedMps * 3600f / 1000f)
+                    }
+                }
+            }
+
             do {
                 var segIdx = 0
                 while (isActive && segIdx < lats.size - 1) {
@@ -267,6 +303,7 @@ class SpoofService : Service() {
                 }
             } while (isActive && loop)
             currentSpeedMps = 0f
+            _currentSpeedKmh.postValue(0f)
         }
     }
 
@@ -333,6 +370,7 @@ class SpoofService : Service() {
         _isPaused.postValue(false)
         _currentLat.postValue(0.0)
         _currentLng.postValue(0.0)
+        _currentSpeedKmh.postValue(0f)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
