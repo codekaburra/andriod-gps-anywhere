@@ -13,6 +13,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.core.content.ContextCompat
+import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.ui.navigation.MainApp
 
@@ -23,9 +24,8 @@ class MainActivity : ComponentActivity() {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
-        val fineDenied = results[Manifest.permission.ACCESS_FINE_LOCATION] == false
-        if (fineDenied) {
-            // Shown via compose state on next frame if needed
+        if (results[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            CurrentLocationProvider.ensureStarted(this)
         }
     }
 
@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         requestNeededPermissions()
+        CurrentLocationProvider.ensureStarted(this)
 
         setContent {
             val showPermissionDialog = remember { mutableStateOf(false) }

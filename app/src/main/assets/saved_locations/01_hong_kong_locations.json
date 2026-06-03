@@ -1,0 +1,36 @@
+{
+  "pack_name": "香港常用地點",
+  "version": 1,
+  "locations": [
+    {
+      "source_id": "hong-kong-museum-of-art",
+      "name": "香港藝術館",
+      "latitude": 22.2937758,
+      "longitude": 114.1721957
+    },
+    {
+      "source_id": "hong-kong-airport-station",
+      "name": "香港機場站",
+      "latitude": 22.3158675,
+      "longitude": 113.9290017
+    },
+    {
+      "source_id": "hong-kong-disneyland",
+      "name": "香港迪士尼樂園",
+      "latitude": 22.310864,
+      "longitude": 114.0415442
+    },
+    {
+      "source_id": "hong-kong-yang-guang-laundry",
+      "name": "陽光洗衣-洗衣街店",
+      "latitude": 22.3238869,
+      "longitude": 114.1698906
+    },
+    {
+      "source_id": "hong-kong-kai-tak-sports-park",
+      "name": "啟德體育園",
+      "latitude": 22.3245331,
+      "longitude": 114.197575
+    }
+  ]
+}

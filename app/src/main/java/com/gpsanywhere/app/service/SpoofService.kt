@@ -60,6 +60,10 @@ class SpoofService : Service() {
         private val _currentSpeedKmh = MutableLiveData(0f)
         val currentSpeedKmh: LiveData<Float> = _currentSpeedKmh
 
+        /** True only while a walk route is actively running (not fixed-location spoofing). */
+        private val _isWalkMode = MutableLiveData(false)
+        val isWalkMode: LiveData<Boolean> = _isWalkMode
+
         private val _stepCount = MutableLiveData(0)
         val stepCount: LiveData<Int> = _stepCount
 
@@ -170,6 +174,7 @@ class SpoofService : Service() {
                 startPushLoop()
                 _isRunning.postValue(true)
                 _isPaused.postValue(false)
+                _isWalkMode.postValue(false)
                 _currentLat.postValue(lat)
                 _currentLng.postValue(lng)
             }
@@ -196,6 +201,7 @@ class SpoofService : Service() {
                 startWalkJob(lats, lngs, loop)
                 _isRunning.postValue(true)
                 _isPaused.postValue(false)
+                _isWalkMode.postValue(true)
                 _currentLat.postValue(lastLat)
                 _currentLng.postValue(lastLng)
             }
@@ -223,7 +229,9 @@ class SpoofService : Service() {
             }
             ACTION_UPDATE_SPEED -> {
                 val speedKmh = intent.getFloatExtra(EXTRA_SPEED_KMH, 4f)
-                currentSpeedMps = speedKmh * 1000f / 3600f
+                baseSpeedMps = speedKmh * 1000f / 3600f
+                currentSpeedMps = baseSpeedMps
+                _currentSpeedKmh.postValue(speedKmh)
                 val nm = getSystemService(NotificationManager::class.java)
                 nm.notify(NOTIFICATION_ID, buildNotification("Walking @ ${"%.1f".format(speedKmh)} km/h"))
             }
@@ -402,6 +410,7 @@ class SpoofService : Service() {
         cleanupTestProvider()
         _isRunning.postValue(false)
         _isPaused.postValue(false)
+        _isWalkMode.postValue(false)
         _currentLat.postValue(0.0)
         _currentLng.postValue(0.0)
         _currentSpeedKmh.postValue(0f)

@@ -1,5 +1,6 @@
 package com.gpsanywhere.app.ui.location
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
@@ -25,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +35,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -45,12 +49,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationAsset
+import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationPack
 import com.gpsanywhere.app.data.SavedLocation
+import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
+import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.settings.HistoryEntry
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.viewmodel.SavedLocationsViewModel
@@ -59,29 +68,146 @@ import java.util.Date
 import java.util.Locale
 import org.osmdroid.util.GeoPoint
 
+private sealed class PendingLocation {
+    abstract val name: String
+    abstract val latitude: Double
+    abstract val longitude: Double
+    abstract val selectionKey: String
+
+    data class Prebuilt(val asset: DefaultLocationAsset) : PendingLocation() {
+        override val name get() = asset.name
+        override val latitude get() = asset.latitude
+        override val longitude get() = asset.longitude
+        override val selectionKey get() = "prebuilt_${asset.sourceId}"
+    }
+
+    data class Custom(val location: SavedLocation) : PendingLocation() {
+        override val name get() = location.name
+        override val latitude get() = location.latitude
+        override val longitude get() = location.longitude
+        override val selectionKey get() = "custom_${location.id}"
+    }
+}
+
+private fun PendingLocation?.matches(other: PendingLocation?): Boolean =
+    this != null && other != null && selectionKey == other.selectionKey
+
+private fun coordinatesMatch(
+    lat1: Double,
+    lng1: Double,
+    lat2: Double,
+    lng2: Double
+): Boolean =
+    "%.6f".format(lat1) == "%.6f".format(lat2) &&
+        "%.6f".format(lng1) == "%.6f".format(lng2)
+
+private val ActiveLocationFill = Color(0xFFFFF9C4)
+private val ActiveLocationBorder = Color(0xFFF9A825)
+
+private fun activeLocationKey(
+    lat: Double?,
+    lng: Double?,
+    isSpoofing: Boolean,
+    isWalkMode: Boolean,
+    locationPacks: List<DefaultLocationPack>,
+    customLocations: List<SavedLocation>
+): String? {
+    if (isWalkMode || !isSpoofing || lat == null || lng == null) return null
+
+    locationPacks.flatMap { it.locations }.firstOrNull { asset ->
+        coordinatesMatch(asset.latitude, asset.longitude, lat, lng)
+    }?.let { return "prebuilt_${it.sourceId}" }
+
+    customLocations.firstOrNull { loc ->
+        coordinatesMatch(loc.latitude, loc.longitude, lat, lng)
+    }?.let { return "custom_${it.id}" }
+
+    return null
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationScreen(
     viewModel: SavedLocationsViewModel,
     modifier: Modifier = Modifier
 ) {
-    val locations by viewModel.locations.observeAsState(emptyList())
+    val locationPacks by viewModel.locationPacks.collectAsState()
+    val customLocations by viewModel.customLocations.observeAsState(emptyList())
     val history by viewModel.history.collectAsState()
     val routeHints by viewModel.routeHints.collectAsState()
 
+    val prebuiltLocations = remember(locationPacks) {
+        locationPacks.flatMap { pack -> pack.locations.map { pack.packName to it } }
+    }
+
+    val isSpoofing by viewModel.isSpoofing.observeAsState(false)
+    val isWalkMode by SpoofService.isWalkMode.observeAsState(false)
+    val currentLat by CurrentLocationProvider.latitude.observeAsState()
+    val currentLng by CurrentLocationProvider.longitude.observeAsState()
+
     var showAddSheet by remember { mutableStateOf(false) }
-    var confirmLocation by remember { mutableStateOf<SavedLocation?>(null) }
+    var selectedLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var confirmHistory by remember { mutableStateOf<HistoryEntry?>(null) }
+    var walkBreakLocation by remember { mutableStateOf<PendingLocation?>(null) }
+    var walkBreakHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var deleteHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var clearHistory by remember { mutableStateOf(false) }
-    var selectedLocation by remember(locations) { mutableStateOf(locations.firstOrNull()) }
 
-    val previewPoint = selectedLocation?.let {
-        LocationPoint(it.latitude, it.longitude, it.name)
-    } ?: history.firstOrNull()?.let {
-        LocationPoint(it.lat, it.lng, it.label)
-    } ?: LocationPoint(22.9747562, 120.2215652, "台南市文化中心")
+    val activeLocationKey = remember(
+        currentLat,
+        currentLng,
+        isSpoofing,
+        isWalkMode,
+        locationPacks,
+        customLocations
+    ) {
+        activeLocationKey(currentLat, currentLng, isSpoofing, isWalkMode, locationPacks, customLocations)
+    }
+
+    fun onLocationSelected(pending: PendingLocation) {
+        selectedLocation = pending
+    }
+
+    fun applyJump(pending: PendingLocation) {
+        when (pending) {
+            is PendingLocation.Prebuilt -> viewModel.startSpoofing(pending.asset)
+            is PendingLocation.Custom -> viewModel.startSpoofing(pending.location)
+        }
+        selectedLocation = null
+    }
+
+    fun onJump(pending: PendingLocation) {
+        if (isWalkMode) {
+            walkBreakLocation = pending
+        } else {
+            applyJump(pending)
+        }
+    }
+
+    val mapCenter: GeoPoint? = when {
+        selectedLocation != null ->
+            GeoPoint(selectedLocation!!.latitude, selectedLocation!!.longitude)
+        isSpoofing && currentLat != null && currentLng != null ->
+            GeoPoint(currentLat!!, currentLng!!)
+        currentLat != null && currentLng != null ->
+            GeoPoint(currentLat!!, currentLng!!)
+        history.isNotEmpty() ->
+            GeoPoint(history.first().lat, history.first().lng)
+        else -> null
+    }
+
+    val previewPoint: LocationPoint? = when {
+        selectedLocation != null ->
+            LocationPoint(selectedLocation!!.latitude, selectedLocation!!.longitude, selectedLocation!!.name)
+        isSpoofing && currentLat != null && currentLng != null ->
+            LocationPoint(currentLat!!, currentLng!!, "Current position")
+        currentLat != null && currentLng != null ->
+            LocationPoint(currentLat!!, currentLng!!, "Current position")
+        history.isNotEmpty() ->
+            LocationPoint(history.first().lat, history.first().lng, history.first().label)
+        else -> null
+    }
 
     Scaffold(
         modifier = modifier,
@@ -96,54 +222,115 @@ fun LocationScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                MapViewComposable(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    center = GeoPoint(previewPoint.latitude, previewPoint.longitude),
-                    zoom = 15.0,
-                    waypoints = listOf(previewPoint)
-                )
+            // ── Walk-mode banner — outside LazyColumn so it's never covered ──
+            if (isWalkMode) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(0.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.DirectionsWalk,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            "Walk mode active — map follows your fake location. Setting a custom location will stop the walk.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+            if (mapCenter != null) {
+                item {
+                    MapViewComposable(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
+                        center = mapCenter,
+                        zoom = 15.0,
+                        waypoints = previewPoint?.let { listOf(it) } ?: emptyList()
+                    )
+                }
             }
 
             item {
                 SectionHeader(title = "Saved Locations")
             }
 
-            if (locations.isEmpty()) {
+            locationPacks.filter { it.locations.isNotEmpty() }.forEach { pack ->
+                item(key = "pack_header_${pack.packName}") {
+                    SectionHeader(title = pack.packName)
+                }
+                items(pack.locations, key = { "prebuilt_${it.sourceId}" }) { asset ->
+                    val pending = PendingLocation.Prebuilt(asset)
+                    LocationCard(
+                        name = asset.name,
+                        latitude = asset.latitude,
+                        longitude = asset.longitude,
+                        routeHint = viewModel.routeHintFor(asset.name, asset.latitude, asset.longitude, routeHints),
+                        isPreinstalled = true,
+                        isSelected = selectedLocation.matches(pending),
+                        isActive = !selectedLocation.matches(pending) &&
+                            activeLocationKey == pending.selectionKey,
+                        showJumpButton = selectedLocation.matches(pending),
+                        onClick = { onLocationSelected(pending) },
+                        onJump = { onJump(pending) },
+                        onDelete = null
+                    )
+                }
+            }
+
+            if (prebuiltLocations.isNotEmpty() && customLocations.isNotEmpty()) {
+                item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
+            }
+
+            item {
+                SectionHeader(title = "My Locations")
+            }
+
+            if (customLocations.isEmpty()) {
                 item {
                     EmptyState(
                         icon = Icons.Default.LocationOn,
-                        title = "No saved locations",
-                        body = "Tap + to add a custom location"
+                        title = "No custom locations",
+                        body = "Tap + to add your own location"
                     )
                 }
             } else {
-                items(locations, key = { it.id }) { loc ->
+                items(customLocations, key = { it.id }) { loc ->
+                    val pending = PendingLocation.Custom(loc)
                     LocationCard(
-                        location = loc,
-                        routeHint = if (loc.sourceId != null) {
-                            viewModel.routeHintFor(loc, routeHints)
-                        } else {
-                            null
-                        },
-                        onClick = {
-                            selectedLocation = loc
-                            confirmLocation = loc
-                        },
-                        onDelete = if (!loc.isPreinstalled) {
-                            { deleteLocation = loc }
-                        } else {
-                            null
-                        }
+                        name = loc.name,
+                        latitude = loc.latitude,
+                        longitude = loc.longitude,
+                        routeHint = null,
+                        isPreinstalled = false,
+                        isSelected = selectedLocation.matches(pending),
+                        isActive = !selectedLocation.matches(pending) &&
+                            activeLocationKey == pending.selectionKey,
+                        showJumpButton = selectedLocation.matches(pending),
+                        onClick = { onLocationSelected(pending) },
+                        onJump = { onJump(pending) },
+                        onDelete = { deleteLocation = loc }
                     )
                 }
             }
@@ -175,31 +362,15 @@ fun LocationScreen(
                 items(history, key = { "${it.lat}-${it.lng}-${it.timestamp}" }) { entry ->
                     HistoryCard(
                         entry = entry,
-                        onClick = { confirmHistory = entry },
+                        onClick = { if (isSpoofing) walkBreakHistory = entry else confirmHistory = entry },
                         onDelete = { deleteHistory = entry }
                     )
                 }
             }
 
             item { Spacer(Modifier.height(16.dp)) }
-        }
-    }
-
-    confirmLocation?.let { loc ->
-        AlertDialog(
-            onDismissRequest = { confirmLocation = null },
-            title = { Text("Use location?") },
-            text = { Text("Use \"${loc.name}\" as custom GPS location?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.startSpoofing(loc)
-                    confirmLocation = null
-                }) { Text("Start") }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmLocation = null }) { Text("Cancel") }
             }
-        )
+        }
     }
 
     confirmHistory?.let { entry ->
@@ -215,6 +386,41 @@ fun LocationScreen(
             },
             dismissButton = {
                 TextButton(onClick = { confirmHistory = null }) { Text("Cancel") }
+            }
+        )
+    }
+
+    // ── Walk-break warning dialogs ────────────────────────────────────────────
+    walkBreakLocation?.let { loc ->
+        AlertDialog(
+            onDismissRequest = { walkBreakLocation = null },
+            title = { Text("Stop walk mode?") },
+            text = { Text("Setting \"${loc.name}\" as your location will stop the current walk. Continue?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    applyJump(loc)
+                    walkBreakLocation = null
+                }) { Text("Stop walk & use location") }
+            },
+            dismissButton = {
+                TextButton(onClick = { walkBreakLocation = null }) { Text("Cancel") }
+            }
+        )
+    }
+
+    walkBreakHistory?.let { entry ->
+        AlertDialog(
+            onDismissRequest = { walkBreakHistory = null },
+            title = { Text("Stop walk mode?") },
+            text = { Text("Setting \"${entry.displayName()}\" as your location will stop the current walk. Continue?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.startSpoofing(entry)
+                    walkBreakHistory = null
+                }) { Text("Stop walk & use location") }
+            },
+            dismissButton = {
+                TextButton(onClick = { walkBreakHistory = null }) { Text("Cancel") }
             }
         )
     }
@@ -292,18 +498,45 @@ private fun SectionHeader(title: String) {
 
 @Composable
 private fun LocationCard(
-    location: SavedLocation,
+    name: String,
+    latitude: Double,
+    longitude: Double,
     routeHint: String?,
+    isPreinstalled: Boolean,
+    isSelected: Boolean,
+    isActive: Boolean,
+    showJumpButton: Boolean,
     onClick: () -> Unit,
+    onJump: () -> Unit,
     onDelete: (() -> Unit)?
 ) {
+    val baseContainerColor = if (isPreinstalled) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
+    val containerColor = when {
+        isSelected -> MaterialTheme.colorScheme.primaryContainer
+        isActive -> ActiveLocationFill
+        else -> baseContainerColor
+    }
+    val border = when {
+        isSelected -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        isActive -> BorderStroke(2.dp, ActiveLocationBorder)
+        else -> null
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = border,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected || isActive) 3.dp else 1.dp
+        )
     ) {
         Row(
             modifier = Modifier
@@ -323,7 +556,7 @@ private fun LocationCard(
                     .padding(start = 12.dp)
             ) {
                 Text(
-                    location.name,
+                    name,
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -338,12 +571,16 @@ private fun LocationCard(
                     )
                 }
                 Text(
-                    "${"%.6f".format(location.longitude)}, ${"%.6f".format(location.latitude)}",
+                    "${"%.6f".format(longitude)}, ${"%.6f".format(latitude)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
-            if (onDelete != null) {
+            if (showJumpButton) {
+                Button(onClick = onJump) {
+                    Text("Jump")
+                }
+            } else if (onDelete != null) {
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
@@ -480,7 +717,7 @@ private fun AddLocationSheet(
                     value = lngText,
                     onValueChange = { lngText = it; error = null },
                     label = { Text("Longitude") },
-                    placeholder = { Text("120.2215652") },
+                    placeholder = { Text("Longitude") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
@@ -489,7 +726,7 @@ private fun AddLocationSheet(
                     value = latText,
                     onValueChange = { latText = it; error = null },
                     label = { Text("Latitude") },
-                    placeholder = { Text("22.9747562") },
+                    placeholder = { Text("Latitude") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.weight(1f)

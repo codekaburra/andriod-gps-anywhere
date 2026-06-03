@@ -59,6 +59,8 @@ fun RouteScreen(
     val endLat by viewModel.endLat.collectAsState()
     val endLng by viewModel.endLng.collectAsState()
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
+    val mapCenterLat by viewModel.mapCenterLat.observeAsState()
+    val mapCenterLng by viewModel.mapCenterLng.observeAsState()
 
     var showSaveDialog by remember { mutableStateOf(false) }
     var routeName by remember { mutableStateOf("") }
@@ -73,12 +75,16 @@ fun RouteScreen(
 
     val scope = rememberCoroutineScope()
 
-    val mapCenter = when {
+    val mapCenter: GeoPoint? = when {
         waypoints.isNotEmpty() -> GeoPoint(waypoints.first().latitude, waypoints.first().longitude)
         else -> {
             val sLat = startLat.toDoubleOrNull()
             val sLng = startLng.toDoubleOrNull()
-            if (sLat != null && sLng != null) GeoPoint(sLat, sLng) else GeoPoint(25.0330, 121.5654)
+            when {
+                sLat != null && sLng != null -> GeoPoint(sLat, sLng)
+                mapCenterLat != null && mapCenterLng != null -> GeoPoint(mapCenterLat!!, mapCenterLng!!)
+                else -> null
+            }
         }
     }
 
@@ -104,17 +110,25 @@ fun RouteScreen(
             }
         }
 
-        MapViewComposable(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.45f),
-            center = mapCenter,
-            waypoints = waypoints,
-            showNumberedPins = selectedTab == RouteTab.MANUAL,
-            onMapClick = if (selectedTab == RouteTab.MANUAL) {
-                { viewModel.addWaypoint(it) }
-            } else null
-        )
+        if (mapCenter != null) {
+            MapViewComposable(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.45f),
+                center = mapCenter,
+                waypoints = waypoints,
+                showNumberedPins = selectedTab == RouteTab.MANUAL,
+                onMapClick = if (selectedTab == RouteTab.MANUAL) {
+                    { viewModel.addWaypoint(it) }
+                } else null
+            )
+        } else {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.45f)
+            )
+        }
 
         Card(
             modifier = Modifier
@@ -136,7 +150,7 @@ fun RouteScreen(
                         value = pasteText,
                         onValueChange = { pasteText = it },
                         label = { Text("Paste coords") },
-                        placeholder = { Text("25.0330, 121.5654") },
+                        placeholder = { Text("latitude, longitude") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )

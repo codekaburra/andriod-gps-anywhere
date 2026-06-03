@@ -11,6 +11,7 @@ import com.gpsanywhere.app.directions.NominatimClient
 import com.gpsanywhere.app.directions.NominatimResult
 import com.gpsanywhere.app.directions.OsrmClient
 import com.gpsanywhere.app.directions.OsrmRouteResult
+import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,17 +41,24 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
     private val _speedKmh = MutableStateFlow(4f)
     val speedKmh: StateFlow<Float> = _speedKmh.asStateFlow()
 
-    private val _startLat = MutableStateFlow("25.0330")
+    private val _startLat = MutableStateFlow("")
     val startLat: StateFlow<String> = _startLat.asStateFlow()
 
-    private val _startLng = MutableStateFlow("121.5654")
+    private val _startLng = MutableStateFlow("")
     val startLng: StateFlow<String> = _startLng.asStateFlow()
 
-    private val _endLat = MutableStateFlow("25.0400")
+    private val _endLat = MutableStateFlow("")
     val endLat: StateFlow<String> = _endLat.asStateFlow()
 
-    private val _endLng = MutableStateFlow("121.5700")
+    private val _endLng = MutableStateFlow("")
     val endLng: StateFlow<String> = _endLng.asStateFlow()
+
+    val mapCenterLat = CurrentLocationProvider.latitude
+    val mapCenterLng = CurrentLocationProvider.longitude
+
+    init {
+        CurrentLocationProvider.ensureStarted(getApplication())
+    }
 
     private val _osrmResult = MutableStateFlow<OsrmRouteResult?>(null)
     val osrmResult: StateFlow<OsrmRouteResult?> = _osrmResult.asStateFlow()
