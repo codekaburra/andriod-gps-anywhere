@@ -3,10 +3,7 @@ package com.gpsanywhere.app.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.AddLocation
-import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material3.Icon
@@ -57,7 +54,7 @@ fun MainApp(preferences: AppPreferences) {
     val themeMode by mainViewModel.themeMode.observeAsState(ThemeMode.SYSTEM)
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: Routes.HOME
+    val currentRoute = navBackStackEntry?.destination?.route ?: Routes.WALK
 
     var showOnboarding by remember { mutableStateOf(!preferences.onboardingShown) }
 
@@ -87,12 +84,6 @@ fun MainApp(preferences: AppPreferences) {
                         }
                     }
                     NavigationBarItem(
-                        selected = currentRoute == Routes.HOME,
-                        onClick = { nav(Routes.HOME) },
-                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                        label = { Text("Home") }
-                    )
-                    NavigationBarItem(
                         selected = currentRoute == Routes.LOCATION,
                         onClick = { nav(Routes.LOCATION) },
                         icon = { Icon(Icons.Default.LocationOn, contentDescription = "Location") },
@@ -111,12 +102,6 @@ fun MainApp(preferences: AppPreferences) {
                         label = { Text("Steps") }
                     )
                     NavigationBarItem(
-                        selected = currentRoute == Routes.ROUTE,
-                        onClick = { nav(Routes.ROUTE) },
-                        icon = { Icon(Icons.Default.AddLocation, contentDescription = "Add Route") },
-                        label = { Text("Add Route") }
-                    )
-                    NavigationBarItem(
                         selected = currentRoute == Routes.SAVED,
                         onClick = { nav(Routes.SAVED) },
                         icon = { Icon(Icons.Outlined.Bookmarks, contentDescription = "Saved") },
@@ -127,22 +112,19 @@ fun MainApp(preferences: AppPreferences) {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = Routes.HOME,
+                startDestination = Routes.WALK,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(Routes.HOME) {
-                    HomeScreen(
-                        viewModel = mainViewModel,
-                        onNavigateToLocation = {
-                            navController.navigate(Routes.LOCATION) { launchSingleTop = true }
-                        }
-                    )
-                }
                 composable(Routes.LOCATION) {
                     LocationScreen(viewModel = savedLocationsViewModel)
                 }
                 composable(Routes.WALK) {
-                    WalkScreen(viewModel = walkViewModel)
+                    WalkScreen(
+                        viewModel = walkViewModel,
+                        onNavigateToAddRoute = {
+                            navController.navigate(Routes.ROUTE) { launchSingleTop = true }
+                        }
+                    )
                 }
                 composable(Routes.STEPS) {
                     StepsScreen(viewModel = stepsViewModel)

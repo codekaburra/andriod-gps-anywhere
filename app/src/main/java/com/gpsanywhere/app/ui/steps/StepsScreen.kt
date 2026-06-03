@@ -159,6 +159,14 @@ fun StepsScreen(
             style = MaterialTheme.typography.headlineMedium
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "🚧 UNDER DEVELOPMENT - COMING SOON 🚧",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(

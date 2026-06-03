@@ -54,7 +54,8 @@ import com.gpsanywhere.app.viewmodel.WalkViewModel
 @Composable
 fun WalkScreen(
     viewModel: WalkViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToAddRoute: () -> Unit = {}
 ) {
     val routes by viewModel.routes.observeAsState(emptyList())
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
@@ -299,11 +300,20 @@ fun WalkScreen(
 
             // ── Saved Routes header ───────────────────────────────────────────
             item {
-                Text(
-                    "Saved Routes",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Saved Routes",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    TextButton(onClick = onNavigateToAddRoute) {
+                        Text("+ New Route", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
             }
 
             // ── Route list ────────────────────────────────────────────────────
