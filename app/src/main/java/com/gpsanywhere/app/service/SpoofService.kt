@@ -55,6 +55,18 @@ class SpoofService : Service() {
         private val _currentSpeedKmh = MutableLiveData(0f)
         val currentSpeedKmh: LiveData<Float> = _currentSpeedKmh
 
+        private val _stepCount = MutableLiveData(0)
+        val stepCount: LiveData<Int> = _stepCount
+
+        fun incrementSteps(amount: Int) {
+            val current = _stepCount.value ?: 0
+            _stepCount.postValue(current + amount)
+        }
+
+        fun resetSteps() {
+            _stepCount.postValue(0)
+        }
+
         fun startFixed(context: Context, lat: Double, lng: Double) {
             val intent = Intent(context, SpoofService::class.java).apply {
                 action = ACTION_START_FIXED

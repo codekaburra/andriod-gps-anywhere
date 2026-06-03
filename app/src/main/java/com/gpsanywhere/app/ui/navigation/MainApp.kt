@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.outlined.Bookmarks
+import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -34,12 +35,14 @@ import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.route.RouteScreen
 import com.gpsanywhere.app.ui.saved.SavedRoutesScreen
+import com.gpsanywhere.app.ui.steps.StepsScreen
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import com.gpsanywhere.app.ui.walk.WalkScreen
 import com.gpsanywhere.app.viewmodel.MainViewModel
 import com.gpsanywhere.app.viewmodel.RouteViewModel
 import com.gpsanywhere.app.viewmodel.SavedLocationsViewModel
 import com.gpsanywhere.app.viewmodel.SavedRoutesViewModel
+import com.gpsanywhere.app.viewmodel.StepsViewModel
 import com.gpsanywhere.app.viewmodel.WalkViewModel
 
 @Composable
@@ -49,6 +52,7 @@ fun MainApp(preferences: AppPreferences) {
     val routeViewModel: RouteViewModel = viewModel()
     val savedViewModel: SavedRoutesViewModel = viewModel()
     val walkViewModel: WalkViewModel = viewModel()
+    val stepsViewModel: StepsViewModel = viewModel()
 
     val themeMode by mainViewModel.themeMode.observeAsState(ThemeMode.SYSTEM)
     val navController = rememberNavController()
@@ -101,6 +105,12 @@ fun MainApp(preferences: AppPreferences) {
                         label = { Text("Walk") }
                     )
                     NavigationBarItem(
+                        selected = currentRoute == Routes.STEPS,
+                        onClick = { nav(Routes.STEPS) },
+                        icon = { Icon(Icons.Default.DirectionsRun, contentDescription = "Steps") },
+                        label = { Text("Steps") }
+                    )
+                    NavigationBarItem(
                         selected = currentRoute == Routes.ROUTE,
                         onClick = { nav(Routes.ROUTE) },
                         icon = { Icon(Icons.Default.AddLocation, contentDescription = "Add Route") },
@@ -133,6 +143,9 @@ fun MainApp(preferences: AppPreferences) {
                 }
                 composable(Routes.WALK) {
                     WalkScreen(viewModel = walkViewModel)
+                }
+                composable(Routes.STEPS) {
+                    StepsScreen(viewModel = stepsViewModel)
                 }
                 composable(Routes.ROUTE) {
                     RouteScreen(viewModel = routeViewModel)
