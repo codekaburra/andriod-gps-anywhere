@@ -13,12 +13,25 @@
 
 ### 📸 App Screenshots 實際應用截圖
 
-Current screenshot from the running app. More screens will be added as development progresses.  
-目前為實際執行中的 App 截圖，後續會隨開發進度加入更多畫面。
+Screenshots from the running app (June 2026).  
+以下為實際執行中的 App 截圖。
 
 <p align="center">
-  <img src="docs/screenshots/location-screen.png" width="45%" alt="Location screen — map, coordinate input, and recent locations history">
+  <img src="docs/screenshots/Screenshot_20260603_233437.png" width="30%" alt="Location screen">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/Screenshot_20260603_233446.png" width="30%" alt="Walk screen — route list">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/Screenshot_20260603_233457.png" width="30%" alt="Walk screen — ready to start">
 </p>
+
+**Location 位置** — Map preview centred on current GPS, saved locations grouped by region (香港常用地點 etc.). Tap any entry to jump to that fake location.  
+地圖預覽自動置中目前 GPS、依地區分類的內建位置，點選即跳轉模擬定位。
+
+**Walk 步行 — Route List** — Base speed slider (1–20 km/h with tick marks), Speed Variation panel (Min / Max / Vary ±N stepper), preset routes with distance and stop count, **+ New Route** shortcut.  
+基礎速度滑桿附刻度、速度變化設定（最小/最大/浮動 ±N 步進器）、預設路線含距離與站點數、**+ New Route** 快捷。
+
+**Walk 步行 — Ready to Start** — Tap a route to enter the walk view instantly. Live map follows current position, waypoint list shows distances, tap **▶ Start** to begin simulation.  
+點選路線後立即進入步行畫面，地圖即時跟隨目前位置、含距離的航點列表，點擊 **▶ Start** 才開始模擬步行。
 
 ---
 
