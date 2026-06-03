@@ -2,12 +2,14 @@ package com.gpsanywhere.app.ui.walk
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -80,106 +82,112 @@ fun WalkScreen(
         val route = activeRoute!!
         val waypoints = WaypointJson.fromJson(route.waypointsJson)
 
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // ── Header ────────────────────────────────────────────────────────
-            item {
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text("Walk", style = MaterialTheme.typography.headlineMedium)
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            "Active Route",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            route.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
+        val stopButtonHeight = 72.dp
 
-            // ── Current Speed (large, live, centred) ─────────────────────────
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        "Current Speed",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            "${"%.1f".format(liveSpeed)}",
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontSize = 80.sp,
+        Box(modifier = modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    bottom = stopButtonHeight + 16.dp
+                )
+            ) {
+                // ── Header ────────────────────────────────────────────────────
+                item {
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text("Walk", style = MaterialTheme.typography.headlineMedium)
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                "Active Route",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                        )
-                        Spacer(Modifier.width(6.dp))
+                            Text(
+                                route.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+
+                // ── Current Speed (large, live, centred) ──────────────────────
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
-                            "km/h",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            modifier = Modifier.padding(bottom = 14.dp)
+                            "Current Speed",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                "${"%.1f".format(liveSpeed)}",
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    fontSize = 80.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "km/h",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(bottom = 14.dp)
+                            )
+                        }
+                        Text(
+                            "Base ${speed.toInt()} km/h · vary ±${vary.toInt()} · range ${minSpeed.toInt()}–${maxSpeed.toInt()} km/h",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     }
-                    Text(
-                        "Base ${speed.toInt()} km/h · vary ±${vary.toInt()} · range ${minSpeed.toInt()}–${maxSpeed.toInt()} km/h",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                }
+
+                // ── Waypoint progress list ─────────────────────────────────────
+                item {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                }
+
+                itemsIndexed(waypoints) { index, point ->
+                    val dist = distanceBetween(currentLat, currentLng, point.latitude, point.longitude)
+                    val isNearest = findNearestIndex(waypoints, currentLat, currentLng) == index
+                    WaypointProgressRow(
+                        index = index,
+                        point = point,
+                        distanceKm = dist,
+                        isNearest = isNearest
                     )
                 }
             }
 
-            // ── Waypoint progress list ────────────────────────────────────────
-            item {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            }
-
-            itemsIndexed(waypoints) { index, point ->
-                val dist = distanceBetween(currentLat, currentLng, point.latitude, point.longitude)
-                val isNearest = findNearestIndex(waypoints, currentLat, currentLng) == index
-
-                WaypointProgressRow(
-                    index = index,
-                    point = point,
-                    distanceKm = dist,
-                    isNearest = isNearest
+            // ── Stop Walk button — always visible, pinned to bottom ────────────
+            Button(
+                onClick = { viewModel.stop() },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .navigationBarsPadding(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
                 )
-            }
-
-            // ── Stop Walk button ──────────────────────────────────────────────
-            item {
-                Spacer(Modifier.height(12.dp))
-                Button(
-                    onClick = { viewModel.stop() },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(Icons.Default.Stop, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Stop Walk", style = MaterialTheme.typography.titleMedium)
-                }
-                Spacer(Modifier.height(16.dp))
+            ) {
+                Icon(Icons.Default.Stop, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Stop Walk", style = MaterialTheme.typography.titleMedium)
             }
         }
     } else {
