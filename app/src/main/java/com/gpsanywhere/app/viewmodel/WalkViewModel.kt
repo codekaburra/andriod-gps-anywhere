@@ -19,6 +19,7 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
 
     val routes: LiveData<List<SavedRoute>> = routeDao.observeAll()
     val isSpoofing: LiveData<Boolean> = SpoofService.isRunning
+    val isPaused: LiveData<Boolean> = SpoofService.isPaused
     val currentLat: LiveData<Double> = SpoofService.currentLat
     val currentLng: LiveData<Double> = SpoofService.currentLng
     val currentSpeedKmh: LiveData<Float> = SpoofService.currentSpeedKmh
@@ -73,8 +74,18 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun pause() = SpoofService.pause(getApplication())
+    fun resume() = SpoofService.resume(getApplication())
+
+    /** End the walk but keep the GPS fixed at whatever position we stopped at. */
     fun stop() {
-        SpoofService.stop(getApplication())
+        val lat = SpoofService.currentLat.value ?: 0.0
+        val lng = SpoofService.currentLng.value ?: 0.0
+        if (lat != 0.0 || lng != 0.0) {
+            SpoofService.startFixed(getApplication(), lat, lng)
+        } else {
+            SpoofService.stop(getApplication())
+        }
         _activeRoute.value = null
     }
 
