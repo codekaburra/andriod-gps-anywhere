@@ -36,6 +36,9 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setSpeed(speed: Float) {
         _speedKmh.value = speed
+        if (SpoofService.isRunning.value == true && _activeRoute.value != null) {
+            SpoofService.updateSpeed(getApplication(), speed)
+        }
     }
 
     fun startWalk(route: SavedRoute) {
@@ -58,4 +61,26 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
 
     fun distanceKm(route: SavedRoute) = "%.1f km".format(route.distanceMeters / 1000.0)
     fun waypointCount(route: SavedRoute) = WaypointJson.fromJson(route.waypointsJson).size
+
+    fun progressLabel(route: SavedRoute, currentLat: Double, currentLng: Double): String {
+        val points = WaypointJson.fromJson(route.waypointsJson)
+        if (points.isEmpty()) return ""
+        val currentIndex = points
+            .mapIndexed { index, point ->
+                val results = FloatArray(1)
+                android.location.Location.distanceBetween(
+                    currentLat,
+                    currentLng,
+                    point.latitude,
+                    point.longitude,
+                    results
+                )
+                index to results[0]
+            }
+            .minByOrNull { it.second }
+            ?.first ?: 0
+        val stopName = points[currentIndex].name?.takeIf { it.isNotBlank() }
+            ?: "Waypoint ${currentIndex + 1}"
+        return "${currentIndex + 1} / ${points.size} · $stopName"
+    }
 }

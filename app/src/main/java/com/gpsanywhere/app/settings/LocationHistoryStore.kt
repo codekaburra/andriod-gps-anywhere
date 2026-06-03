@@ -26,11 +26,11 @@ class LocationHistoryStore(context: Context) {
         }
     }
 
-    fun push(lat: Double, lng: Double) {
+    fun push(lat: Double, lng: Double, label: String? = null) {
         val entries = load().toMutableList()
         // Remove duplicate if the same coordinates already exist
         entries.removeAll { it.lat == lat && it.lng == lng }
-        entries.add(0, HistoryEntry(lat = lat, lng = lng))
+        entries.add(0, HistoryEntry(lat = lat, lng = lng, label = label?.trim()?.ifBlank { null }))
         val trimmed = entries.take(MAX_ENTRIES)
         prefs.edit().putString(KEY_HISTORY, gson.toJson(trimmed)).apply()
     }

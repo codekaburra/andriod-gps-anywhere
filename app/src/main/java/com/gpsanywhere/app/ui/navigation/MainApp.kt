@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material3.Icon
@@ -102,8 +103,8 @@ fun MainApp(preferences: AppPreferences) {
                     NavigationBarItem(
                         selected = currentRoute == Routes.ROUTE,
                         onClick = { nav(Routes.ROUTE) },
-                        icon = { Icon(Icons.Default.Route, contentDescription = "Route") },
-                        label = { Text("Route") }
+                        icon = { Icon(Icons.Default.AddLocation, contentDescription = "Add Route") },
+                        label = { Text("Add Route") }
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.SAVED,

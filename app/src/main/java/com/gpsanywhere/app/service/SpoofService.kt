@@ -28,6 +28,7 @@ class SpoofService : Service() {
         const val ACTION_STOP = "com.gpsanywhere.app.STOP"
         const val ACTION_PAUSE = "com.gpsanywhere.app.PAUSE"
         const val ACTION_RESUME = "com.gpsanywhere.app.RESUME"
+        const val ACTION_UPDATE_SPEED = "com.gpsanywhere.app.UPDATE_SPEED"
 
         const val EXTRA_LATITUDE = "extra_latitude"
         const val EXTRA_LONGITUDE = "extra_longitude"
@@ -99,6 +100,13 @@ class SpoofService : Service() {
                 action = ACTION_STOP
             }
             context.startService(intent)
+        }
+
+        fun updateSpeed(context: Context, speedKmh: Float) {
+            context.startService(Intent(context, SpoofService::class.java).apply {
+                action = ACTION_UPDATE_SPEED
+                putExtra(EXTRA_SPEED_KMH, speedKmh)
+            })
         }
     }
 
@@ -176,6 +184,12 @@ class SpoofService : Service() {
             ACTION_STOP -> {
                 stopSpoofing()
             }
+            ACTION_UPDATE_SPEED -> {
+                val speedKmh = intent.getFloatExtra(EXTRA_SPEED_KMH, 4f)
+                currentSpeedMps = speedKmh * 1000f / 3600f
+                val nm = getSystemService(NotificationManager::class.java)
+                nm.notify(NOTIFICATION_ID, buildNotification("Walking @ ${"%.1f".format(speedKmh)} km/h"))
+            }
         }
         return START_STICKY
     }
@@ -225,9 +239,7 @@ class SpoofService : Service() {
 
     private fun startWalkJob(lats: DoubleArray, lngs: DoubleArray, speedKmh: Float, loop: Boolean) {
         walkJob?.cancel()
-        val metersPerSec = (speedKmh * 1000.0 / 3600.0).coerceAtLeast(0.1)
         val tickMs = 500L
-        val metersPerTick = metersPerSec * (tickMs / 1000.0)
         walkJob = serviceScope.launch {
             do {
                 var segIdx = 0
@@ -237,7 +249,6 @@ class SpoofService : Service() {
                     val segLen = haversine(aLat, aLng, bLat, bLng)
                     if (segLen < 0.01) { segIdx++; continue }
                     currentBearing = bearing(aLat, aLng, bLat, bLng).toFloat()
-                    currentSpeedMps = metersPerSec.toFloat()
                     var traveled = 0.0
                     while (isActive && traveled < segLen) {
                         val frac = (traveled / segLen).coerceIn(0.0, 1.0)
@@ -246,7 +257,8 @@ class SpoofService : Service() {
                         _currentLat.postValue(lastLat)
                         _currentLng.postValue(lastLng)
                         delay(tickMs)
-                        traveled += metersPerTick
+                        val metersPerSec = currentSpeedMps.toDouble().coerceAtLeast(0.1)
+                        traveled += metersPerSec * (tickMs / 1000.0)
                     }
                     segIdx++
                 }
