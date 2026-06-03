@@ -1,5 +1,6 @@
 package com.gpsanywhere.app.ui.location
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,11 +49,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationAsset
+import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationPack
 import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
@@ -69,25 +72,58 @@ private sealed class PendingLocation {
     abstract val name: String
     abstract val latitude: Double
     abstract val longitude: Double
+    abstract val selectionKey: String
 
     data class Prebuilt(val asset: DefaultLocationAsset) : PendingLocation() {
         override val name get() = asset.name
         override val latitude get() = asset.latitude
         override val longitude get() = asset.longitude
+        override val selectionKey get() = "prebuilt_${asset.sourceId}"
     }
 
     data class Custom(val location: SavedLocation) : PendingLocation() {
         override val name get() = location.name
         override val latitude get() = location.latitude
         override val longitude get() = location.longitude
+        override val selectionKey get() = "custom_${location.id}"
     }
 }
 
-private data class MapPreviewTarget(
-    val name: String,
-    val latitude: Double,
-    val longitude: Double
-)
+private fun PendingLocation?.matches(other: PendingLocation?): Boolean =
+    this != null && other != null && selectionKey == other.selectionKey
+
+private fun coordinatesMatch(
+    lat1: Double,
+    lng1: Double,
+    lat2: Double,
+    lng2: Double
+): Boolean =
+    "%.6f".format(lat1) == "%.6f".format(lat2) &&
+        "%.6f".format(lng1) == "%.6f".format(lng2)
+
+private val ActiveLocationFill = Color(0xFFFFF9C4)
+private val ActiveLocationBorder = Color(0xFFF9A825)
+
+private fun activeLocationKey(
+    lat: Double?,
+    lng: Double?,
+    isSpoofing: Boolean,
+    isWalkMode: Boolean,
+    locationPacks: List<DefaultLocationPack>,
+    customLocations: List<SavedLocation>
+): String? {
+    if (isWalkMode || !isSpoofing || lat == null || lng == null) return null
+
+    locationPacks.flatMap { it.locations }.firstOrNull { asset ->
+        coordinatesMatch(asset.latitude, asset.longitude, lat, lng)
+    }?.let { return "prebuilt_${it.sourceId}" }
+
+    customLocations.firstOrNull { loc ->
+        coordinatesMatch(loc.latitude, loc.longitude, lat, lng)
+    }?.let { return "custom_${it.id}" }
+
+    return null
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,13 +139,6 @@ fun LocationScreen(
     val prebuiltLocations = remember(locationPacks) {
         locationPacks.flatMap { pack -> pack.locations.map { pack.packName to it } }
     }
-    val defaultPreviewTarget = remember(prebuiltLocations, customLocations) {
-        prebuiltLocations.firstOrNull()?.second?.let {
-            MapPreviewTarget(it.name, it.latitude, it.longitude)
-        } ?: customLocations.firstOrNull()?.let {
-            MapPreviewTarget(it.name, it.latitude, it.longitude)
-        }
-    }
 
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
     val isWalkMode by SpoofService.isWalkMode.observeAsState(false)
@@ -117,41 +146,66 @@ fun LocationScreen(
     val currentLng by CurrentLocationProvider.longitude.observeAsState()
 
     var showAddSheet by remember { mutableStateOf(false) }
-    var confirmLocation by remember { mutableStateOf<PendingLocation?>(null) }
+    var selectedLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var confirmHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var walkBreakLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var walkBreakHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var deleteHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var clearHistory by remember { mutableStateOf(false) }
-    var selectedPreview by remember(defaultPreviewTarget) { mutableStateOf(defaultPreviewTarget) }
+
+    val activeLocationKey = remember(
+        currentLat,
+        currentLng,
+        isSpoofing,
+        isWalkMode,
+        locationPacks,
+        customLocations
+    ) {
+        activeLocationKey(currentLat, currentLng, isSpoofing, isWalkMode, locationPacks, customLocations)
+    }
 
     fun onLocationSelected(pending: PendingLocation) {
-        selectedPreview = MapPreviewTarget(pending.name, pending.latitude, pending.longitude)
-        if (isSpoofing) walkBreakLocation = pending else confirmLocation = pending
+        selectedLocation = pending
+    }
+
+    fun applyJump(pending: PendingLocation) {
+        when (pending) {
+            is PendingLocation.Prebuilt -> viewModel.startSpoofing(pending.asset)
+            is PendingLocation.Custom -> viewModel.startSpoofing(pending.location)
+        }
+        selectedLocation = null
+    }
+
+    fun onJump(pending: PendingLocation) {
+        if (isWalkMode) {
+            walkBreakLocation = pending
+        } else {
+            applyJump(pending)
+        }
     }
 
     val mapCenter: GeoPoint? = when {
+        selectedLocation != null ->
+            GeoPoint(selectedLocation!!.latitude, selectedLocation!!.longitude)
         isSpoofing && currentLat != null && currentLng != null ->
             GeoPoint(currentLat!!, currentLng!!)
-        selectedPreview != null ->
-            GeoPoint(selectedPreview!!.latitude, selectedPreview!!.longitude)
-        history.isNotEmpty() ->
-            GeoPoint(history.first().lat, history.first().lng)
         currentLat != null && currentLng != null ->
             GeoPoint(currentLat!!, currentLng!!)
+        history.isNotEmpty() ->
+            GeoPoint(history.first().lat, history.first().lng)
         else -> null
     }
 
     val previewPoint: LocationPoint? = when {
+        selectedLocation != null ->
+            LocationPoint(selectedLocation!!.latitude, selectedLocation!!.longitude, selectedLocation!!.name)
         isSpoofing && currentLat != null && currentLng != null ->
             LocationPoint(currentLat!!, currentLng!!, "Current position")
-        selectedPreview != null ->
-            LocationPoint(selectedPreview!!.latitude, selectedPreview!!.longitude, selectedPreview!!.name)
-        history.isNotEmpty() ->
-            LocationPoint(history.first().lat, history.first().lng, history.first().label)
         currentLat != null && currentLng != null ->
             LocationPoint(currentLat!!, currentLng!!, "Current position")
+        history.isNotEmpty() ->
+            LocationPoint(history.first().lat, history.first().lng, history.first().label)
         else -> null
     }
 
@@ -227,13 +281,19 @@ fun LocationScreen(
                     SectionHeader(title = pack.packName)
                 }
                 items(pack.locations, key = { "prebuilt_${it.sourceId}" }) { asset ->
+                    val pending = PendingLocation.Prebuilt(asset)
                     LocationCard(
                         name = asset.name,
                         latitude = asset.latitude,
                         longitude = asset.longitude,
                         routeHint = viewModel.routeHintFor(asset.name, asset.latitude, asset.longitude, routeHints),
                         isPreinstalled = true,
-                        onClick = { onLocationSelected(PendingLocation.Prebuilt(asset)) },
+                        isSelected = selectedLocation.matches(pending),
+                        isActive = !selectedLocation.matches(pending) &&
+                            activeLocationKey == pending.selectionKey,
+                        showJumpButton = selectedLocation.matches(pending),
+                        onClick = { onLocationSelected(pending) },
+                        onJump = { onJump(pending) },
                         onDelete = null
                     )
                 }
@@ -257,13 +317,19 @@ fun LocationScreen(
                 }
             } else {
                 items(customLocations, key = { it.id }) { loc ->
+                    val pending = PendingLocation.Custom(loc)
                     LocationCard(
                         name = loc.name,
                         latitude = loc.latitude,
                         longitude = loc.longitude,
                         routeHint = null,
                         isPreinstalled = false,
-                        onClick = { onLocationSelected(PendingLocation.Custom(loc)) },
+                        isSelected = selectedLocation.matches(pending),
+                        isActive = !selectedLocation.matches(pending) &&
+                            activeLocationKey == pending.selectionKey,
+                        showJumpButton = selectedLocation.matches(pending),
+                        onClick = { onLocationSelected(pending) },
+                        onJump = { onJump(pending) },
                         onDelete = { deleteLocation = loc }
                     )
                 }
@@ -307,26 +373,6 @@ fun LocationScreen(
         }
     }
 
-    confirmLocation?.let { loc ->
-        AlertDialog(
-            onDismissRequest = { confirmLocation = null },
-            title = { Text("Use location?") },
-            text = { Text("Use \"${loc.name}\" as custom GPS location?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    when (loc) {
-                        is PendingLocation.Prebuilt -> viewModel.startSpoofing(loc.asset)
-                        is PendingLocation.Custom -> viewModel.startSpoofing(loc.location)
-                    }
-                    confirmLocation = null
-                }) { Text("Start") }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmLocation = null }) { Text("Cancel") }
-            }
-        )
-    }
-
     confirmHistory?.let { entry ->
         AlertDialog(
             onDismissRequest = { confirmHistory = null },
@@ -352,10 +398,7 @@ fun LocationScreen(
             text = { Text("Setting \"${loc.name}\" as your location will stop the current walk. Continue?") },
             confirmButton = {
                 TextButton(onClick = {
-                    when (loc) {
-                        is PendingLocation.Prebuilt -> viewModel.startSpoofing(loc.asset)
-                        is PendingLocation.Custom -> viewModel.startSpoofing(loc.location)
-                    }
+                    applyJump(loc)
                     walkBreakLocation = null
                 }) { Text("Stop walk & use location") }
             },
@@ -460,22 +503,40 @@ private fun LocationCard(
     longitude: Double,
     routeHint: String?,
     isPreinstalled: Boolean,
+    isSelected: Boolean,
+    isActive: Boolean,
+    showJumpButton: Boolean,
     onClick: () -> Unit,
+    onJump: () -> Unit,
     onDelete: (() -> Unit)?
 ) {
+    val baseContainerColor = if (isPreinstalled) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
+    val containerColor = when {
+        isSelected -> MaterialTheme.colorScheme.primaryContainer
+        isActive -> ActiveLocationFill
+        else -> baseContainerColor
+    }
+    val border = when {
+        isSelected -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        isActive -> BorderStroke(2.dp, ActiveLocationBorder)
+        else -> null
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isPreinstalled) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = border,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected || isActive) 3.dp else 1.dp
+        )
     ) {
         Row(
             modifier = Modifier
@@ -515,7 +576,11 @@ private fun LocationCard(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
-            if (onDelete != null) {
+            if (showJumpButton) {
+                Button(onClick = onJump) {
+                    Text("Jump")
+                }
+            } else if (onDelete != null) {
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
