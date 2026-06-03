@@ -1,0 +1,38 @@
+{
+  "route_id": "tainan-city-2",
+  "route_name": "台南2",
+  "version": 1,
+  "speed_kmh": 4.0,
+  "coordinates": [
+    {
+      "name": "台灣首廟天壇",
+      "latitude": 22.993414,
+      "longitude": 120.203649
+    },
+    {
+      "name": "林百貨",
+      "latitude": 22.991851,
+      "longitude": 120.202117
+    },
+    {
+      "name": "台南孔子廟",
+      "latitude": 22.990426,
+      "longitude": 120.204555
+    },
+    {
+      "name": "台南市美術館2館",
+      "latitude": 22.990715,
+      "longitude": 120.201382
+    },
+    {
+      "name": "藍晒圖文創園區",
+      "latitude": 22.986389,
+      "longitude": 120.197222
+    },
+    {
+      "name": "神農街",
+      "latitude": 22.997222,
+      "longitude": 120.195556
+    }
+  ]
+}

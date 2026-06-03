@@ -23,4 +23,10 @@ interface RouteDao {
 
     @Query("SELECT * FROM saved_routes ORDER BY updatedAt DESC")
     suspend fun getAll(): List<SavedRoute>
+
+    @Query("SELECT COUNT(*) FROM saved_routes WHERE name = :name")
+    suspend fun countByName(name: String): Int
+
+    @Query("SELECT COUNT(*) FROM saved_routes WHERE routeId = :routeId")
+    suspend fun countByRouteId(routeId: String): Int
 }

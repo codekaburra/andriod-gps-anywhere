@@ -1,0 +1,62 @@
+{
+  "pack_name": "台南常用地點",
+  "version": 1,
+  "locations": [
+    {
+      "source_id": "tainan-cultural-center",
+      "name": "台南市文化中心",
+      "latitude": 22.9747562,
+      "longitude": 120.2215652,
+      "category": "culture"
+    },
+    {
+      "source_id": "tainan-chihkan-tower",
+      "name": "赤崁樓",
+      "latitude": 22.9974567,
+      "longitude": 120.2026493,
+      "category": "landmark"
+    },
+    {
+      "source_id": "tainan-confucius-temple",
+      "name": "台南孔子廟",
+      "latitude": 22.990426,
+      "longitude": 120.204555,
+      "category": "landmark"
+    },
+    {
+      "source_id": "tainan-hayashi",
+      "name": "林百貨",
+      "latitude": 22.991851,
+      "longitude": 120.202117,
+      "category": "shopping"
+    },
+    {
+      "source_id": "tainan-anping-fort",
+      "name": "安平古堡",
+      "latitude": 23.0008,
+      "longitude": 120.1618,
+      "category": "landmark"
+    },
+    {
+      "source_id": "tainan-national-museum-history",
+      "name": "國立臺灣歷史博物館",
+      "latitude": 23.0579365,
+      "longitude": 120.2351629,
+      "category": "culture"
+    },
+    {
+      "source_id": "tainan-airport",
+      "name": "台南航空站",
+      "latitude": 22.9481447,
+      "longitude": 120.216182,
+      "category": "transport"
+    },
+    {
+      "source_id": "tainan-shennong-street",
+      "name": "神農街",
+      "latitude": 22.997222,
+      "longitude": 120.195556,
+      "category": "culture"
+    }
+  ]
+}

@@ -80,8 +80,11 @@ fun MapViewComposable(
                 position = GeoPoint(point.latitude, point.longitude)
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 if (showNumberedPins) {
-                    title = "${index + 1}"
+                    title = point.name?.takeIf { it.isNotBlank() }?.let { "${index + 1}. $it" }
+                        ?: "${index + 1}"
                     snippet = "${point.latitude}, ${point.longitude}"
+                } else {
+                    title = point.name
                 }
             }
             mapView.overlays.add(marker)
