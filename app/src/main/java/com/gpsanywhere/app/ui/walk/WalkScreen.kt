@@ -2,12 +2,14 @@ package com.gpsanywhere.app.ui.walk
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,6 +30,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,9 +59,17 @@ fun WalkScreen(
     val routes by viewModel.routes.observeAsState(emptyList())
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
     val speed by viewModel.speedKmh.collectAsState()
+    val minSpeed by viewModel.minSpeedKmh.collectAsState()
+    val maxSpeed by viewModel.maxSpeedKmh.collectAsState()
+    val vary by viewModel.varyKmh.collectAsState()
+    val liveSpeed by viewModel.currentSpeedKmh.observeAsState(0f)
     val activeRoute by viewModel.activeRoute.collectAsState()
     val currentLat by viewModel.currentLat.observeAsState(0.0)
     val currentLng by viewModel.currentLng.observeAsState(0.0)
+
+    var minText by remember { mutableStateOf("0") }
+    var maxText by remember { mutableStateOf("20") }
+    var varyText by remember { mutableStateOf("1") }
 
     var confirmRoute by remember { mutableStateOf<SavedRoute?>(null) }
 
@@ -71,106 +82,112 @@ fun WalkScreen(
         val route = activeRoute!!
         val waypoints = WaypointJson.fromJson(route.waypointsJson)
 
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // ── Header ────────────────────────────────────────────────────────
-            item {
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text("Walk", style = MaterialTheme.typography.headlineMedium)
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            "Active Route",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            route.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
+        val stopButtonHeight = 72.dp
 
-            // ── Current Speed (large) ─────────────────────────────────────────
-            item {
-                Column {
-                    Text(
-                        "Current Speed",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
+        Box(modifier = modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    bottom = stopButtonHeight + 16.dp
+                )
+            ) {
+                // ── Header ────────────────────────────────────────────────────
+                item {
+                    Spacer(Modifier.height(12.dp))
                     Row(
-                        verticalAlignment = Alignment.Bottom
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Text(
-                            "${"%.1f".format(speed)}",
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontSize = 56.sp,
+                        Text("Walk", style = MaterialTheme.typography.headlineMedium)
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                "Active Route",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                        )
-                        Spacer(Modifier.width(6.dp))
+                            Text(
+                                route.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+
+                // ── Current Speed (large, live, centred) ──────────────────────
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
-                            "km/h",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            modifier = Modifier.padding(bottom = 10.dp)
+                            "Current Speed",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                "${"%.1f".format(liveSpeed)}",
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    fontSize = 80.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "km/h",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(bottom = 14.dp)
+                            )
+                        }
+                        Text(
+                            "Base ${speed.toInt()} km/h · vary ±${vary.toInt()} · range ${minSpeed.toInt()}–${maxSpeed.toInt()} km/h",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     }
-                    Slider(
-                        value = speed,
-                        onValueChange = viewModel::setSpeed,
-                        valueRange = 4f..20f,
-                        steps = 15,
-                        modifier = Modifier.fillMaxWidth()
+                }
+
+                // ── Waypoint progress list ─────────────────────────────────────
+                item {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                }
+
+                itemsIndexed(waypoints) { index, point ->
+                    val dist = distanceBetween(currentLat, currentLng, point.latitude, point.longitude)
+                    val isNearest = findNearestIndex(waypoints, currentLat, currentLng) == index
+                    WaypointProgressRow(
+                        index = index,
+                        point = point,
+                        distanceKm = dist,
+                        isNearest = isNearest
                     )
                 }
             }
 
-            // ── Waypoint progress list ────────────────────────────────────────
-            item {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            }
-
-            itemsIndexed(waypoints) { index, point ->
-                val dist = distanceBetween(currentLat, currentLng, point.latitude, point.longitude)
-                val isNearest = findNearestIndex(waypoints, currentLat, currentLng) == index
-
-                WaypointProgressRow(
-                    index = index,
-                    point = point,
-                    distanceKm = dist,
-                    isNearest = isNearest
+            // ── Stop Walk button — always visible, pinned to bottom ────────────
+            Button(
+                onClick = { viewModel.stop() },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .navigationBarsPadding(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
                 )
-            }
-
-            // ── Stop Walk button ──────────────────────────────────────────────
-            item {
-                Spacer(Modifier.height(12.dp))
-                Button(
-                    onClick = { viewModel.stop() },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(Icons.Default.Stop, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Stop Walk", style = MaterialTheme.typography.titleMedium)
-                }
-                Spacer(Modifier.height(16.dp))
+            ) {
+                Icon(Icons.Default.Stop, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Stop Walk", style = MaterialTheme.typography.titleMedium)
             }
         }
     } else {
@@ -189,37 +206,94 @@ fun WalkScreen(
                 Text("Walk", style = MaterialTheme.typography.headlineMedium)
             }
 
-            // ── Speed ─────────────────────────────────────────────────────────
+            // ── Speed settings ────────────────────────────────────────────────
             item {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "Speed",
+                        "Base Speed",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            "${"%.1f".format(speed)}",
+                            "—",
                             style = MaterialTheme.typography.displayLarge.copy(
                                 fontSize = 48.sp,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                             )
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
                             "km/h",
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
                     Slider(
                         value = speed,
                         onValueChange = viewModel::setSpeed,
-                        valueRange = 4f..20f,
-                        steps = 15,
+                        valueRange = 1f..20f,
+                        steps = 18,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    // Tick labels: 1, 5, 10, 15, 20
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        listOf("1", "5", "10", "15", "20").forEach { label ->
+                            Text(
+                                label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                            )
+                        }
+                    }
+
+                    Text(
+                        "Speed Variation",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = minText,
+                            onValueChange = { v ->
+                                minText = v
+                                v.toFloatOrNull()?.let { viewModel.setMinSpeed(it) }
+                            },
+                            label = { Text("Min (km/h)") },
+                            placeholder = { Text("0") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = maxText,
+                            onValueChange = { v ->
+                                maxText = v
+                                v.toFloatOrNull()?.let { viewModel.setMaxSpeed(it) }
+                            },
+                            label = { Text("Max (km/h)") },
+                            placeholder = { Text("20") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = varyText,
+                            onValueChange = { v ->
+                                varyText = v
+                                v.toFloatOrNull()?.let { viewModel.setVary(it) }
+                            },
+                            label = { Text("Vary ±N") },
+                            placeholder = { Text("1") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
 
@@ -276,7 +350,7 @@ fun WalkScreen(
         AlertDialog(
             onDismissRequest = { confirmRoute = null },
             title = { Text("Start walk?") },
-            text = { Text("Walk \"${route.name}\" at ${"%.1f".format(speed)} km/h?") },
+            text = { Text("Walk \"${route.name}\" at ${"%.1f".format(speed)} ±${vary.toInt()} km/h (${minSpeed.toInt()}–${maxSpeed.toInt()} km/h)?") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.startWalk(route)

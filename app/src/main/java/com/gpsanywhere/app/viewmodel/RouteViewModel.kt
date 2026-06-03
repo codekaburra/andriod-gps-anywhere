@@ -132,7 +132,7 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
         }
         val lats = points.map { it.latitude }.toDoubleArray()
         val lngs = points.map { it.longitude }.toDoubleArray()
-        SpoofService.startWalk(getApplication(), lats, lngs, _speedKmh.value, loop)
+        SpoofService.startWalk(getApplication(), lats, lngs, _speedKmh.value, loop = loop)
         return true
     }
 

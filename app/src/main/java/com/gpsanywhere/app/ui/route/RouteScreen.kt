@@ -25,7 +25,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -52,7 +51,6 @@ fun RouteScreen(
 ) {
     val selectedTab by viewModel.selectedTab.collectAsState()
     val waypoints by viewModel.waypoints.collectAsState()
-    val speed by viewModel.speedKmh.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val osrmResult by viewModel.osrmResult.collectAsState()
@@ -340,14 +338,6 @@ fun RouteScreen(
                         }
                     }
                 }
-
-                Text("Speed: ${speed.toInt()} km/h", style = MaterialTheme.typography.labelMedium)
-                Slider(
-                    value = speed,
-                    onValueChange = viewModel::setSpeed,
-                    valueRange = 4f..20f,
-                    steps = 15
-                )
 
                 Button(
                     onClick = { viewModel.startWalk() },
