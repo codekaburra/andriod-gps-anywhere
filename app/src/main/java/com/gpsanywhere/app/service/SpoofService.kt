@@ -16,6 +16,11 @@ import com.gpsanywhere.app.MainActivity
 import com.gpsanywhere.app.R
 import kotlinx.coroutines.*
 import kotlin.random.Random
+import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.records.StepsRecord
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 
 class SpoofService : Service() {
 
@@ -61,10 +66,6 @@ class SpoofService : Service() {
         fun incrementSteps(amount: Int) {
             val current = _stepCount.value ?: 0
             _stepCount.postValue(current + amount)
-        }
-
-        fun resetSteps() {
-            _stepCount.postValue(0)
         }
 
         fun startFixed(context: Context, lat: Double, lng: Double) {
@@ -306,7 +307,28 @@ class SpoofService : Service() {
                         _currentLng.postValue(lastLng)
                         delay(tickMs)
                         val metersPerSec = currentSpeedMps.toDouble().coerceAtLeast(0.1)
-                        traveled += metersPerSec * (tickMs / 1000.0)
+                        val distThisTick = metersPerSec * (tickMs / 1000.0)
+                        traveled += distThisTick
+                        val stepsThis = (distThisTick / 0.78).toInt()
+                        if (stepsThis > 0) {
+                            SpoofService.incrementSteps(stepsThis)
+                            // Write to HC for games (from walk simulation)
+                            launch {
+                                try {
+                                    val client = HealthConnectClient.getOrCreate(this@SpoofService)
+                                    val now = Instant.now()
+                                    val start = now.minus(1, ChronoUnit.MINUTES)
+                                    val record = StepsRecord(
+                                        count = stepsThis.toLong(),
+                                        startTime = start,
+                                        endTime = now,
+                                        startZoneOffset = ZoneOffset.systemDefault().rules.getOffset(start),
+                                        endZoneOffset = ZoneOffset.systemDefault().rules.getOffset(now)
+                                    )
+                                    client.insertRecords(listOf(record))
+                                } catch (_: Exception) {}
+                            }
+                        }
                     }
                     segIdx++
                 }

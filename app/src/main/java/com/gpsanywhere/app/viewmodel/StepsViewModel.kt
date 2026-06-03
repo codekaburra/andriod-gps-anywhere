@@ -12,8 +12,4 @@ class StepsViewModel(application: Application) : AndroidViewModel(application) {
     fun increment(by: Int) {
         SpoofService.incrementSteps(by)
     }
-
-    fun reset() {
-        SpoofService.resetSteps()
-    }
 }
