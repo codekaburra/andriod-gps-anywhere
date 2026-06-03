@@ -10,20 +10,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -39,9 +42,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
-import com.gpsanywhere.app.ui.components.MapPreviewSheet
+import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.viewmodel.WalkViewModel
 
 @Composable
@@ -53,36 +57,77 @@ fun WalkScreen(
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
     val speed by viewModel.speedKmh.collectAsState()
     val activeRoute by viewModel.activeRoute.collectAsState()
+    val currentLat by viewModel.currentLat.observeAsState(0.0)
+    val currentLng by viewModel.currentLng.observeAsState(0.0)
 
     var confirmRoute by remember { mutableStateOf<SavedRoute?>(null) }
-    var previewRoute by remember { mutableStateOf<SavedRoute?>(null) }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // ── Header ────────────────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(12.dp))
-            Text("Walk", style = MaterialTheme.typography.headlineMedium)
-        }
+    val isActive = isSpoofing && activeRoute != null
 
-        // ── Speed panel ───────────────────────────────────────────────────────
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+    if (isActive) {
+        // ═══════════════════════════════════════════════════════════════════════
+        // ACTIVE WALK STATE
+        // ═══════════════════════════════════════════════════════════════════════
+        val route = activeRoute!!
+        val waypoints = WaypointJson.fromJson(route.waypointsJson)
+
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // ── Header ────────────────────────────────────────────────────────
+            item {
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text("Walk", style = MaterialTheme.typography.headlineMedium)
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            "Active Route",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            route.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
+            // ── Current Speed (large) ─────────────────────────────────────────
+            item {
+                Column {
                     Text(
-                        "Speed: ${"%.1f".format(speed)} km/h",
-                        style = MaterialTheme.typography.titleMedium
+                        "Current Speed",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
+                    Row(
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            "${"%.1f".format(speed)}",
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                fontSize = 56.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "km/h",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(bottom = 10.dp)
+                        )
+                    }
                     Slider(
                         value = speed,
                         onValueChange = viewModel::setSpeed,
@@ -90,108 +135,143 @@ fun WalkScreen(
                         steps = 15,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                        Text("4 km/h (walk)", style = MaterialTheme.typography.labelSmall)
-                        Text("20 km/h (run)", style = MaterialTheme.typography.labelSmall)
-                    }
                 }
             }
-        }
 
-        // ── Active walk banner ────────────────────────────────────────────────
-        if (isSpoofing && activeRoute != null) {
+            // ── Waypoint progress list ────────────────────────────────────────
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Walking", style = MaterialTheme.typography.labelMedium)
-                            Text(
-                                activeRoute!!.name,
-                                style = MaterialTheme.typography.titleSmall,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                "${"%.1f".format(speed)} km/h",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        Button(
-                            onClick = { viewModel.stop() },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Icon(Icons.Default.Stop, contentDescription = null)
-                            Text("Stop", modifier = Modifier.padding(start = 4.dp))
-                        }
-                    }
-                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             }
-        }
 
-        // ── Routes list ───────────────────────────────────────────────────────
-        item {
-            Text(
-                "Saved Routes",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+            itemsIndexed(waypoints) { index, point ->
+                val dist = distanceBetween(currentLat, currentLng, point.latitude, point.longitude)
+                val isNearest = findNearestIndex(waypoints, currentLat, currentLng) == index
 
-        if (routes.isEmpty()) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        Icons.Default.DirectionsWalk,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text("No routes yet", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "Create a route on the Route tab",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                }
-            }
-        } else {
-            items(routes, key = { it.id }) { route ->
-                WalkRouteCard(
-                    route = route,
-                    distanceLabel = viewModel.distanceKm(route),
-                    waypointCount = viewModel.waypointCount(route),
-                    isActive = activeRoute?.id == route.id && isSpoofing,
-                    onTap = { confirmRoute = route },
-                    onPreview = { previewRoute = route }
+                WaypointProgressRow(
+                    index = index,
+                    point = point,
+                    distanceKm = dist,
+                    isNearest = isNearest
                 )
             }
-        }
 
-        item { Spacer(Modifier.height(16.dp)) }
+            // ── Stop Walk button ──────────────────────────────────────────────
+            item {
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = { viewModel.stop() },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(Icons.Default.Stop, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Stop Walk", style = MaterialTheme.typography.titleMedium)
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    } else {
+        // ═══════════════════════════════════════════════════════════════════════
+        // IDLE STATE — speed + route picker
+        // ═══════════════════════════════════════════════════════════════════════
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // ── Header ────────────────────────────────────────────────────────
+            item {
+                Spacer(Modifier.height(12.dp))
+                Text("Walk", style = MaterialTheme.typography.headlineMedium)
+            }
+
+            // ── Speed ─────────────────────────────────────────────────────────
+            item {
+                Column {
+                    Text(
+                        "Speed",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            "${"%.1f".format(speed)}",
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                fontSize = 48.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "km/h",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+                    Slider(
+                        value = speed,
+                        onValueChange = viewModel::setSpeed,
+                        valueRange = 4f..20f,
+                        steps = 15,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // ── Saved Routes header ───────────────────────────────────────────
+            item {
+                Text(
+                    "Saved Routes",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            // ── Route list ────────────────────────────────────────────────────
+            if (routes.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.DirectionsWalk,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text("No routes yet", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Create a route on the Add Route tab",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            } else {
+                items(routes, key = { it.id }) { route ->
+                    RouteRow(
+                        route = route,
+                        distanceLabel = viewModel.distanceKm(route),
+                        waypointCount = viewModel.waypointCount(route),
+                        onClick = { confirmRoute = route }
+                    )
+                }
+            }
+
+            item { Spacer(Modifier.height(16.dp)) }
+        }
     }
 
-    // ── Confirm start walk ─────────────────────────────────────────────────
+    // ── Confirm start walk dialog ─────────────────────────────────────────────
     confirmRoute?.let { route ->
         AlertDialog(
             onDismissRequest = { confirmRoute = null },
@@ -208,55 +288,129 @@ fun WalkScreen(
             }
         )
     }
-
-    // ── Map preview sheet ──────────────────────────────────────────────────
-    previewRoute?.let { route ->
-        MapPreviewSheet(
-            routeName = route.name,
-            waypoints = WaypointJson.fromJson(route.waypointsJson),
-            onDismiss = { previewRoute = null }
-        )
-    }
 }
 
+// ── Idle: compact route row ──────────────────────────────────────────────────
+
 @Composable
-private fun WalkRouteCard(
+private fun RouteRow(
     route: SavedRoute,
     distanceLabel: String,
     waypointCount: Int,
-    isActive: Boolean,
-    onTap: () -> Unit,
-    onPreview: () -> Unit
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onTap() },
-        shape = RoundedCornerShape(16.dp),
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isActive)
-                MaterialTheme.colorScheme.tertiaryContainer
-            else if (route.isPreinstalled)
-                MaterialTheme.colorScheme.secondaryContainer
-            else
-                MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(route.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(distanceLabel, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
-                Text("$waypointCount waypoints", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                Text(
+                    route.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    "$distanceLabel · $waypointCount stops",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
             }
-            IconButton(onClick = onPreview) {
-                Icon(Icons.Default.Map, contentDescription = "Preview map")
-            }
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            )
         }
     }
+}
+
+// ── Active: waypoint progress row ────────────────────────────────────────────
+
+@Composable
+private fun WaypointProgressRow(
+    index: Int,
+    point: LocationPoint,
+    distanceKm: String,
+    isNearest: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Default.LocationOn,
+            contentDescription = null,
+            tint = if (isNearest)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                point.name?.takeIf { it.isNotBlank() } ?: "Waypoint ${index + 1}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isNearest)
+                    MaterialTheme.colorScheme.onSurface
+                else
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                "${"%.5f".format(point.latitude)}  ${"%.5f".format(point.longitude)}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            )
+        }
+        Text(
+            distanceKm,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (isNearest)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+        )
+    }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+private fun distanceBetween(lat1: Double, lng1: Double, lat2: Double, lng2: Double): String {
+    val results = FloatArray(1)
+    android.location.Location.distanceBetween(lat1, lng1, lat2, lng2, results)
+    val meters = results[0]
+    return if (meters < 1000) "${"%.0f".format(meters)} m" else "${"%.2f".format(meters / 1000)} km"
+}
+
+private fun findNearestIndex(
+    waypoints: List<LocationPoint>,
+    lat: Double,
+    lng: Double
+): Int {
+    if (waypoints.isEmpty()) return -1
+    var minDist = Float.MAX_VALUE
+    var minIdx = 0
+    waypoints.forEachIndexed { i, p ->
+        val r = FloatArray(1)
+        android.location.Location.distanceBetween(lat, lng, p.latitude, p.longitude, r)
+        if (r[0] < minDist) { minDist = r[0]; minIdx = i }
+    }
+    return minIdx
 }
