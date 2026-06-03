@@ -2,6 +2,7 @@ package com.gpsanywhere.app.ui.route
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -62,11 +64,25 @@ fun RouteScreen(
 
     var showSaveDialog by remember { mutableStateOf(false) }
     var routeName by remember { mutableStateOf("") }
+    var pasteText by remember { mutableStateOf("") }
+    var pasteStart by remember { mutableStateOf("") }
+    var pasteEnd by remember { mutableStateOf("") }
+
+    // Name search (Nominatim geocoding) state
+    var searchQuery by remember { mutableStateOf("") }
+    val searchResults by viewModel.searchResults.collectAsState()
+    val searchLoading by viewModel.searchLoading.collectAsState()
+
     val scope = rememberCoroutineScope()
 
-    val mapCenter = waypoints.firstOrNull()?.let {
-        GeoPoint(it.latitude, it.longitude)
-    } ?: GeoPoint(25.0330, 121.5654)
+    val mapCenter = when {
+        waypoints.isNotEmpty() -> GeoPoint(waypoints.first().latitude, waypoints.first().longitude)
+        else -> {
+            val sLat = startLat.toDoubleOrNull()
+            val sLng = startLng.toDoubleOrNull()
+            if (sLat != null && sLng != null) GeoPoint(sLat, sLng) else GeoPoint(25.0330, 121.5654)
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         SingleChoiceSegmentedButtonRow(
@@ -117,7 +133,112 @@ fun RouteScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                if (selectedTab == RouteTab.MANUAL) {
+                    OutlinedTextField(
+                        value = pasteText,
+                        onValueChange = { pasteText = it },
+                        label = { Text("Paste coords") },
+                        placeholder = { Text("25.0330, 121.5654") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedButton(
+                        onClick = {
+                            if (viewModel.addPastedWaypoint(pasteText)) pasteText = ""
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Add as waypoint") }
+                }
+
                 if (selectedTab == RouteTab.OSRM) {
+                    // --- Search by name (online geocoding via Nominatim) ---
+                    Text("Or search by name", style = MaterialTheme.typography.labelMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            label = { Text("Place name or address") },
+                            placeholder = { Text("e.g. Eiffel Tower, Central Park") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        Button(
+                            onClick = { viewModel.searchByName(searchQuery) },
+                            enabled = searchQuery.isNotBlank() && !searchLoading,
+                            contentPadding = PaddingValues(horizontal = 12.dp)
+                        ) {
+                            if (searchLoading) {
+                                CircularProgressIndicator(modifier = Modifier.height(18.dp))
+                            } else {
+                                Text("Search")
+                            }
+                        }
+                    }
+
+                    // Search results
+                    if (searchResults.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                        ) {
+                            searchResults.forEach { result ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = result.displayName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    OutlinedButton(
+                                        onClick = { viewModel.applySearchResult(result, isStart = true) },
+                                        contentPadding = PaddingValues(horizontal = 8.dp)
+                                    ) {
+                                        Text("Start", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                    OutlinedButton(
+                                        onClick = { viewModel.applySearchResult(result, isStart = false) },
+                                        contentPadding = PaddingValues(horizontal = 8.dp)
+                                    ) {
+                                        Text("End", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                            }
+                            TextButton(
+                                onClick = { viewModel.clearSearchResults() },
+                                modifier = Modifier.align(Alignment.End)
+                            ) {
+                                Text("Clear results", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = pasteStart,
+                            onValueChange = { pasteStart = it },
+                            label = { Text("Paste Start (lat, lng)") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedButton(onClick = {
+                            if (viewModel.setStartFromPaste(pasteStart)) pasteStart = ""
+                        }) { Text("Set") }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -136,6 +257,22 @@ fun RouteScreen(
                             modifier = Modifier.weight(1f),
                             singleLine = true
                         )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = pasteEnd,
+                            onValueChange = { pasteEnd = it },
+                            label = { Text("Paste Destination (lat, lng)") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedButton(onClick = {
+                            if (viewModel.setEndFromPaste(pasteEnd)) pasteEnd = ""
+                        }) { Text("Set") }
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),

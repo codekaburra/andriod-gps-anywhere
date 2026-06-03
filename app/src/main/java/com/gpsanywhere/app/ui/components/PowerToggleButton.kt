@@ -19,9 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.gpsanywhere.app.ui.theme.AccentGreen
-import com.gpsanywhere.app.ui.theme.PrimaryBlueLight
-import com.gpsanywhere.app.ui.theme.TextMuted
+import com.gpsanywhere.app.ui.theme.GalaxyAccent
+import com.gpsanywhere.app.ui.theme.GalaxyPrimaryLight
+import com.gpsanywhere.app.ui.theme.GalaxyMuted
 
 @Composable
 fun PowerToggleButton(
@@ -38,24 +38,28 @@ fun PowerToggleButton(
         label = "scale"
     )
 
+    // Galaxy themed toggle: glowing orb for "Custom Location" active state
     Box(
         modifier = modifier
             .size(140.dp)
             .scale(scale)
             .clip(CircleShape)
             .background(
-                if (isActive) AccentGreen.copy(alpha = glowAlpha)
-                else TextMuted.copy(alpha = glowAlpha)
+                if (isActive) GalaxyAccent.copy(alpha = glowAlpha)
+                else GalaxyMuted.copy(alpha = glowAlpha)
             )
             .clickable(onClick = onClick)
-            .semantics { contentDescription = "Toggle GPS spoofing" },
+            .semantics { contentDescription = if (isActive) "Custom Location active" else "Real Location active" },
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(if (isActive) PrimaryBlueLight else TextMuted.copy(alpha = 0.5f)),
+                .background(
+                    if (isActive) GalaxyPrimaryLight.copy(alpha = 0.9f)
+                    else GalaxyMuted.copy(alpha = 0.6f)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(

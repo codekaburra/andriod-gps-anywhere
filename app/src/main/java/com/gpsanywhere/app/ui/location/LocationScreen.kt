@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
@@ -29,6 +31,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -59,6 +62,7 @@ import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.settings.HistoryEntry
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.MapViewComposable
+import com.gpsanywhere.app.ui.theme.GalaxyAccent
 import com.gpsanywhere.app.viewmodel.LocationViewModel
 import org.osmdroid.util.GeoPoint
 import java.text.SimpleDateFormat
@@ -79,6 +83,11 @@ fun LocationScreen(
     val inputError by viewModel.inputError.collectAsState()
     val locationHistory by viewModel.locationHistory.collectAsState()
 
+    // Local state + flows for online name search (Nominatim)
+    var searchQuery by remember { mutableStateOf("") }
+    val searchResults by viewModel.searchResults.collectAsState()
+    val searchLoading by viewModel.searchLoading.collectAsState()
+
     var showComplianceDialog by remember { mutableStateOf(false) }
     var showValidationDialog by remember { mutableStateOf(false) }
     var pasteInput by remember { mutableStateOf("") }
@@ -98,6 +107,13 @@ fun LocationScreen(
 
     LaunchedEffect(inputError) {
         if (inputError != null) showValidationDialog = true
+    }
+
+    // Keep map in sync when lat/lng are set externally (e.g. from name search)
+    LaunchedEffect(latitude, longitude) {
+        val l = latitude.toDoubleOrNull() ?: return@LaunchedEffect
+        val g = longitude.toDoubleOrNull() ?: return@LaunchedEffect
+        mapCenter = GeoPoint(l, g)
     }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -130,6 +146,71 @@ fun LocationScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // ── Search by name (online) ──────────────────────────────
+                Text("Search by name or address", style = MaterialTheme.typography.titleMedium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text("e.g. Times Square, London Eye") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    Button(
+                        onClick = { viewModel.searchByName(searchQuery) },
+                        enabled = searchQuery.isNotBlank() && !searchLoading,
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        if (searchLoading) {
+                            CircularProgressIndicator(modifier = Modifier.height(18.dp))
+                        } else {
+                            Text("Search")
+                        }
+                    }
+                }
+
+                // Results list
+                if (searchResults.isNotEmpty()) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        searchResults.forEach { result ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.applySearchResult(result)
+                                    }
+                                    .padding(vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = result.displayName,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                    text = "Use",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
+                        }
+                        TextButton(
+                            onClick = { viewModel.clearSearchResults() },
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Text("Clear", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    HorizontalDivider()
+                }
+
                 // ── Coordinate inputs ────────────────────────────────────
                 Text("Or enter coordinates", style = MaterialTheme.typography.titleMedium)
 
@@ -219,7 +300,7 @@ fun LocationScreen(
                     Icon(Icons.Default.PlayArrow, contentDescription = null)
                     val label = if (isSpoofing && !isPaused) "  Update Location"
                                 else if (isPaused) "  Resume & Update"
-                                else "  Start Spoofing"
+                                else "  Activate Custom"
                     Text(label, modifier = Modifier.padding(vertical = 4.dp))
                 }
 
@@ -307,7 +388,7 @@ fun LocationScreen(
         AlertDialog(
             onDismissRequest = { showComplianceDialog = false },
             title = { Text("Development Use Only") },
-            text = { Text("GPS spoofing is for development and testing only. Please comply with local laws and app terms of service.") },
+            text = { Text("Using custom locations is for development and testing only. Please comply with local laws and app terms of service.") },
             confirmButton = {
                 TextButton(onClick = {
                     preferences.complianceAcknowledged = true
@@ -500,22 +581,22 @@ private fun BoxWithConstraintsMap(
             colors = CardDefaults.cardColors(
                 containerColor = when {
                     isPaused -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.92f)
-                    isSpoofing -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f)
+                    isSpoofing -> GalaxyAccent.copy(alpha = 0.2f)  // subtle cyan glow for galaxy custom mode
                     else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
                 }
             )
         ) {
             Text(
                 text = when {
-                    isPaused -> "⏸ Paused — real GPS active"
-                    isSpoofing -> "● Spoofing active"
+                    isPaused -> "⏸ Paused — using real location"
+                    isSpoofing -> "● Custom location active"
                     else -> "Tap to pick location"
                 },
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 style = MaterialTheme.typography.labelMedium,
                 color = when {
                     isPaused -> MaterialTheme.colorScheme.onErrorContainer
-                    isSpoofing -> MaterialTheme.colorScheme.onPrimaryContainer
+                    isSpoofing -> GalaxyAccent
                     else -> MaterialTheme.colorScheme.onSurface
                 }
             )

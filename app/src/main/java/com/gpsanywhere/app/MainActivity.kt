@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
                     onDismissRequest = { showPermissionDialog.value = false },
                     title = { Text("Permissions Required") },
                     text = {
-                        Text("Location permission is required for GPS spoofing. Please grant it in app settings.")
+                        Text("Location permission is required for custom location mode. Please grant it in app settings.")
                     },
                     confirmButton = {
                         TextButton(onClick = { showPermissionDialog.value = false }) {
