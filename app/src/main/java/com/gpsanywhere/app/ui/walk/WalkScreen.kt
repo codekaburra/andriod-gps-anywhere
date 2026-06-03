@@ -20,8 +20,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -70,7 +73,6 @@ fun WalkScreen(
 
     var minText by remember { mutableStateOf("0") }
     var maxText by remember { mutableStateOf("20") }
-    var varyText by remember { mutableStateOf("1") }
 
     var confirmRoute by remember { mutableStateOf<SavedRoute?>(null) }
 
@@ -201,13 +203,29 @@ fun WalkScreen(
                                 singleLine = true,
                                 modifier = Modifier.weight(1f)
                             )
-                            OutlinedTextField(
-                                value = varyText,
-                                onValueChange = { v -> varyText = v; v.toFloatOrNull()?.let { viewModel.setVary(it) } },
-                                label = { Text("Vary ±N") },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
+                            // Vary ±N stepper
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    "Vary ±N",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(onClick = { viewModel.setVary((vary - 1f).coerceAtLeast(0f)) }) {
+                                        Icon(Icons.Default.Remove, contentDescription = "Decrease vary")
+                                    }
+                                    Text(
+                                        "${vary.toInt()} km/h",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    IconButton(onClick = { viewModel.setVary(vary + 1f) }) {
+                                        Icon(Icons.Default.Add, contentDescription = "Increase vary")
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -339,17 +357,29 @@ fun WalkScreen(
                             singleLine = true,
                             modifier = Modifier.weight(1f)
                         )
-                        OutlinedTextField(
-                            value = varyText,
-                            onValueChange = { v ->
-                                varyText = v
-                                v.toFloatOrNull()?.let { viewModel.setVary(it) }
-                            },
-                            label = { Text("Vary ±N") },
-                            placeholder = { Text("1") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f)
-                        )
+                        // Vary ±N stepper
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Vary ±N",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { viewModel.setVary((vary - 1f).coerceAtLeast(0f)) }) {
+                                    Icon(Icons.Default.Remove, contentDescription = "Decrease vary")
+                                }
+                                Text(
+                                    "${vary.toInt()} km/h",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                IconButton(onClick = { viewModel.setVary(vary + 1f) }) {
+                                    Icon(Icons.Default.Add, contentDescription = "Increase vary")
+                                }
+                            }
+                        }
                     }
                 }
             }
