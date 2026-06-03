@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 
 object DefaultSavedRouteSeeder {
     private const val PREFS_NAME = "gpsanywhere_default_saved_routes"
-    private const val KEY_SEEDED = "seeded_v4" // bumped: added HK Disneyland route
+    private const val KEY_SEEDED = "seeded_v6" // bumped: dedup cleanup for preset routes
     private const val DEFAULT_ROUTE_METHOD = "MANUAL_MAP"
     const val ASSET_FOLDER = "saved_routes"
 
@@ -53,12 +53,29 @@ object DefaultSavedRouteSeeder {
         val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         if (prefs.getBoolean(KEY_SEEDED, false)) return@withContext
 
-        loadAllAssets(appContext).forEach { route ->
+        val assets = loadAllAssets(appContext)
+
+        // Remove duplicate rows caused by previous seeder key bumps:
+        // for each preset name, keep only one row (prefer the one that already has routeId set).
+        assets.forEach { route ->
+            val rows = routeDao.getAllByName(route.routeName)
+            if (rows.size > 1) {
+                val keep = rows.first() // query orders: routeId NOT NULL first
+                val deleteIds = rows.drop(1).map { it.id }
+                routeDao.deleteByIds(deleteIds)
+                // Backfill routeId on the kept row if it is missing
+                if (keep.routeId == null && route.routeId != null) {
+                    routeDao.update(keep.copy(routeId = route.routeId))
+                }
+            }
+        }
+
+        // Seed any preset that is not yet in the DB (check routeId first, then name)
+        assets.forEach { route ->
             val points = route.toLocationPoints()
             if (points.isEmpty()) return@forEach
-            // Deduplicate by route_id (stable key) or fall back to name
             val alreadyExists = if (route.routeId != null) {
-                routeDao.countByRouteId(route.routeId) > 0
+                routeDao.countByRouteId(route.routeId) > 0 || routeDao.countByName(route.routeName) > 0
             } else {
                 routeDao.countByName(route.routeName) > 0
             }

@@ -29,4 +29,10 @@ interface RouteDao {
 
     @Query("SELECT COUNT(*) FROM saved_routes WHERE routeId = :routeId")
     suspend fun countByRouteId(routeId: String): Int
+
+    @Query("SELECT * FROM saved_routes WHERE name = :name ORDER BY routeId IS NULL, createdAt ASC")
+    suspend fun getAllByName(name: String): List<SavedRoute>
+
+    @Query("DELETE FROM saved_routes WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
 }
