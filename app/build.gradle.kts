@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.gpsanywhere.app"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -79,6 +79,9 @@ dependencies {
     // OkHttp / Gson
     implementation(libs.okhttp)
     implementation(libs.gson)
+
+    // Health Connect for step data (to make games notice the steps)
+    implementation(libs.androidx.health.connect.client)
 
     // Preferences
     implementation(libs.androidx.preference)

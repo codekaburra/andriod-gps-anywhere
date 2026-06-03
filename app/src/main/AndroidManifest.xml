@@ -12,6 +12,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Health Connect permissions for writing step data so games can detect the simulated steps -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.WRITE_STEPS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -30,6 +34,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Required by Health Connect: without this the permission dialog will not open -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
         </activity>
 
         <service
@@ -38,5 +46,13 @@
             android:foregroundServiceType="location" />
 
     </application>
+
+    <!-- Health Connect: package query needed to detect if HC is installed -->
+    <queries>
+        <!-- Android 13 and below: standalone Health Connect app -->
+        <package android:name="com.google.android.apps.healthdata" />
+        <!-- Android 14+: Health Connect built into the OS -->
+        <package android:name="com.google.android.healthconnect.controller" />
+    </queries>
 
 </manifest>
