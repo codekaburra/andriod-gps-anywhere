@@ -55,7 +55,6 @@ fun StepsScreen(
     var permissionsGranted by remember { mutableStateOf(false) }
     var pendingDelta by remember { mutableStateOf(0) }
     var permissionRequestMessage by remember { mutableStateOf<String?>(null) }
-    var permissionRequestMessage by remember { mutableStateOf<String?>(null) }
 
     val permissions = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
