@@ -255,7 +255,7 @@ fun WalkScreen(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = androidx.compose.ui.graphics.Color(0xFFFFD700).copy(alpha = 0.2f),
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {

@@ -38,7 +38,7 @@ fun PowerToggleButton(
         label = "scale"
     )
 
-    // Galaxy themed toggle: glowing orb for "Custom Location" active state
+    // Soft active glow for custom location mode.
     Box(
         modifier = modifier
             .size(140.dp)

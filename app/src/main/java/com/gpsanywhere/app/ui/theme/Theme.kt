@@ -9,29 +9,49 @@ import androidx.compose.ui.graphics.Color
 import com.gpsanywhere.app.settings.ThemeMode
 
 private val LightColorScheme = lightColorScheme(
-    primary = GalaxyPrimary,
-    secondary = GalaxyAccent,
-    background = BackgroundLight,
-    surface = SurfaceLight,
+    primary = MilkTeaPrimary,
+    secondary = MilkTeaSecondary,
+    tertiary = MilkTeaAccent,
+    background = MilkTeaBackground,
+    surface = MilkTeaCard,
     error = ErrorRed,
-    onPrimary = Color.White,
-    onBackground = GalaxyPrimary,
-    onSurface = Color(0xFF1E293B),
-    surfaceVariant = Color(0xFFE0E7FF),
-    onSurfaceVariant = Color(0xFF475569)
+    primaryContainer = MilkTeaSecondary,
+    onPrimaryContainer = MilkTeaText,
+    secondaryContainer = Color(0xFFF3E8DC),
+    onSecondaryContainer = MilkTeaText,
+    tertiaryContainer = Color(0xFFF0D8CB),
+    onTertiaryContainer = MilkTeaText,
+    onPrimary = MilkTeaText,
+    onSecondary = MilkTeaText,
+    onTertiary = MilkTeaText,
+    onBackground = MilkTeaText,
+    onSurface = MilkTeaText,
+    surfaceVariant = Color(0xFFF1E8DF),
+    onSurfaceVariant = MilkTeaMuted,
+    outline = MilkTeaBorder
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = GalaxyPrimaryLight,
-    secondary = GalaxyAccent,
-    background = GalaxyBackgroundDark,
-    surface = GalaxySurfaceDark,
+    primary = MilkTeaAccent,
+    secondary = MilkTeaSecondary,
+    tertiary = MilkTeaPrimary,
+    background = MilkTeaBackgroundDark,
+    surface = MilkTeaSurfaceDark,
     error = ErrorRed,
-    onPrimary = Color.White,
-    onBackground = GalaxyTextOnDark,
-    onSurface = GalaxyTextOnDark,
-    surfaceVariant = Color(0xFF1F253D),
-    onSurfaceVariant = Color(0xFF94A3B8)
+    primaryContainer = Color(0xFF5D4D43),
+    onPrimaryContainer = MilkTeaTextOnDark,
+    secondaryContainer = Color(0xFF4E433B),
+    onSecondaryContainer = MilkTeaTextOnDark,
+    tertiaryContainer = Color(0xFF614B41),
+    onTertiaryContainer = MilkTeaTextOnDark,
+    onPrimary = Color(0xFF2B2420),
+    onSecondary = Color(0xFF2B2420),
+    onTertiary = Color(0xFF2B2420),
+    onBackground = MilkTeaTextOnDark,
+    onSurface = MilkTeaTextOnDark,
+    surfaceVariant = Color(0xFF4E433B),
+    onSurfaceVariant = Color(0xFFD9C9BA),
+    outline = Color(0xFF6F6258)
 )
 
 @Composable

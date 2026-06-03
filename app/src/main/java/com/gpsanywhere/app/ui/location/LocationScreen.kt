@@ -16,10 +16,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
@@ -101,8 +101,8 @@ private fun coordinatesMatch(
     "%.6f".format(lat1) == "%.6f".format(lat2) &&
         "%.6f".format(lng1) == "%.6f".format(lng2)
 
-private val ActiveLocationFill = Color(0xFFFFF9C4)
-private val ActiveLocationBorder = Color(0xFFF9A825)
+private val ActiveLocationFill = Color(0xFFF3E8DC)
+private val ActiveLocationBorder = Color(0xFFD9B8A6)
 
 private fun activeLocationKey(
     lat: Double?,
@@ -240,7 +240,7 @@ fun LocationScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Icon(
-                            Icons.Default.DirectionsWalk,
+                            Icons.AutoMirrored.Filled.DirectionsWalk,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
