@@ -43,7 +43,14 @@ fun StepsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    val healthConnectClient = remember { HealthConnectClient.getOrCreate(context) }
+    val healthConnectAvailability = remember {
+        HealthConnectClient.getSdkStatus(context)
+    }
+    val isHealthConnectAvailable = healthConnectAvailability == HealthConnectClient.SDK_AVAILABLE
+
+    val healthConnectClient = remember(isHealthConnectAvailable) {
+        if (isHealthConnectAvailable) HealthConnectClient.getOrCreate(context) else null
+    }
 
     var permissionsGranted by remember { mutableStateOf(false) }
 
@@ -53,15 +60,23 @@ fun StepsScreen(
     )
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
-        PermissionController.createRequestPermissionActivityContract()
-    ) { granted ->
-        permissionsGranted = granted.containsAll(permissions)
+        contract = PermissionController.createRequestPermissionResultContract()
+    ) { grantedPermissions: Set<String> ->
+        permissionsGranted = grantedPermissions.containsAll(permissions)
     }
 
     // Check permissions on start
-    LaunchedEffect(Unit) {
-        val granted = healthConnectClient.permissionController.getGrantedPermissions()
-        permissionsGranted = granted.containsAll(permissions)
+    LaunchedEffect(isHealthConnectAvailable) {
+        if (isHealthConnectAvailable && healthConnectClient != null) {
+            try {
+                val granted = healthConnectClient.permissionController.getGrantedPermissions()
+                permissionsGranted = granted.containsAll(permissions)
+            } catch (e: Exception) {
+                permissionsGranted = false
+            }
+        } else {
+            permissionsGranted = false
+        }
     }
 
     fun requestPermissions() {
@@ -71,8 +86,10 @@ fun StepsScreen(
     }
 
     suspend fun writeStepsToHealthConnect(delta: Int) {
-        if (!permissionsGranted) {
-            requestPermissions()
+        if (!isHealthConnectAvailable || healthConnectClient == null || !permissionsGranted) {
+            if (!permissionsGranted && isHealthConnectAvailable) {
+                requestPermissions()
+            }
             return
         }
         try {
@@ -119,7 +136,7 @@ fun StepsScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        if (!permissionsGranted) {
+        if (isHealthConnectAvailable && !permissionsGranted) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Grant Health Connect permission to make steps visible to games.",
@@ -129,6 +146,13 @@ fun StepsScreen(
             Button(onClick = { requestPermissions() }) {
                 Text("Request Permissions")
             }
+        } else if (!isHealthConnectAvailable) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Health Connect is not available on this device. Steps will only be simulated within the app.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -145,7 +169,6 @@ fun StepsScreen(
         ) {
             Button(
                 onClick = {
-                    if (!permissionsGranted) requestPermissions()
                     viewModel.increment(100)
                     scope.launch { writeStepsToHealthConnect(100) }
                 },
@@ -155,7 +178,6 @@ fun StepsScreen(
             }
             Button(
                 onClick = {
-                    if (!permissionsGranted) requestPermissions()
                     viewModel.increment(1000)
                     scope.launch { writeStepsToHealthConnect(1000) }
                 },
@@ -172,7 +194,6 @@ fun StepsScreen(
         ) {
             Button(
                 onClick = {
-                    if (!permissionsGranted) requestPermissions()
                     viewModel.increment(3000)
                     scope.launch { writeStepsToHealthConnect(3000) }
                 },
@@ -182,7 +203,6 @@ fun StepsScreen(
             }
             Button(
                 onClick = {
-                    if (!permissionsGranted) requestPermissions()
                     viewModel.increment(5000)
                     scope.launch { writeStepsToHealthConnect(5000) }
                 },
