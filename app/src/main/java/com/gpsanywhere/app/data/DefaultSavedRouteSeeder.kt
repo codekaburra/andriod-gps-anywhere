@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 
 object DefaultSavedRouteSeeder {
     private const val PREFS_NAME = "gpsanywhere_default_saved_routes"
-    private const val KEY_SEEDED = "seeded_v3" // bump to re-seed with route_id support
+    private const val KEY_SEEDED = "seeded_v4" // bumped: added HK Disneyland route
     private const val DEFAULT_ROUTE_METHOD = "MANUAL_MAP"
     const val ASSET_FOLDER = "saved_routes"
 
