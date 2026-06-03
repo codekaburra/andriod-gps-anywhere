@@ -37,7 +37,7 @@ private val pages = listOf(
     ),
     OnboardingPage(
         title = "Grant Permissions",
-        body = "Allow location and notification permissions when prompted so spoofing and the status notification work correctly."
+        body = "Allow location and notification permissions when prompted so custom location mode and the status notification work correctly."
     )
 )
 

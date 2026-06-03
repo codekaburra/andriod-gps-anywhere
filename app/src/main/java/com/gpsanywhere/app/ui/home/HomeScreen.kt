@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.ui.components.CoordinateCard
 import com.gpsanywhere.app.ui.components.PowerToggleButton
-import com.gpsanywhere.app.ui.theme.AccentGreen
-import com.gpsanywhere.app.ui.theme.TextMuted
+import com.gpsanywhere.app.ui.theme.GalaxyAccent
+import com.gpsanywhere.app.ui.theme.GalaxyMuted
 import com.gpsanywhere.app.viewmodel.MainViewModel
 
 @Composable
@@ -92,9 +92,9 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = if (isSpoofing) "Spoofing Active" else "Using Real GPS",
+            text = if (isSpoofing) "Custom Location" else "Real Location",
             style = MaterialTheme.typography.headlineMedium,
-            color = if (isSpoofing) AccentGreen else TextMuted
+            color = if (isSpoofing) GalaxyAccent else GalaxyMuted
         )
 
         if (isSpoofing && (currentLat != 0.0 || currentLng != 0.0)) {
@@ -111,7 +111,7 @@ fun HomeScreen(
             onDismissRequest = { showNoSessionDialog = false },
             title = { Text("No Location Set") },
             text = {
-                Text("Go to the Location or Route tab to choose a location before starting spoofing.")
+                Text("Go to the Location or Route tab to choose a custom location before activating.")
             },
             confirmButton = {
                 TextButton(onClick = {

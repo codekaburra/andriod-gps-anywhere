@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.gpsanywhere.app.data.AppDatabase
 import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
+import com.gpsanywhere.app.directions.NominatimClient
+import com.gpsanywhere.app.directions.NominatimResult
 import com.gpsanywhere.app.directions.OsrmClient
 import com.gpsanywhere.app.directions.OsrmRouteResult
 import com.gpsanywhere.app.routes.LocationPoint
@@ -24,6 +26,7 @@ enum class RouteTab {
 class RouteViewModel(application: Application) : AndroidViewModel(application) {
 
     private val osrmClient = OsrmClient()
+    private val nominatimClient = NominatimClient()
     private val routeDao = AppDatabase.getInstance(application).routeDao()
 
     val isSpoofing: LiveData<Boolean> = SpoofService.isRunning
@@ -58,8 +61,18 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    // Geocoding (name → lat/lng) via Nominatim - for OSRM start/end search by name
+    private val _searchResults = MutableStateFlow<List<NominatimResult>>(emptyList())
+    val searchResults: StateFlow<List<NominatimResult>> = _searchResults.asStateFlow()
+
+    private val _searchLoading = MutableStateFlow(false)
+    val searchLoading: StateFlow<Boolean> = _searchLoading.asStateFlow()
+
     fun selectTab(tab: RouteTab) {
         _selectedTab.value = tab
+        if (tab != RouteTab.OSRM) {
+            clearSearchResults()
+        }
     }
 
     fun setSpeed(speed: Float) {
@@ -111,14 +124,15 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun startWalk(): Boolean {
+    fun startWalk(loop: Boolean = false): Boolean {
         val points = _waypoints.value
-        if (points.isEmpty()) {
-            _errorMessage.value = "Add at least one waypoint"
+        if (points.size < 2) {
+            _errorMessage.value = "Need at least 2 waypoints to walk"
             return false
         }
-        val first = points.first()
-        SpoofService.startFixed(getApplication(), first.latitude, first.longitude)
+        val lats = points.map { it.latitude }.toDoubleArray()
+        val lngs = points.map { it.longitude }.toDoubleArray()
+        SpoofService.startWalk(getApplication(), lats, lngs, _speedKmh.value, loop)
         return true
     }
 
@@ -128,6 +142,55 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    /**
+     * Search online by place name / address using Nominatim.
+     * Results are exposed via searchResults. Call applySearchResult to use one.
+     */
+    fun searchByName(query: String) {
+        if (query.isBlank()) {
+            _searchResults.value = emptyList()
+            return
+        }
+        viewModelScope.launch {
+            _searchLoading.value = true
+            _errorMessage.value = null
+            try {
+                val results = nominatimClient.search(query)
+                _searchResults.value = results
+                if (results.isEmpty()) {
+                    _errorMessage.value = "No results found for \"$query\""
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Search failed: ${e.message ?: "network error"}"
+                _searchResults.value = emptyList()
+            } finally {
+                _searchLoading.value = false
+            }
+        }
+    }
+
+    fun clearSearchResults() {
+        _searchResults.value = emptyList()
+    }
+
+    /**
+     * Apply a search result to either the Start or End coordinates (OSRM tab).
+     * Also clears the search results list.
+     */
+    fun applySearchResult(result: NominatimResult, isStart: Boolean) {
+        val latStr = result.latitude.toBigDecimal().stripTrailingZeros().toPlainString()
+        val lngStr = result.longitude.toBigDecimal().stripTrailingZeros().toPlainString()
+
+        if (isStart) {
+            _startLat.value = latStr
+            _startLng.value = lngStr
+        } else {
+            _endLat.value = latStr
+            _endLng.value = lngStr
+        }
+        clearSearchResults()
     }
 
     suspend fun saveRoute(name: String, method: String): Boolean {
@@ -150,6 +213,45 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
         _waypoints.value = WaypointJson.fromJson(route.waypointsJson)
         _speedKmh.value = route.speedKmh.toFloat()
         _selectedTab.value = if (route.routeMethod == "OSRM") RouteTab.OSRM else RouteTab.MANUAL
+    }
+
+    /** Accepts "lat, lng", "lat lng", or "lat;lng". */
+    fun parsePastedLocation(raw: String): LocationPoint? {
+        val match = Regex("""^\s*(-?\d+\.?\d*)\s*[,;\s]\s*(-?\d+\.?\d*)\s*$""").find(raw)
+            ?: return null
+        val lat = match.groupValues[1].toDoubleOrNull() ?: return null
+        val lng = match.groupValues[2].toDoubleOrNull() ?: return null
+        if (lat !in -90.0..90.0 || lng !in -180.0..180.0) return null
+        return LocationPoint(lat, lng)
+    }
+
+    fun addPastedWaypoint(raw: String): Boolean {
+        val p = parsePastedLocation(raw) ?: run {
+            _errorMessage.value = "Couldn't parse location"
+            return false
+        }
+        addWaypoint(p)
+        return true
+    }
+
+    fun setStartFromPaste(raw: String): Boolean {
+        val p = parsePastedLocation(raw) ?: run {
+            _errorMessage.value = "Couldn't parse location"
+            return false
+        }
+        _startLat.value = p.latitude.toString()
+        _startLng.value = p.longitude.toString()
+        return true
+    }
+
+    fun setEndFromPaste(raw: String): Boolean {
+        val p = parsePastedLocation(raw) ?: run {
+            _errorMessage.value = "Couldn't parse location"
+            return false
+        }
+        _endLat.value = p.latitude.toString()
+        _endLng.value = p.longitude.toString()
+        return true
     }
 
     private fun parsePoint(latStr: String, lngStr: String): LocationPoint? {

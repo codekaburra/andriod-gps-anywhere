@@ -33,7 +33,7 @@ fun CoordinateCard(
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             Text(
-                text = "Current Spoofed Location",
+                text = "Current Custom Location",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )

@@ -3,12 +3,16 @@ package com.gpsanywhere.app.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewModelScope
+import com.gpsanywhere.app.directions.NominatimClient
+import com.gpsanywhere.app.directions.NominatimResult
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.settings.HistoryEntry
 import com.gpsanywhere.app.settings.LocationHistoryStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -16,6 +20,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     val isPaused: LiveData<Boolean> = SpoofService.isPaused
 
     private val historyStore = LocationHistoryStore(application)
+    private val nominatimClient = NominatimClient()
 
     private val _latitude = MutableStateFlow(
         SpoofService.currentLat.value?.takeIf { it != 0.0 }
@@ -34,6 +39,13 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     private val _locationHistory = MutableStateFlow<List<HistoryEntry>>(historyStore.load())
     val locationHistory: StateFlow<List<HistoryEntry>> = _locationHistory.asStateFlow()
+
+    // Online name search (Nominatim) for quickly setting a fixed location
+    private val _searchResults = MutableStateFlow<List<NominatimResult>>(emptyList())
+    val searchResults: StateFlow<List<NominatimResult>> = _searchResults.asStateFlow()
+
+    private val _searchLoading = MutableStateFlow(false)
+    val searchLoading: StateFlow<Boolean> = _searchLoading.asStateFlow()
 
     fun setLatitude(value: String) {
         _latitude.value = value
@@ -97,6 +109,47 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     fun clearHistory() {
         historyStore.clear()
         _locationHistory.value = emptyList()
+    }
+
+    /**
+     * Search for a location by name/address online.
+     */
+    fun searchByName(query: String) {
+        if (query.isBlank()) {
+            _searchResults.value = emptyList()
+            return
+        }
+        viewModelScope.launch {
+            _searchLoading.value = true
+            _inputError.value = null
+            try {
+                val results = nominatimClient.search(query)
+                _searchResults.value = results
+                if (results.isEmpty()) {
+                    _inputError.value = "No results for \"$query\""
+                }
+            } catch (e: Exception) {
+                _inputError.value = "Search failed: ${e.message ?: "network error"}"
+                _searchResults.value = emptyList()
+            } finally {
+                _searchLoading.value = false
+            }
+        }
+    }
+
+    fun clearSearchResults() {
+        _searchResults.value = emptyList()
+    }
+
+    /**
+     * Apply a geocoded result and update both the fields + history entry logic.
+     */
+    fun applySearchResult(result: NominatimResult) {
+        setCoordinates(result.latitude, result.longitude)
+        // Also push to recent history like a normal start would (user can still tap Start)
+        historyStore.push(result.latitude, result.longitude)
+        _locationHistory.value = historyStore.load()
+        clearSearchResults()
     }
 
     fun pauseSpoofing() {

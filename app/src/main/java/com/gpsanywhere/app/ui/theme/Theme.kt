@@ -1,36 +1,37 @@
 package com.gpsanywhere.app.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import com.gpsanywhere.app.settings.ThemeMode
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryBlue,
-    secondary = AccentGreen,
+    primary = GalaxyPrimary,
+    secondary = GalaxyAccent,
     background = BackgroundLight,
     surface = SurfaceLight,
     error = ErrorRed,
-    onPrimary = SurfaceLight,
-    onBackground = PrimaryBlue,
-    onSurface = PrimaryBlue
+    onPrimary = Color.White,
+    onBackground = GalaxyPrimary,
+    onSurface = Color(0xFF1E293B),
+    surfaceVariant = Color(0xFFE0E7FF),
+    onSurfaceVariant = Color(0xFF475569)
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryBlueLight,
-    secondary = AccentGreen,
-    background = BackgroundDark,
-    surface = SurfaceDark,
+    primary = GalaxyPrimaryLight,
+    secondary = GalaxyAccent,
+    background = GalaxyBackgroundDark,
+    surface = GalaxySurfaceDark,
     error = ErrorRed,
-    onPrimary = SurfaceLight,
-    onBackground = SurfaceLight,
-    onSurface = SurfaceLight
+    onPrimary = Color.White,
+    onBackground = GalaxyTextOnDark,
+    onSurface = GalaxyTextOnDark,
+    surfaceVariant = Color(0xFF1F253D),
+    onSurfaceVariant = Color(0xFF94A3B8)
 )
 
 @Composable
@@ -44,11 +45,7 @@ fun GPSAnywhereTheme(
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
 
-    val context = LocalContext.current
     val colorScheme = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && themeMode == ThemeMode.SYSTEM -> {
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
