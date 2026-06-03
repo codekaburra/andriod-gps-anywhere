@@ -255,7 +255,7 @@ fun WalkScreen(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = androidx.compose.ui.graphics.Color(0xFFFFD700).copy(alpha = 0.5f),
+                            containerColor = androidx.compose.ui.graphics.Color(0xFFFFD700).copy(alpha = 0.2f),
                             contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {
@@ -270,7 +270,10 @@ fun WalkScreen(
                         onClick = { viewModel.stop() },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
                     ) {
                         Icon(Icons.Default.Stop, contentDescription = null)
                         Spacer(Modifier.width(6.dp))
@@ -447,13 +450,13 @@ private fun SpeedControlPanel(
             )
             // Vary ±N stepper
             Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Vary ±N", style = MaterialTheme.typography.labelSmall,
+                Text("Vary ±N km/h", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onVaryDecrease) {
                         Icon(Icons.Default.Remove, contentDescription = "Decrease vary")
                     }
-                    Text("${vary.toInt()} km/h", style = MaterialTheme.typography.bodyMedium)
+                    Text("${vary.toInt()} ", style = MaterialTheme.typography.bodyMedium)
                     IconButton(onClick = onVaryIncrease) {
                         Icon(Icons.Default.Add, contentDescription = "Increase vary")
                     }
