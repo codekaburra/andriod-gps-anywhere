@@ -26,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +52,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationAsset
 import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
@@ -63,35 +65,77 @@ import java.util.Date
 import java.util.Locale
 import org.osmdroid.util.GeoPoint
 
+private sealed class PendingLocation {
+    abstract val name: String
+    abstract val latitude: Double
+    abstract val longitude: Double
+
+    data class Prebuilt(val asset: DefaultLocationAsset) : PendingLocation() {
+        override val name get() = asset.name
+        override val latitude get() = asset.latitude
+        override val longitude get() = asset.longitude
+    }
+
+    data class Custom(val location: SavedLocation) : PendingLocation() {
+        override val name get() = location.name
+        override val latitude get() = location.latitude
+        override val longitude get() = location.longitude
+    }
+}
+
+private data class MapPreviewTarget(
+    val name: String,
+    val latitude: Double,
+    val longitude: Double
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationScreen(
     viewModel: SavedLocationsViewModel,
     modifier: Modifier = Modifier
 ) {
-    val locations by viewModel.locations.observeAsState(emptyList())
+    val locationPacks by viewModel.locationPacks.collectAsState()
+    val customLocations by viewModel.customLocations.observeAsState(emptyList())
     val history by viewModel.history.collectAsState()
     val routeHints by viewModel.routeHints.collectAsState()
 
+    val prebuiltLocations = remember(locationPacks) {
+        locationPacks.flatMap { pack -> pack.locations.map { pack.packName to it } }
+    }
+    val defaultPreviewTarget = remember(prebuiltLocations, customLocations) {
+        prebuiltLocations.firstOrNull()?.second?.let {
+            MapPreviewTarget(it.name, it.latitude, it.longitude)
+        } ?: customLocations.firstOrNull()?.let {
+            MapPreviewTarget(it.name, it.latitude, it.longitude)
+        }
+    }
+
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
+    val isWalkMode by SpoofService.isWalkMode.observeAsState(false)
     val currentLat by CurrentLocationProvider.latitude.observeAsState()
     val currentLng by CurrentLocationProvider.longitude.observeAsState()
 
     var showAddSheet by remember { mutableStateOf(false) }
-    var confirmLocation by remember { mutableStateOf<SavedLocation?>(null) }
+    var confirmLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var confirmHistory by remember { mutableStateOf<HistoryEntry?>(null) }
-    var walkBreakLocation by remember { mutableStateOf<SavedLocation?>(null) }
+    var walkBreakLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var walkBreakHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var deleteHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var clearHistory by remember { mutableStateOf(false) }
-    var selectedLocation by remember(locations) { mutableStateOf(locations.firstOrNull()) }
+    var selectedPreview by remember(defaultPreviewTarget) { mutableStateOf(defaultPreviewTarget) }
+
+    fun onLocationSelected(pending: PendingLocation) {
+        selectedPreview = MapPreviewTarget(pending.name, pending.latitude, pending.longitude)
+        if (isSpoofing) walkBreakLocation = pending else confirmLocation = pending
+    }
 
     val mapCenter: GeoPoint? = when {
         isSpoofing && currentLat != null && currentLng != null ->
             GeoPoint(currentLat!!, currentLng!!)
-        selectedLocation != null ->
-            GeoPoint(selectedLocation!!.latitude, selectedLocation!!.longitude)
+        selectedPreview != null ->
+            GeoPoint(selectedPreview!!.latitude, selectedPreview!!.longitude)
         history.isNotEmpty() ->
             GeoPoint(history.first().lat, history.first().lng)
         currentLat != null && currentLng != null ->
@@ -102,8 +146,8 @@ fun LocationScreen(
     val previewPoint: LocationPoint? = when {
         isSpoofing && currentLat != null && currentLng != null ->
             LocationPoint(currentLat!!, currentLng!!, "Current position")
-        selectedLocation != null ->
-            LocationPoint(selectedLocation!!.latitude, selectedLocation!!.longitude, selectedLocation!!.name)
+        selectedPreview != null ->
+            LocationPoint(selectedPreview!!.latitude, selectedPreview!!.longitude, selectedPreview!!.name)
         history.isNotEmpty() ->
             LocationPoint(history.first().lat, history.first().lng, history.first().label)
         currentLat != null && currentLng != null ->
@@ -124,41 +168,43 @@ fun LocationScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ── Walk-mode banner ──────────────────────────────────────────────
-            if (isSpoofing) {
-                item {
-                    Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
+            // ── Walk-mode banner — outside LazyColumn so it's never covered ──
+            if (isWalkMode) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(0.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.DirectionsWalk,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                "Walk mode active — map follows your fake location.\nSetting a custom location will stop the walk.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
+                        Icon(
+                            Icons.Default.DirectionsWalk,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            "Walk mode active — map follows your fake location. Setting a custom location will stop the walk.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
                 }
             }
 
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
             if (mapCenter != null) {
                 item {
                     MapViewComposable(
@@ -176,32 +222,49 @@ fun LocationScreen(
                 SectionHeader(title = "Saved Locations")
             }
 
-            if (locations.isEmpty()) {
+            locationPacks.filter { it.locations.isNotEmpty() }.forEach { pack ->
+                item(key = "pack_header_${pack.packName}") {
+                    SectionHeader(title = pack.packName)
+                }
+                items(pack.locations, key = { "prebuilt_${it.sourceId}" }) { asset ->
+                    LocationCard(
+                        name = asset.name,
+                        latitude = asset.latitude,
+                        longitude = asset.longitude,
+                        routeHint = viewModel.routeHintFor(asset.name, asset.latitude, asset.longitude, routeHints),
+                        isPreinstalled = true,
+                        onClick = { onLocationSelected(PendingLocation.Prebuilt(asset)) },
+                        onDelete = null
+                    )
+                }
+            }
+
+            if (prebuiltLocations.isNotEmpty() && customLocations.isNotEmpty()) {
+                item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
+            }
+
+            item {
+                SectionHeader(title = "My Locations")
+            }
+
+            if (customLocations.isEmpty()) {
                 item {
                     EmptyState(
                         icon = Icons.Default.LocationOn,
-                        title = "No saved locations",
-                        body = "Tap + to add a custom location"
+                        title = "No custom locations",
+                        body = "Tap + to add your own location"
                     )
                 }
             } else {
-                items(locations, key = { it.id }) { loc ->
+                items(customLocations, key = { it.id }) { loc ->
                     LocationCard(
-                        location = loc,
-                        routeHint = if (loc.sourceId != null) {
-                            viewModel.routeHintFor(loc, routeHints)
-                        } else {
-                            null
-                        },
-                        onClick = {
-                            selectedLocation = loc
-                            if (isSpoofing) walkBreakLocation = loc else confirmLocation = loc
-                        },
-                        onDelete = if (!loc.isPreinstalled) {
-                            { deleteLocation = loc }
-                        } else {
-                            null
-                        }
+                        name = loc.name,
+                        latitude = loc.latitude,
+                        longitude = loc.longitude,
+                        routeHint = null,
+                        isPreinstalled = false,
+                        onClick = { onLocationSelected(PendingLocation.Custom(loc)) },
+                        onDelete = { deleteLocation = loc }
                     )
                 }
             }
@@ -240,6 +303,7 @@ fun LocationScreen(
             }
 
             item { Spacer(Modifier.height(16.dp)) }
+            }
         }
     }
 
@@ -250,7 +314,10 @@ fun LocationScreen(
             text = { Text("Use \"${loc.name}\" as custom GPS location?") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.startSpoofing(loc)
+                    when (loc) {
+                        is PendingLocation.Prebuilt -> viewModel.startSpoofing(loc.asset)
+                        is PendingLocation.Custom -> viewModel.startSpoofing(loc.location)
+                    }
                     confirmLocation = null
                 }) { Text("Start") }
             },
@@ -285,7 +352,10 @@ fun LocationScreen(
             text = { Text("Setting \"${loc.name}\" as your location will stop the current walk. Continue?") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.startSpoofing(loc)
+                    when (loc) {
+                        is PendingLocation.Prebuilt -> viewModel.startSpoofing(loc.asset)
+                        is PendingLocation.Custom -> viewModel.startSpoofing(loc.location)
+                    }
                     walkBreakLocation = null
                 }) { Text("Stop walk & use location") }
             },
@@ -385,8 +455,11 @@ private fun SectionHeader(title: String) {
 
 @Composable
 private fun LocationCard(
-    location: SavedLocation,
+    name: String,
+    latitude: Double,
+    longitude: Double,
     routeHint: String?,
+    isPreinstalled: Boolean,
     onClick: () -> Unit,
     onDelete: (() -> Unit)?
 ) {
@@ -395,7 +468,13 @@ private fun LocationCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isPreinstalled) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
@@ -416,7 +495,7 @@ private fun LocationCard(
                     .padding(start = 12.dp)
             ) {
                 Text(
-                    location.name,
+                    name,
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -431,7 +510,7 @@ private fun LocationCard(
                     )
                 }
                 Text(
-                    "${"%.6f".format(location.longitude)}, ${"%.6f".format(location.latitude)}",
+                    "${"%.6f".format(longitude)}, ${"%.6f".format(latitude)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )

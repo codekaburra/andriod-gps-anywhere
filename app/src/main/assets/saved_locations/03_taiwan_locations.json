@@ -1,0 +1,30 @@
+{
+  "pack_name": "台灣",
+  "version": 1,
+  "locations": [
+    {
+      "source_id": "tainan-cultural-center",
+      "name": "台南市文化中心",
+      "latitude": 22.9747562,
+      "longitude": 120.2215652
+    },
+    {
+      "source_id": "tainan-confucius-temple",
+      "name": "台南孔子廟",
+      "latitude": 22.990426,
+      "longitude": 120.204555
+    },
+    {
+      "source_id": "tainan-national-museum-history",
+      "name": "國立臺灣歷史博物館",
+      "latitude": 23.0579365,
+      "longitude": 120.2351629
+    },
+    {
+      "source_id": "tainan-airport",
+      "name": "台南航空站",
+      "latitude": 22.9481447,
+      "longitude": 120.216182
+    }
+  ]
+}
