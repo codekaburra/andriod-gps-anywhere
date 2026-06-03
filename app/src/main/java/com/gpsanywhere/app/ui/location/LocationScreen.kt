@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
@@ -32,6 +33,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -51,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.routes.LocationPoint
+import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.settings.HistoryEntry
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.viewmodel.SavedLocationsViewModel
@@ -69,13 +72,32 @@ fun LocationScreen(
     val history by viewModel.history.collectAsState()
     val routeHints by viewModel.routeHints.collectAsState()
 
+    // Walk-mode awareness
+    val isWalking by SpoofService.isRunning.observeAsState(false)
+    val fakeLat by SpoofService.currentLat.observeAsState(0.0)
+    val fakeLng by SpoofService.currentLng.observeAsState(0.0)
+
     var showAddSheet by remember { mutableStateOf(false) }
     var confirmLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var confirmHistory by remember { mutableStateOf<HistoryEntry?>(null) }
+    var walkBreakLocation by remember { mutableStateOf<SavedLocation?>(null) }
+    var walkBreakHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var deleteHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var clearHistory by remember { mutableStateOf(false) }
     var selectedLocation by remember(locations) { mutableStateOf(locations.firstOrNull()) }
+
+    // When walking, map follows the live fake location; otherwise show selected/history
+    val mapCenter = if (isWalking && (fakeLat != 0.0 || fakeLng != 0.0)) {
+        GeoPoint(fakeLat, fakeLng)
+    } else {
+        val fallback = selectedLocation?.let {
+            LocationPoint(it.latitude, it.longitude, it.name)
+        } ?: history.firstOrNull()?.let {
+            LocationPoint(it.lat, it.lng, it.label)
+        } ?: LocationPoint(22.9747562, 120.2215652, "台南市文化中心")
+        GeoPoint(fallback.latitude, fallback.longitude)
+    }
 
     val previewPoint = selectedLocation?.let {
         LocationPoint(it.latitude, it.longitude, it.name)
@@ -103,14 +125,43 @@ fun LocationScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // ── Walk-mode banner ──────────────────────────────────────────────
+            if (isWalking) {
+                item {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.DirectionsWalk,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                "Walk mode active — map follows your fake location.\nSetting a custom location will stop the walk.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
             item {
                 MapViewComposable(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp),
-                    center = GeoPoint(previewPoint.latitude, previewPoint.longitude),
+                    center = mapCenter,
                     zoom = 15.0,
-                    waypoints = listOf(previewPoint)
+                    waypoints = if (isWalking) listOf(LocationPoint(fakeLat, fakeLng, "Current position"))
+                                else listOf(previewPoint)
                 )
             }
 
@@ -137,7 +188,7 @@ fun LocationScreen(
                         },
                         onClick = {
                             selectedLocation = loc
-                            confirmLocation = loc
+                            if (isWalking) walkBreakLocation = loc else confirmLocation = loc
                         },
                         onDelete = if (!loc.isPreinstalled) {
                             { deleteLocation = loc }
@@ -175,7 +226,7 @@ fun LocationScreen(
                 items(history, key = { "${it.lat}-${it.lng}-${it.timestamp}" }) { entry ->
                     HistoryCard(
                         entry = entry,
-                        onClick = { confirmHistory = entry },
+                        onClick = { if (isWalking) walkBreakHistory = entry else confirmHistory = entry },
                         onDelete = { deleteHistory = entry }
                     )
                 }
@@ -215,6 +266,41 @@ fun LocationScreen(
             },
             dismissButton = {
                 TextButton(onClick = { confirmHistory = null }) { Text("Cancel") }
+            }
+        )
+    }
+
+    // ── Walk-break warning dialogs ────────────────────────────────────────────
+    walkBreakLocation?.let { loc ->
+        AlertDialog(
+            onDismissRequest = { walkBreakLocation = null },
+            title = { Text("Stop walk mode?") },
+            text = { Text("Setting \"${loc.name}\" as your location will stop the current walk. Continue?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.startSpoofing(loc)
+                    walkBreakLocation = null
+                }) { Text("Stop walk & use location") }
+            },
+            dismissButton = {
+                TextButton(onClick = { walkBreakLocation = null }) { Text("Cancel") }
+            }
+        )
+    }
+
+    walkBreakHistory?.let { entry ->
+        AlertDialog(
+            onDismissRequest = { walkBreakHistory = null },
+            title = { Text("Stop walk mode?") },
+            text = { Text("Setting \"${entry.displayName()}\" as your location will stop the current walk. Continue?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.startSpoofing(entry)
+                    walkBreakHistory = null
+                }) { Text("Stop walk & use location") }
+            },
+            dismissButton = {
+                TextButton(onClick = { walkBreakHistory = null }) { Text("Cancel") }
             }
         )
     }

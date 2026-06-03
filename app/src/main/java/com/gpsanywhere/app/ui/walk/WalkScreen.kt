@@ -148,11 +148,67 @@ fun WalkScreen(
                                 modifier = Modifier.padding(bottom = 14.dp)
                             )
                         }
+                    }
+                }
+
+                // ── Speed controls (editable while walking) ───────────────────
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            "Base ${speed.toInt()} km/h · vary ±${vary.toInt()} · range ${minSpeed.toInt()}–${maxSpeed.toInt()} km/h",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            "Base Speed",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
+                        Slider(
+                            value = speed,
+                            onValueChange = viewModel::setSpeed,
+                            valueRange = 1f..20f,
+                            steps = 18,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            listOf("1", "5", "10", "15", "20").forEach { label ->
+                                Text(
+                                    label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                                )
+                            }
+                        }
+                        Text(
+                            "Speed Variation",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = minText,
+                                onValueChange = { v -> minText = v; v.toFloatOrNull()?.let { viewModel.setMinSpeed(it) } },
+                                label = { Text("Min (km/h)") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
+                            )
+                            OutlinedTextField(
+                                value = maxText,
+                                onValueChange = { v -> maxText = v; v.toFloatOrNull()?.let { viewModel.setMaxSpeed(it) } },
+                                label = { Text("Max (km/h)") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
+                            )
+                            OutlinedTextField(
+                                value = varyText,
+                                onValueChange = { v -> varyText = v; v.toFloatOrNull()?.let { viewModel.setVary(it) } },
+                                label = { Text("Vary ±N") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
 

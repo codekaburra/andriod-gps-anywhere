@@ -44,7 +44,12 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setSpeed(speed: Float) { _speedKmh.value = speed }
+    fun setSpeed(speed: Float) {
+        _speedKmh.value = speed
+        if (SpoofService.isRunning.value == true) {
+            SpoofService.updateSpeed(getApplication(), speed)
+        }
+    }
     fun setMinSpeed(v: Float) { _minSpeedKmh.value = v.coerceIn(0f, 20f) }
     fun setMaxSpeed(v: Float) { _maxSpeedKmh.value = v.coerceIn(0f, 20f) }
     fun setVary(v: Float) { _varyKmh.value = v.coerceAtLeast(0f) }
