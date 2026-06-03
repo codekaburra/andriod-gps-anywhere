@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -80,9 +79,15 @@ fun WalkScreen(
 
     var minText by remember { mutableStateOf("0") }
     var maxText by remember { mutableStateOf("20") }
-    var confirmRoute by remember { mutableStateOf<SavedRoute?>(null) }
 
-    val isActive = isSpoofing && activeRoute != null
+    // Route selected by the user — persists after stop so user stays in walk view
+    var selectedRoute by remember { mutableStateOf<SavedRoute?>(null) }
+
+    val isWalking = isSpoofing && activeRoute != null
+    // Show walk view when a route is selected OR a walk is active
+    val showWalkView = selectedRoute != null || isWalking
+    // The route to display (prefer the live active route while walking)
+    val displayRoute = activeRoute ?: selectedRoute
 
     // Map centre: use live GPS if available, else Taipei as fallback
     val mapCenter = if (currentLat != 0.0 || currentLng != 0.0)
@@ -95,11 +100,11 @@ fun WalkScreen(
     // Height reserved for the floating bottom button bar
     val bottomBarHeight = 80.dp
 
-    if (isActive) {
+    if (showWalkView && displayRoute != null) {
         // ═══════════════════════════════════════════════════════════════════════
-        // ACTIVE WALK STATE
+        // WALK VIEW — pre-start (selected) or active (walking / paused)
         // ═══════════════════════════════════════════════════════════════════════
-        val route = activeRoute!!
+        val route = displayRoute
         val waypoints = WaypointJson.fromJson(route.waypointsJson)
 
         Box(modifier = modifier.fillMaxSize()) {
@@ -121,9 +126,17 @@ fun WalkScreen(
                         Text("Walk", style = MaterialTheme.typography.headlineMedium)
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                "Active Route",
+                                when {
+                                    isPaused -> "Paused"
+                                    isWalking -> "Active Route"
+                                    else -> "Ready to Start"
+                                },
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
+                                color = when {
+                                    isPaused -> MaterialTheme.colorScheme.error
+                                    isWalking -> MaterialTheme.colorScheme.primary
+                                    else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                }
                             )
                             Text(
                                 route.name,
@@ -154,21 +167,28 @@ fun WalkScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            if (isPaused) "Paused" else "Current Speed",
+                            when {
+                                !isWalking -> "Not started"
+                                isPaused -> "Paused"
+                                else -> "Current Speed"
+                            },
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (isPaused) MaterialTheme.colorScheme.error
-                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = when {
+                                !isWalking -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                isPaused -> MaterialTheme.colorScheme.error
+                                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            }
                         )
                         Spacer(Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                if (isPaused) "—" else "${"%.1f".format(liveSpeed)}",
+                                if (isWalking && !isPaused) "${"%.1f".format(liveSpeed)}" else "—",
                                 style = MaterialTheme.typography.displayLarge.copy(
                                     fontSize = 80.sp,
-                                    color = if (isPaused)
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                                    else
+                                    color = if (isWalking && !isPaused)
                                         MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                                 )
                             )
                             Spacer(Modifier.width(6.dp))
@@ -204,7 +224,7 @@ fun WalkScreen(
                 }
             }
 
-            // ── Floating bottom bar: Pause/Resume + Stop ───────────────────────
+            // ── Floating bottom bar ────────────────────────────────────────────
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -213,33 +233,45 @@ fun WalkScreen(
                     .navigationBarsPadding(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Pause / Resume — yellow at 50% alpha
-                Button(
-                    onClick = { if (isPaused) viewModel.resume() else viewModel.pause() },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = androidx.compose.ui.graphics.Color(0xFFFFD700).copy(alpha = 0.5f),
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                ) {
-                    Icon(
-                        if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                        contentDescription = null
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(if (isPaused) "Resume" else "Pause")
-                }
-                // Stop
-                Button(
-                    onClick = { viewModel.stop() },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Icon(Icons.Default.Stop, contentDescription = null)
-                    Spacer(Modifier.width(6.dp))
-                    Text("Stop")
+                if (!isWalking) {
+                    // Pre-start: single Start button
+                    Button(
+                        onClick = { viewModel.startWalk(route) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Start", style = MaterialTheme.typography.titleMedium)
+                    }
+                } else {
+                    // Walking: Pause/Resume + Stop
+                    Button(
+                        onClick = { if (isPaused) viewModel.resume() else viewModel.pause() },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = androidx.compose.ui.graphics.Color(0xFFFFD700).copy(alpha = 0.5f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(
+                            if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (isPaused) "Resume" else "Pause")
+                    }
+                    Button(
+                        onClick = { viewModel.stop() },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.Stop, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Stop")
+                    }
                 }
             }
         }
@@ -355,7 +387,7 @@ fun WalkScreen(
                         route = route,
                         distanceLabel = viewModel.distanceKm(route),
                         waypointCount = viewModel.waypointCount(route),
-                        onClick = { confirmRoute = route }
+                        onClick = { selectedRoute = route }
                     )
                 }
             }
@@ -364,23 +396,6 @@ fun WalkScreen(
         }
     }
 
-    // ── Confirm start walk dialog ─────────────────────────────────────────────
-    confirmRoute?.let { route ->
-        AlertDialog(
-            onDismissRequest = { confirmRoute = null },
-            title = { Text("Start walk?") },
-            text = { Text("Walk \"${route.name}\" at ${"%.1f".format(speed)} ±${vary.toInt()} km/h (${minSpeed.toInt()}–${maxSpeed.toInt()} km/h)?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.startWalk(route)
-                    confirmRoute = null
-                }) { Text("Start") }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmRoute = null }) { Text("Cancel") }
-            }
-        )
-    }
 }
 
 // ── Shared speed control panel ───────────────────────────────────────────────
