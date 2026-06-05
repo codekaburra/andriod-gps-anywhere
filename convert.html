@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CSV ↔ Google Maps URL</title>
+  <style>
+    :root {
+      --bg: #FAF7F2;
+      --panel: #FFFFFF;
+      --text: #4E433B;
+      --muted: #A9948A;
+      --accent: #C8A98D;
+      --secondary: #E6D5C3;
+      --peach: #D9B8A6;
+      --border: #E6D5C3;
+      --ok: #7A9E7E;
+      --err: #C0705A;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      padding: 32px 24px;
+      min-height: 100vh;
+    }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .col { display: flex; flex-direction: column; gap: 8px; }
+    .label { font-size: 12px; font-weight: 700; color: var(--accent); }
+
+    textarea {
+      width: 100%;
+      height: 420px;
+      background: var(--panel);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      resize: vertical;
+    }
+    textarea::placeholder { color: var(--muted); opacity: 0.7; }
+    textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,169,141,0.15); }
+
+    .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(0.93); }
+    button.ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    button.ghost:hover { color: var(--text); border-color: var(--accent); }
+
+    .arrow-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding-top: 28px;
+    }
+    .arrow-btn {
+      background: var(--secondary);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      border-radius: 50%;
+      width: 42px;
+      height: 42px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .arrow-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .status {
+      font-size: 12px;
+      min-height: 18px;
+      color: var(--muted);
+    }
+    .status.ok  { color: var(--ok); }
+    .status.err { color: var(--err); }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .toggle-row code { color: var(--text); font-size: 11px; }
+    /* Toggle switch */
+    .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 3px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .switch input:checked + .slider { background: var(--secondary); }
+    .switch input:checked + .slider::before { transform: translateX(16px); background: var(--accent); }
+
+    .url-link {
+      font-size: 11px;
+      word-break: break-all;
+      margin-top: 4px;
+    }
+    .url-link a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>CSV ↔ Google Maps URL</h1>
+  <p class="sub">Paste either format — click an arrow to convert.</p>
+
+  <div class="toggle-row">
+    <label class="switch">
+      <input type="checkbox" id="hl-toggle" onchange="onCsvChange()">
+      <span class="slider"></span>
+    </label>
+    Append <code>?hl=zh-TW</code> to URL
+  </div>
+
+  <div class="row">
+    <!-- Left: CSV -->
+    <div class="col">
+      <div class="label">Route CSV</div>
+      <textarea id="csv" placeholder="# route_id: my-route
+# route_name: My Route
+# version: 1
+name,latitude,longitude
+Place A,35.1288,135.7652
+Place B,35.0636,135.8085" oninput="onCsvChange()"></textarea>
+      <div class="btns">
+        <button onclick="csvToUrl()">→ Convert to URL</button>
+        <button class="ghost" onclick="clearCsv()">Clear</button>
+      </div>
+      <div class="status" id="csv-status"></div>
+    </div>
+
+    <!-- Middle: arrows -->
+    <div class="arrow-col">
+      <div class="arrow-btn" onclick="csvToUrl()" title="CSV → URL">→</div>
+      <div class="arrow-btn" onclick="urlToCsv()" title="URL → CSV">←</div>
+    </div>
+
+    <!-- Right: URL -->
+    <div class="col">
+      <div class="label">Google Maps Directions URL</div>
+      <textarea id="url" placeholder="https://www.google.com/maps/dir/35.1288,135.7652/35.0636,135.8085/..." oninput="onUrlChange()"></textarea>
+      <div class="btns">
+        <button onclick="urlToCsv()">← Convert to CSV</button>
+        <button class="ghost" onclick="clearUrl()">Clear</button>
+      </div>
+      <div class="status" id="url-status"></div>
+      <div class="url-link" id="url-link"></div>
+    </div>
+  </div>
+
+  <script>
+    // ── CSV parsing ────────────────────────────────────────────────────────────
+
+    function parseCsv(text) {
+      let routeId = null, routeName = null, version = 1;
+      const points = [];
+      let headerSkipped = false;
+
+      for (const raw of text.split('\n')) {
+        const line = raw.trim();
+        if (line.startsWith('# route_id:'))   { routeId   = line.slice('# route_id:'.length).trim(); continue; }
+        if (line.startsWith('# route_name:')) { routeName = line.slice('# route_name:'.length).trim(); continue; }
+        if (line.startsWith('# version:'))    { version   = parseInt(line.slice('# version:'.length).trim()) || 1; continue; }
+        if (line.startsWith('#') || line === '') continue;
+        if (!headerSkipped) { headerSkipped = true; continue; } // skip header row
+
+        const cols = parseLine(line);
+        if (cols.length < 3) continue;
+        const lat = parseFloat(cols[1]);
+        const lng = parseFloat(cols[2]);
+        if (isNaN(lat) || isNaN(lng)) continue;
+        points.push({ name: cols[0], lat, lng });
+      }
+
+      return { routeId, routeName, version, points };
+    }
+
+    function parseLine(line) {
+      const fields = [];
+      let sb = '', inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"' && !inQ) { inQ = true; continue; }
+        if (c === '"' &&  inQ) {
+          if (line[i+1] === '"') { sb += '"'; i++; } else inQ = false;
+          continue;
+        }
+        if (c === ',' && !inQ) { fields.push(sb); sb = ''; continue; }
+        sb += c;
+      }
+      fields.push(sb);
+      return fields;
+    }
+
+    function buildCsv({ routeId, routeName, version, points }) {
+      const lines = [];
+      if (routeId)   lines.push(`# route_id: ${routeId}`);
+      if (routeName) lines.push(`# route_name: ${routeName}`);
+      lines.push(`# version: ${version}`);
+      lines.push('name,latitude,longitude');
+      for (const p of points) {
+        const name = p.name.includes(',') ? `"${p.name.replace(/"/g, '""')}"` : p.name;
+        lines.push(`${name},${p.lat},${p.lng}`);
+      }
+      return lines.join('\n');
+    }
+
+    // ── URL parsing ────────────────────────────────────────────────────────────
+
+    function parseUrl(urlStr) {
+      // Extract path segments between /dir/ and the first /@... or end-of-path
+      const dirMatch = urlStr.match(/\/maps\/dir\/([^?#]*)/);
+      if (!dirMatch) return null;
+
+      const pathPart = dirMatch[1];
+      // Segments end at /@... (center marker)
+      const segments = pathPart.split('/').filter(s => s && !s.startsWith('@'));
+
+      const points = [];
+      for (const seg of segments) {
+        const parts = seg.split(',');
+        if (parts.length < 2) continue;
+        const lat = parseFloat(parts[0]);
+        const lng = parseFloat(parts[1]);
+        if (isNaN(lat) || isNaN(lng)) continue;
+        points.push({ name: '', lat, lng });
+      }
+      return points.length > 0 ? points : null;
+    }
+
+    function buildUrl(points) {
+      const coords = points.map(p => `${p.lat},${p.lng}`).join('/');
+      const hl = document.getElementById('hl-toggle').checked ? '?hl=zh-TW' : '';
+      return `https://www.google.com/maps/dir/${coords}${hl}`;
+    }
+
+    // ── Conversion actions ─────────────────────────────────────────────────────
+
+    function csvToUrl() {
+      const text = document.getElementById('csv').value.trim();
+      if (!text) { setStatus('csv', 'Nothing to convert.', 'err'); return; }
+
+      const { routeId, routeName, points } = parseCsv(text);
+      if (points.length === 0) {
+        setStatus('csv', 'No valid coordinates found in CSV.', 'err');
+        return;
+      }
+
+      const url = buildUrl(points);
+      document.getElementById('url').value = url;
+      setStatus('csv', `Converted ${points.length} waypoints → URL`, 'ok');
+      setStatus('url', '');
+      showLink(url);
+    }
+
+    function urlToCsv() {
+      const text = document.getElementById('url').value.trim();
+      if (!text) { setStatus('url', 'Nothing to convert.', 'err'); return; }
+
+      const points = parseUrl(text);
+      if (!points) {
+        setStatus('url', 'Could not find lat,lng segments in URL.', 'err');
+        return;
+      }
+
+      // Try to preserve existing CSV metadata if the left side already has it
+      const existing = parseCsv(document.getElementById('csv').value);
+      const meta = {
+        routeId:   existing.routeId   || null,
+        routeName: existing.routeName || null,
+        version:   existing.version   || 1,
+        points
+      };
+
+      document.getElementById('csv').value = buildCsv(meta);
+      setStatus('url', `Converted ${points.length} waypoints → CSV`, 'ok');
+      setStatus('csv', '');
+      showLink(text);
+    }
+
+    function clearCsv() {
+      document.getElementById('csv').value = '';
+      setStatus('csv', '');
+    }
+
+    function clearUrl() {
+      document.getElementById('url').value = '';
+      setStatus('url', '');
+      document.getElementById('url-link').innerHTML = '';
+    }
+
+    // ── Auto-convert on change ─────────────────────────────────────────────────
+
+    let converting = false;
+
+    function onCsvChange() {
+      if (converting) return;
+      converting = true;
+      csvToUrl();
+      converting = false;
+    }
+
+    function onUrlChange() {
+      if (converting) return;
+      converting = true;
+      urlToCsv();
+      converting = false;
+    }
+
+    function setStatus(side, msg, type) {
+      const el = document.getElementById(side + '-status');
+      el.textContent = msg;
+      el.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    function showLink(url) {
+      document.getElementById('url-link').innerHTML =
+        `<a href="${encodeURI(url)}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`;
+    }
+  </script>
+</body>
+</html>
