@@ -96,9 +96,11 @@ Default behavior (when no flags are passed):
 
 Optional flags:
 
+converting current andriod app prebuilded route to iframe
+
 ```bash
 go run ./cmd/json2iframe \
-  -input-dir=cmd/json2iframe/input \
+  -input-dir=../app/src/main/assets/saved_routes \
   -output-dir=cmd/json2iframe/output \
   -once \
   -width=600 \
@@ -106,6 +108,8 @@ go run ./cmd/json2iframe \
   -loading=lazy \
   -referrerpolicy=no-referrer-when-downgrade
 ```
+
+
 
 ## Useful shell commands (`iframe2json`)
 
@@ -120,3 +124,4 @@ Clean all generated JSON files in `cmd/iframe2json/output/`:
 ```bash
 rm -f cmd/iframe2json/output/*.json
 ```
+
