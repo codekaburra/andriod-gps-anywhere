@@ -20,17 +20,24 @@ func ProcessAll(cfg config.Config, logger *log.Logger) error {
 		return err
 	}
 
-	inputFiles, err := listHTMLFiles(cfg.TodoDir)
+	inputFiles, err := listHTMLFiles(cfg.InputDir)
 	if err != nil {
 		return fmt.Errorf("failed to list input files: %w", err)
 	}
 	if len(inputFiles) == 0 {
-		logger.Printf("no html files found in %s", cfg.TodoDir)
+		logger.Printf("no html files found in %s", cfg.InputDir)
+		return nil
+	}
+
+	if cfg.Once {
+		if err := processSingleFile(inputFiles[0], cfg, logger, true); err != nil {
+			return fmt.Errorf("process failed for %s: %w", filepath.Base(inputFiles[0]), err)
+		}
 		return nil
 	}
 
 	for _, inputPath := range inputFiles {
-		if err := processSingleFile(inputPath, cfg, logger); err != nil {
+		if err := processSingleFile(inputPath, cfg, logger, false); err != nil {
 			logger.Printf("skip %s: %v", filepath.Base(inputPath), err)
 			continue
 		}
@@ -40,7 +47,10 @@ func ProcessAll(cfg config.Config, logger *log.Logger) error {
 }
 
 func ensureDirectories(cfg config.Config) error {
-	dirs := []string{cfg.TodoDir, cfg.ResultDir, cfg.DoneDir}
+	dirs := []string{cfg.InputDir, cfg.OutputDir}
+	if cfg.Once {
+		dirs = append(dirs, doneDirFromInput(cfg.InputDir))
+	}
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", dir, err)
@@ -69,7 +79,7 @@ func listHTMLFiles(todoDir string) ([]string, error) {
 	return files, nil
 }
 
-func processSingleFile(inputPath string, cfg config.Config, logger *log.Logger) error {
+func processSingleFile(inputPath string, cfg config.Config, logger *log.Logger, moveProcessed bool) error {
 	content, err := os.ReadFile(inputPath)
 	if err != nil {
 		return fmt.Errorf("read failed: %w", err)
@@ -86,7 +96,7 @@ func processSingleFile(inputPath string, cfg config.Config, logger *log.Logger) 
 	}
 
 	base := strings.TrimSuffix(filepath.Base(inputPath), filepath.Ext(inputPath))
-	outputName, timestampID, err := buildTimestampOutputName(base, cfg.ResultDir)
+	outputName, timestampID, err := buildTimestampOutputName(base, cfg.OutputDir)
 	if err != nil {
 		return fmt.Errorf("build output filename failed: %w", err)
 	}
@@ -98,16 +108,22 @@ func processSingleFile(inputPath string, cfg config.Config, logger *log.Logger) 
 		Coordinates: coords,
 	}
 
-	outputPath := filepath.Join(cfg.ResultDir, outputName)
+	outputPath := filepath.Join(cfg.OutputDir, outputName)
 	if err := writeRouteJSON(outputPath, route); err != nil {
 		return fmt.Errorf("write json failed: %w", err)
 	}
 
-	if err := moveToDone(inputPath, cfg.DoneDir); err != nil {
-		return fmt.Errorf("move source to done failed: %w", err)
+	if moveProcessed {
+		if err := moveToDone(inputPath, doneDirFromInput(cfg.InputDir)); err != nil {
+			return fmt.Errorf("move source to done failed: %w", err)
+		}
 	}
 
-	logger.Printf("processed %s -> %s (%d points)", filepath.Base(inputPath), outputName, len(coords))
+	moveStatus := "kept in input"
+	if moveProcessed {
+		moveStatus = "moved to done"
+	}
+	logger.Printf("processed %s -> %s (%d points, %s)", filepath.Base(inputPath), outputName, len(coords), moveStatus)
 	return nil
 }
 
@@ -128,6 +144,10 @@ func buildTimestampOutputName(base, resultDir string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unable to allocate unique output name for %s", base)
+}
+
+func doneDirFromInput(inputDir string) string {
+	return filepath.Join(inputDir, "done")
 }
 
 func writeRouteJSON(outputPath string, route model.Route) error {
