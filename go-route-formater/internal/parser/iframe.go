@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/url"
@@ -96,17 +95,5 @@ func decodeNameToken(value string) string {
 		raw = value
 	}
 
-	name := strings.TrimSpace(raw)
-	if name == "" {
-		return ""
-	}
-
-	// Google map place names inside `2z` are frequently url-safe base64 strings.
-	if decoded, err := base64.RawURLEncoding.DecodeString(name); err == nil {
-		name = strings.TrimSpace(string(decoded))
-	}
-
-	// Many embeds append address after a space, e.g. "Place Name 700CityAddress".
-	parts := strings.SplitN(name, " ", 2)
-	return strings.TrimSpace(parts[0])
+	return strings.TrimSpace(raw)
 }

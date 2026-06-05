@@ -112,10 +112,10 @@ func processSingleFile(inputPath string, cfg config.Config, logger *log.Logger) 
 }
 
 func buildTimestampOutputName(base, resultDir string) (string, string, error) {
-	// Timestamp format required: YYYYMMDDHHmmSSS (milliseconds, no seconds).
+	// Timestamp format: YYYYMMDDHHmmSSS (14 date/time chars + 3 millis = 17 chars total).
 	for i := 0; i < 1000; i++ {
 		now := time.Now()
-		timestamp := now.Format("200601021504") + fmt.Sprintf("%03d", now.Nanosecond()/1e6)
+		timestamp := now.Format("20060102150405") + fmt.Sprintf("%03d", now.Nanosecond()/1e6)
 		filename := fmt.Sprintf("%s_%s.json", base, timestamp)
 		path := filepath.Join(resultDir, filename)
 		if _, err := os.Stat(path); os.IsNotExist(err) {
