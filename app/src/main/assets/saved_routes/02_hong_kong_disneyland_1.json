@@ -2,7 +2,6 @@
   "route_id": "hong-kong-disneyland-1",
   "route_name": "香港迪士尼樂園遊覽路線",
   "version": 1,
-  "speed_kmh": 4.0,
   "coordinates": [
     {
       "name": "愉景灣 Discovery Bay",

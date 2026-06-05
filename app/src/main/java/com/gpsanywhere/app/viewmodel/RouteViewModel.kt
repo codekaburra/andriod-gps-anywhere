@@ -209,7 +209,6 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
         val route = SavedRoute(
             name = name.trim(),
             waypointsJson = WaypointJson.toJson(points),
-            speedKmh = _speedKmh.value.toDouble(),
             routeMethod = method,
             distanceMeters = distance
         )
@@ -219,7 +218,6 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun loadRoute(route: SavedRoute) {
         _waypoints.value = WaypointJson.fromJson(route.waypointsJson)
-        _speedKmh.value = route.speedKmh.toFloat()
         _selectedTab.value = if (route.routeMethod == "OSRM") RouteTab.OSRM else RouteTab.MANUAL
     }
 

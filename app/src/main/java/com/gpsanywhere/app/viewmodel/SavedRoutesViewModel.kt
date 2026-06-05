@@ -45,18 +45,18 @@ class SavedRoutesViewModel(application: Application) : AndroidViewModel(applicat
         if (points.size >= 2) {
             val lats = points.map { it.latitude }.toDoubleArray()
             val lngs = points.map { it.longitude }.toDoubleArray()
-            SpoofService.startWalk(getApplication(), lats, lngs, route.speedKmh.toFloat())
+            SpoofService.startWalk(getApplication(), lats, lngs, 4f)
         } else if (points.size == 1) {
             SpoofService.startFixed(getApplication(), points[0].latitude, points[0].longitude)
         }
     }
 
-    fun startDefaultRoute(asset: DefaultRouteAsset, speedKmh: Float = 4f) {
+    fun startDefaultRoute(asset: DefaultRouteAsset) {
         val points = asset.toLocationPoints()
         if (points.size >= 2) {
             val lats = points.map { it.latitude }.toDoubleArray()
             val lngs = points.map { it.longitude }.toDoubleArray()
-            SpoofService.startWalk(getApplication(), lats, lngs, speedKmh)
+            SpoofService.startWalk(getApplication(), lats, lngs, 4f)
         }
     }
 
@@ -68,7 +68,6 @@ class SavedRoutesViewModel(application: Application) : AndroidViewModel(applicat
                     SavedRoute(
                         name = asset.routeName,
                         waypointsJson = WaypointJson.toJson(points),
-                        speedKmh = 4.0,
                         routeMethod = "MANUAL_MAP",
                         distanceMeters = estimateDistance(points)
                     )

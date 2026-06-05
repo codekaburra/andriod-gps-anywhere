@@ -22,7 +22,6 @@ object DefaultSavedRouteSeeder {
         @SerializedName("route_id") val routeId: String? = null,
         @SerializedName("route_name") val routeName: String,
         val version: Int = 1,
-        @SerializedName("speed_kmh") val speedKmh: Double = 4.0,
         val coordinates: List<DefaultLocationAsset>
     ) {
         fun toLocationPoints() = coordinates.map {
@@ -90,7 +89,6 @@ object DefaultSavedRouteSeeder {
                     SavedRoute(
                         name = route.routeName,
                         waypointsJson = WaypointJson.toJson(points),
-                        speedKmh = route.speedKmh,
                         routeMethod = DEFAULT_ROUTE_METHOD,
                         distanceMeters = estimateDistance(points),
                         routeId = route.routeId

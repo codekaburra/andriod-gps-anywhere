@@ -2,7 +2,6 @@
   "route_id": "tainan-city-2",
   "route_name": "台南2",
   "version": 1,
-  "speed_kmh": 4.0,
   "coordinates": [
     {
       "name": "台灣首廟天壇",

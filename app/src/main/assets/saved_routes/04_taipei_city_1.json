@@ -2,7 +2,6 @@
   "route_id": "taipei-city-1",
   "route_name": "台北市區1",
   "version": 1,
-  "speed_kmh": 4.0,
   "coordinates": [
     {
       "name": "台北101",
