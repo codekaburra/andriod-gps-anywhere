@@ -1,13 +1,23 @@
 # GPS Anywhere GPS Formatter
 
-Convert Google Maps embed iframe HTML files into route JSON files.
+Convert between Google Maps embed iframe HTML and GPS Anywhere route JSON.
 
-## What it does
+## Commands
 
-- Reads source `.html` files from `input/todo/`
+### `iframe2json`
+
+- Reads source `.html` files from `cmd/iframe2json/input/`
 - Extracts iframe `src` and parses Google Maps `pb` data
-- Writes JSON files to `output/`
-- Moves processed source files to `input/done/`
+- Writes JSON files to `cmd/iframe2json/output/`
+- Keeps source HTML files in place by default
+- With `--once`, processes one file only and moves it to `cmd/iframe2json/input/done/`
+
+### `json2iframe`
+
+- Reads source `.json` files from `cmd/json2iframe/input/`
+- Generates iframe HTML files into `cmd/json2iframe/output/`
+- Keeps source JSON files in place by default
+- With `--once`, processes one file only and moves it to `cmd/json2iframe/input/done/`
 
 ## Input file format
 
@@ -45,31 +55,79 @@ Recommended source filename:
 }
 ```
 
-## Run
+## Run `iframe2json`
 
 ```bash
 go run ./cmd/iframe2json
 ```
 
+Default behavior (when no flags are passed):
+
+- `-input-dir=cmd/iframe2json/input`
+- `-output-dir=cmd/iframe2json/output`
+- `done dir is auto-derived as <input-dir>/done`
+- `-once=false` (process all `.html` files and do not move source files)
+
 Optional flags:
 
 ```bash
 go run ./cmd/iframe2json \
-  -todo-dir=input/todo \
-  -result-dir=output \
-  -done-dir=input/done
+  -input-dir=cmd/iframe2json/input \
+  -output-dir=cmd/iframe2json/output \
+  -once
 ```
 
-## Useful shell commands
-
-Move all files from `input/done/` back to `input/todo/`:
+## Run `json2iframe`
 
 ```bash
-mv input/done/* input/todo/
+go run ./cmd/json2iframe
 ```
 
-Clean all generated JSON files in `output/`:
+Default behavior (when no flags are passed):
+
+- `-input-dir=cmd/json2iframe/input`
+- `-output-dir=cmd/json2iframe/output`
+- `done dir is auto-derived as <input-dir>/done`
+- `-once=false` (process all `.json` files and do not move source files)
+- `-width=600`
+- `-height=450`
+- `-loading=lazy`
+- `-referrerpolicy=no-referrer-when-downgrade`
+
+Optional flags:
+
+Convert current Android app built-in routes to iframe output:
 
 ```bash
-rm -f output/*.json
+go run ./cmd/json2iframe --from-app-routes
 ```
+
+Equivalent explicit command:
+
+```bash
+go run ./cmd/json2iframe \
+  -input-dir=../app/src/main/assets/saved_routes \
+  -output-dir=cmd/json2iframe/output \
+  -once \
+  -width=600 \
+  -height=450 \
+  -loading=lazy \
+  -referrerpolicy=no-referrer-when-downgrade
+```
+
+
+
+## Useful shell commands (`iframe2json`)
+
+Move all files from `cmd/iframe2json/input/done/` back to `cmd/iframe2json/input/`:
+
+```bash
+mv cmd/iframe2json/input/done/* cmd/iframe2json/input/
+```
+
+Clean all generated JSON files in `cmd/iframe2json/output/`:
+
+```bash
+rm -f cmd/iframe2json/output/*.json
+```
+
