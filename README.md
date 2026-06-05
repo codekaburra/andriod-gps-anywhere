@@ -223,32 +223,6 @@ app/src/main/java/com/gpsanywhere/app/
     └── LocationPoint.kt
 ```
 
-### Route Conversion Utility 路線格式轉換工具
-
-`go-route-formater/` contains helper commands for converting between Google Maps iframe HTML and app route JSON.
-`go-route-formater/` 提供 Google Maps iframe HTML 與 App 路線 JSON 的雙向轉換工具。
-
-- `iframe2json`  
-  HTML (`cmd/iframe2json/input/`) → JSON (`cmd/iframe2json/output/`).  
-  Default keeps source files; use `--once` to process one file and move it to `cmd/iframe2json/input/done/`.
-- `json2iframe`  
-  JSON (`cmd/json2iframe/input/`) → HTML (`cmd/json2iframe/output/`).  
-  Default keeps source files; use `--once` to process one file and move it to `cmd/json2iframe/input/done/`.
-
-Run from project root:
-
-```bash
-cd go-route-formater
-go run ./cmd/iframe2json
-```
-```bash
-cd go-route-formater
-go run ./cmd/json2iframe
-go run ./cmd/json2iframe --from-app-routes
-```
-For full flags, examples, and workflow notes, see [`go-route-formater/README.md`](go-route-formater/README.md).
-完整參數、範例與操作流程請參考 [`go-route-formater/README.md`](go-route-formater/README.md)。
-
 ---
 
 ## 🔐 Permissions 權限說明
