@@ -1,8 +1,6 @@
 package com.gpsanywhere.app.data
 
 import android.content.Context
-import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 import com.gpsanywhere.app.routes.LocationPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -11,16 +9,14 @@ import kotlinx.coroutines.withContext
 
 object DefaultSavedRouteSeeder {
     private const val PREFS_NAME = "gpsanywhere_default_saved_routes"
-    private const val KEY_SEEDED = "seeded_v8" // bumped: mutex fix + dedup re-run
+    private const val KEY_SEEDED = "seeded_v9" // bumped: switched assets from JSON to CSV
     private val mutex = Mutex()
     private const val DEFAULT_ROUTE_METHOD = "MANUAL_MAP"
     const val ASSET_FOLDER = "saved_routes"
 
-    private val gson = Gson()
-
     data class DefaultRouteAsset(
-        @SerializedName("route_id") val routeId: String? = null,
-        @SerializedName("route_name") val routeName: String,
+        val routeId: String? = null,
+        val routeName: String,
         val version: Int = 1,
         val coordinates: List<DefaultLocationAsset>
     ) {
@@ -35,70 +31,126 @@ object DefaultSavedRouteSeeder {
         val longitude: Double
     )
 
-    /** Load all bundled JSON routes from assets/saved_routes/. */
+    /** Parse a single CSV route file. Returns null if the file is malformed. */
+    private fun parseCsv(content: String): DefaultRouteAsset? {
+        var routeId: String? = null
+        var routeName: String? = null
+        var version = 1
+        val coordinates = mutableListOf<DefaultLocationAsset>()
+        var headerSkipped = false
+
+        for (rawLine in content.lineSequence()) {
+            val line = rawLine.trim()
+            when {
+                line.startsWith("# route_id:") ->
+                    routeId = line.removePrefix("# route_id:").trim()
+                line.startsWith("# route_name:") ->
+                    routeName = line.removePrefix("# route_name:").trim()
+                line.startsWith("# version:") ->
+                    version = line.removePrefix("# version:").trim().toIntOrNull() ?: 1
+                line.startsWith("#") || line.isEmpty() -> Unit // skip other comments / blank
+                !headerSkipped -> headerSkipped = true // skip "name,latitude,longitude" header
+                else -> {
+                    val parts = parseCsvLine(line)
+                    if (parts.size >= 3) {
+                        val lat = parts[1].toDoubleOrNull() ?: continue
+                        val lng = parts[2].toDoubleOrNull() ?: continue
+                        coordinates.add(DefaultLocationAsset(name = parts[0], latitude = lat, longitude = lng))
+                    }
+                }
+            }
+        }
+
+        if (routeName == null || coordinates.isEmpty()) return null
+        return DefaultRouteAsset(routeId = routeId, routeName = routeName, version = version, coordinates = coordinates)
+    }
+
+    /**
+     * Split a CSV line into fields, respecting double-quoted fields that may contain commas.
+     * e.g. "\"My, Place\",22.5,114.1" → ["My, Place", "22.5", "114.1"]
+     */
+    private fun parseCsvLine(line: String): List<String> {
+        val fields = mutableListOf<String>()
+        val sb = StringBuilder()
+        var inQuotes = false
+        var i = 0
+        while (i < line.length) {
+            val ch = line[i]
+            when {
+                ch == '"' && !inQuotes -> inQuotes = true
+                ch == '"' && inQuotes -> {
+                    if (i + 1 < line.length && line[i + 1] == '"') { sb.append('"'); i++ } // escaped ""
+                    else inQuotes = false
+                }
+                ch == ',' && !inQuotes -> { fields.add(sb.toString()); sb.clear() }
+                else -> sb.append(ch)
+            }
+            i++
+        }
+        fields.add(sb.toString())
+        return fields
+    }
+
+    /** Load all bundled CSV routes from assets/saved_routes/. */
     fun loadAllAssets(context: Context): List<DefaultRouteAsset> {
         val appContext = context.applicationContext
         return appContext.assets.list(ASSET_FOLDER)
-            ?.filter { it.endsWith(".json") }
+            ?.filter { it.endsWith(".csv") }
             ?.sortedBy { it }
             ?.mapNotNull { filename ->
                 runCatching {
-                    appContext.assets.open("$ASSET_FOLDER/$filename").bufferedReader().use {
-                        gson.fromJson(it, DefaultRouteAsset::class.java)
-                    }
+                    val content = appContext.assets.open("$ASSET_FOLDER/$filename")
+                        .bufferedReader().use { it.readText() }
+                    parseCsv(content)
                 }.getOrNull()
             } ?: emptyList()
     }
 
     suspend fun seedIfNeeded(context: Context, routeDao: RouteDao) = withContext(Dispatchers.IO) {
-        // Mutex ensures concurrent ViewModel inits (WalkViewModel + SavedRoutesViewModel)
-        // don't both pass the prefs check and double-seed simultaneously.
         mutex.withLock {
-        val appContext = context.applicationContext
-        val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        if (prefs.getBoolean(KEY_SEEDED, false)) return@withLock
+            val appContext = context.applicationContext
+            val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            if (prefs.getBoolean(KEY_SEEDED, false)) return@withLock
 
-        val assets = loadAllAssets(appContext)
+            val assets = loadAllAssets(appContext)
 
-        // Remove duplicate rows caused by previous seeder key bumps:
-        // for each preset name, keep only one row (prefer the one that already has routeId set).
-        assets.forEach { route ->
-            val rows = routeDao.getAllByName(route.routeName)
-            if (rows.size > 1) {
-                val keep = rows.first() // query orders: routeId NOT NULL first
-                val deleteIds = rows.drop(1).map { it.id }
-                routeDao.deleteByIds(deleteIds)
-                // Backfill routeId on the kept row if it is missing
-                if (keep.routeId == null && route.routeId != null) {
-                    routeDao.update(keep.copy(routeId = route.routeId))
+            // Remove duplicate rows caused by previous seeder key bumps
+            assets.forEach { route ->
+                val rows = routeDao.getAllByName(route.routeName)
+                if (rows.size > 1) {
+                    val keep = rows.first()
+                    val deleteIds = rows.drop(1).map { it.id }
+                    routeDao.deleteByIds(deleteIds)
+                    if (keep.routeId == null && route.routeId != null) {
+                        routeDao.update(keep.copy(routeId = route.routeId))
+                    }
                 }
             }
-        }
 
-        // Seed any preset that is not yet in the DB (check routeId first, then name)
-        assets.forEach { route ->
-            val points = route.toLocationPoints()
-            if (points.isEmpty()) return@forEach
-            val alreadyExists = if (route.routeId != null) {
-                routeDao.countByRouteId(route.routeId) > 0 || routeDao.countByName(route.routeName) > 0
-            } else {
-                routeDao.countByName(route.routeName) > 0
-            }
-            if (!alreadyExists) {
-                routeDao.insert(
-                    SavedRoute(
-                        name = route.routeName,
-                        waypointsJson = WaypointJson.toJson(points),
-                        routeMethod = DEFAULT_ROUTE_METHOD,
-                        distanceMeters = estimateDistance(points),
-                        routeId = route.routeId
+            // Seed any preset not yet in DB
+            assets.forEach { route ->
+                val points = route.toLocationPoints()
+                if (points.isEmpty()) return@forEach
+                val alreadyExists = if (route.routeId != null) {
+                    routeDao.countByRouteId(route.routeId) > 0 || routeDao.countByName(route.routeName) > 0
+                } else {
+                    routeDao.countByName(route.routeName) > 0
+                }
+                if (!alreadyExists) {
+                    routeDao.insert(
+                        SavedRoute(
+                            name = route.routeName,
+                            waypointsJson = WaypointJson.toJson(points),
+                            routeMethod = DEFAULT_ROUTE_METHOD,
+                            distanceMeters = estimateDistance(points),
+                            routeId = route.routeId
+                        )
                     )
-                )
+                }
             }
-        }
 
-        prefs.edit().putBoolean(KEY_SEEDED, true).apply()
-        } // end mutex.withLock
+            prefs.edit().putBoolean(KEY_SEEDED, true).apply()
+        }
     }
 
     private fun estimateDistance(points: List<LocationPoint>): Double {

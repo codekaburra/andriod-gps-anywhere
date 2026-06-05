@@ -17,3 +17,4 @@ local.properties
 
 # Go route formatter generated output
 go-route-formater/output/
+go-route-formater/cmd/json2iframe/output/
