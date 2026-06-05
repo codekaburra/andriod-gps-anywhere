@@ -27,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Slider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -144,6 +145,9 @@ fun LocationScreen(
     val isWalkMode by SpoofService.isWalkMode.observeAsState(false)
     val currentLat by CurrentLocationProvider.latitude.observeAsState()
     val currentLng by CurrentLocationProvider.longitude.observeAsState()
+    val spiralSpeed by viewModel.spiralSpeedKmh.collectAsState()
+    val liveSpeedKmh by SpoofService.currentSpeedKmh.observeAsState(0f)
+
 
     var showAddSheet by remember { mutableStateOf(false) }
     var selectedLocation by remember { mutableStateOf<PendingLocation?>(null) }
@@ -177,11 +181,27 @@ fun LocationScreen(
         selectedLocation = null
     }
 
+    fun applySpiral(pending: PendingLocation) {
+        when (pending) {
+            is PendingLocation.Prebuilt -> viewModel.startSpiralWalk(pending.asset)
+            is PendingLocation.Custom -> viewModel.startSpiralWalk(pending.location)
+        }
+        selectedLocation = null
+    }
+
     fun onJump(pending: PendingLocation) {
         if (isWalkMode) {
             walkBreakLocation = pending
         } else {
             applyJump(pending)
+        }
+    }
+
+    fun onSpiral(pending: PendingLocation) {
+        if (isWalkMode) {
+            walkBreakLocation = pending  // reuse same walk-break dialog; user confirms stop+restart
+        } else {
+            applySpiral(pending)
         }
     }
 
@@ -227,28 +247,71 @@ fun LocationScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // ── Walk-mode banner — outside LazyColumn so it's never covered ──
+            // ── Walk-mode banner ──────────────────────────────────────────────
             if (isWalkMode) {
                 Surface(
                     color = MaterialTheme.colorScheme.primaryContainer,
                     shape = RoundedCornerShape(0.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.DirectionsWalk,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            "Walk mode active — map follows your fake location. Setting a custom location will stop the walk.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.DirectionsWalk,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Text(
+                                    "Walk Around active",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            // Live speed badge
+                            Text(
+                                "${"%.1f".format(liveSpeedKmh)} km/h",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                "Speed",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                            Slider(
+                                value = spiralSpeed,
+                                onValueChange = { viewModel.setSpiralSpeed(it) },
+                                valueRange = 0f..20f,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                "${"%.0f".format(spiralSpeed)} km/h",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        // Stop button
+                        OutlinedButton(
+                            onClick = { viewModel.stopSpoofing() },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Stop Walk Around")
+                        }
                     }
                 }
             }
@@ -284,6 +347,7 @@ fun LocationScreen(
                     val pending = PendingLocation.Prebuilt(asset)
                     LocationCard(
                         name = asset.name,
+                        nameEng = asset.nameEng,
                         latitude = asset.latitude,
                         longitude = asset.longitude,
                         routeHint = viewModel.routeHintFor(asset.name, asset.latitude, asset.longitude, routeHints),
@@ -294,6 +358,7 @@ fun LocationScreen(
                         showJumpButton = selectedLocation.matches(pending),
                         onClick = { onLocationSelected(pending) },
                         onJump = { onJump(pending) },
+                        onSpiral = { onSpiral(pending) },
                         onDelete = null
                     )
                 }
@@ -330,6 +395,7 @@ fun LocationScreen(
                         showJumpButton = selectedLocation.matches(pending),
                         onClick = { onLocationSelected(pending) },
                         onJump = { onJump(pending) },
+                        onSpiral = { onSpiral(pending) },
                         onDelete = { deleteLocation = loc }
                     )
                 }
@@ -499,6 +565,7 @@ private fun SectionHeader(title: String) {
 @Composable
 private fun LocationCard(
     name: String,
+    nameEng: String = "",
     latitude: Double,
     longitude: Double,
     routeHint: String?,
@@ -508,6 +575,7 @@ private fun LocationCard(
     showJumpButton: Boolean,
     onClick: () -> Unit,
     onJump: () -> Unit,
+    onSpiral: () -> Unit,
     onDelete: (() -> Unit)?
 ) {
     val baseContainerColor = if (isPreinstalled) {
@@ -538,55 +606,76 @@ private fun LocationCard(
             defaultElevation = if (isSelected || isActive) 3.dp else 1.dp
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.LocationOn,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(26.dp)
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp)
+        Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+            // ── Info row ──────────────────────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    name,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                Icon(
+                    Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(26.dp)
                 )
-                routeHint?.let {
+                Column(
+                    modifier = Modifier.weight(1f).padding(start = 12.dp)
+                ) {
                     Text(
-                        it,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                        name,
+                        style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                }
-                Text(
-                    "${"%.6f".format(longitude)}, ${"%.6f".format(latitude)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
-            if (showJumpButton) {
-                Button(onClick = onJump) {
-                    Text("Jump")
-                }
-            } else if (onDelete != null) {
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error
+                    if (nameEng.isNotBlank()) {
+                        Text(
+                            nameEng,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    routeHint?.let {
+                        Text(
+                            it,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    Text(
+                        "${"%.6f".format(longitude)}, ${"%.6f".format(latitude)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
+                }
+                if (!showJumpButton && onDelete != null) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+
+            // ── Expanded: speed + action buttons ──────────────────────────────
+            if (showJumpButton) {
+                Spacer(Modifier.height(10.dp))
+                // Action buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(onClick = onJump, modifier = Modifier.weight(1f)) {
+                        Text("Jump")
+                    }
+                    Button(onClick = onSpiral, modifier = Modifier.weight(1f)) {
+                        Text("Walk Around")
+                    }
                 }
             }
         }

@@ -11,6 +11,7 @@ import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationPack
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
 import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
+import com.gpsanywhere.app.routes.SpiralWalkGenerator
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.settings.HistoryEntry
 import com.gpsanywhere.app.settings.LocationHistoryStore
@@ -33,6 +34,16 @@ class SavedLocationsViewModel(application: Application) : AndroidViewModel(appli
 
     private val _history = MutableStateFlow<List<HistoryEntry>>(historyStore.load())
     val history: StateFlow<List<HistoryEntry>> = _history.asStateFlow()
+
+    private val _spiralSpeedKmh = MutableStateFlow(4f)
+    val spiralSpeedKmh: StateFlow<Float> = _spiralSpeedKmh.asStateFlow()
+
+    fun setSpiralSpeed(speed: Float) {
+        _spiralSpeedKmh.value = speed.coerceIn(0f, 20f)
+        if (SpoofService.isWalkMode.value == true) {
+            SpoofService.updateSpeed(getApplication(), _spiralSpeedKmh.value)
+        }
+    }
 
     private val _routeHints = MutableStateFlow<Map<String, String>>(emptyMap())
     val routeHints: StateFlow<Map<String, String>> = _routeHints.asStateFlow()
@@ -90,6 +101,32 @@ class SavedLocationsViewModel(application: Application) : AndroidViewModel(appli
     fun clearHistory() {
         historyStore.clear()
         _history.value = emptyList()
+    }
+
+    fun startSpiralWalk(location: SavedLocation) =
+        startSpiralWalk(location.latitude, location.longitude, location.name)
+
+    fun startSpiralWalk(asset: DefaultLocationAsset) =
+        startSpiralWalk(asset.latitude, asset.longitude, asset.name)
+
+    fun startSpiralWalk(
+        lat: Double,
+        lng: Double,
+        name: String = ""
+    ) {
+        val (lats, lngs) = SpiralWalkGenerator.generate(lat, lng)
+        SpoofService.startWalk(
+            getApplication(),
+            lats = lats,
+            lngs = lngs,
+            speedKmh = _spiralSpeedKmh.value,
+            minSpeedKmh = 0f,
+            maxSpeedKmh = 20f,
+            varyKmh = 1f,
+            loop = false
+        )
+        historyStore.push(lat, lng, name.ifBlank { null })
+        _history.value = historyStore.load()
     }
 
     fun stopSpoofing() {

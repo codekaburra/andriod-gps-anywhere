@@ -58,9 +58,9 @@ Query: `reverse geocode <lat> <lng> place name`
 **route_name** — first match wins:
 1. User hint (text after the URL)
 2. `<first waypoint name> → <last waypoint name>`
-3. Timestamp `YYYYMMDDHHMMSS`
+3. Timestamp `YYYYMMDDTHHMMSS`
 
-**route_id** — slugify route_name (lowercase, spaces→hyphens); or same timestamp.
+**route_id** — Timestamp `YYYYMMDDTHHMMSS`
 
 **filename** — snake_case of route_name + `.csv`.
 Check for collision: run `ls /Users/eva/Documents/projects/gpsanywhere/app/src/main/assets/saved_routes/` and auto-increment suffix (`_1`, `_2`…) if name exists.

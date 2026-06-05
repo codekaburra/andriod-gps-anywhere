@@ -23,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Stop
@@ -67,18 +66,15 @@ fun WalkScreen(
 ) {
     val routes by viewModel.routes.observeAsState(emptyList())
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
-    val isPaused by viewModel.isPaused.observeAsState(false)
     val speed by viewModel.speedKmh.collectAsState()
     val minSpeed by viewModel.minSpeedKmh.collectAsState()
     val maxSpeed by viewModel.maxSpeedKmh.collectAsState()
-    val vary by viewModel.varyKmh.collectAsState()
     val liveSpeed by viewModel.currentSpeedKmh.observeAsState(0f)
     val activeRoute by viewModel.activeRoute.collectAsState()
     val mapCenterLat by viewModel.mapCenterLat.observeAsState()
     val mapCenterLng by viewModel.mapCenterLng.observeAsState()
 
-    var minText by remember { mutableStateOf("0") }
-    var maxText by remember { mutableStateOf("20") }
+
 
     // Route selected by the user — persists after stop so user stays in walk view
     var selectedRoute by remember { mutableStateOf<SavedRoute?>(null) }
@@ -127,16 +123,14 @@ fun WalkScreen(
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 when {
-                                    isPaused -> "Paused"
                                     isWalking -> "Active Route"
                                     else -> "Ready to Start"
                                 },
                                 style = MaterialTheme.typography.labelSmall,
-                                color = when {
-                                    isPaused -> MaterialTheme.colorScheme.error
-                                    isWalking -> MaterialTheme.colorScheme.primary
-                                    else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                                }
+                                color = if (isWalking)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                             )
                             Text(
                                 route.name,
@@ -169,25 +163,20 @@ fun WalkScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            when {
-                                !isWalking -> "Not started"
-                                isPaused -> "Paused"
-                                else -> "Current Speed"
-                            },
+                            if (!isWalking) "Not started" else "Current Speed",
                             style = MaterialTheme.typography.labelMedium,
-                            color = when {
-                                !isWalking -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                                isPaused -> MaterialTheme.colorScheme.error
-                                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            }
+                            color = if (!isWalking)
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            else
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                         Spacer(Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                if (isWalking && !isPaused) "${"%.1f".format(liveSpeed)}" else "—",
+                                if (isWalking) "${"%.1f".format(liveSpeed)}" else "—",
                                 style = MaterialTheme.typography.displayLarge.copy(
                                     fontSize = 80.sp,
-                                    color = if (isWalking && !isPaused)
+                                    color = if (isWalking)
                                         MaterialTheme.colorScheme.primary
                                     else
                                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
@@ -207,12 +196,8 @@ fun WalkScreen(
                 // ── Speed controls (editable while walking) ───────────────────
                 item {
                     SpeedControlPanel(
-                        speed = speed, minText = minText, maxText = maxText, vary = vary,
-                        onSpeedChange = viewModel::setSpeed,
-                        onMinChange = { v -> minText = v; v.toFloatOrNull()?.let { viewModel.setMinSpeed(it) } },
-                        onMaxChange = { v -> maxText = v; v.toFloatOrNull()?.let { viewModel.setMaxSpeed(it) } },
-                        onVaryDecrease = { viewModel.setVary((vary - 1f).coerceAtLeast(0f)) },
-                        onVaryIncrease = { viewModel.setVary(vary + 1f) }
+                        speed = speed,
+                        onSpeedChange = viewModel::setSpeed
                     )
                 }
 
@@ -224,7 +209,13 @@ fun WalkScreen(
                     val lng = positionLng ?: 0.0
                     val dist = distanceBetween(lat, lng, point.latitude, point.longitude)
                     val isNearest = findNearestIndex(waypoints, lat, lng) == index
-                    WaypointProgressRow(index = index, point = point, distanceKm = dist, isNearest = isNearest)
+                    WaypointProgressRow(
+                        index = index,
+                        point = point,
+                        distanceKm = dist,
+                        isNearest = isNearest,
+                        onJumpTo = { viewModel.jumpToWaypoint(index, route) }
+                    )
                 }
             }
 
@@ -249,26 +240,10 @@ fun WalkScreen(
                         Text("Start", style = MaterialTheme.typography.titleMedium)
                     }
                 } else {
-                    // Walking: Pause/Resume + Stop
-                    Button(
-                        onClick = { if (isPaused) viewModel.resume() else viewModel.pause() },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    ) {
-                        Icon(
-                            if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                            contentDescription = null
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(if (isPaused) "Resume" else "Pause")
-                    }
+                    // Walking: only Stop (pause removed)
                     Button(
                         onClick = { viewModel.stop() },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
@@ -338,12 +313,8 @@ fun WalkScreen(
                         )
                     }
                     SpeedControlPanel(
-                        speed = speed, minText = minText, maxText = maxText, vary = vary,
-                        onSpeedChange = viewModel::setSpeed,
-                        onMinChange = { v -> minText = v; v.toFloatOrNull()?.let { viewModel.setMinSpeed(it) } },
-                        onMaxChange = { v -> maxText = v; v.toFloatOrNull()?.let { viewModel.setMaxSpeed(it) } },
-                        onVaryDecrease = { viewModel.setVary((vary - 1f).coerceAtLeast(0f)) },
-                        onVaryIncrease = { viewModel.setVary(vary + 1f) }
+                        speed = speed,
+                        onSpeedChange = viewModel::setSpeed
                     )
                 }
             }
@@ -412,56 +383,31 @@ fun WalkScreen(
 @Composable
 private fun SpeedControlPanel(
     speed: Float,
-    minText: String,
-    maxText: String,
-    vary: Float,
-    onSpeedChange: (Float) -> Unit,
-    onMinChange: (String) -> Unit,
-    onMaxChange: (String) -> Unit,
-    onVaryDecrease: () -> Unit,
-    onVaryIncrease: () -> Unit
+    onSpeedChange: (Float) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Slider(
-            value = speed,
-            onValueChange = onSpeedChange,
-            valueRange = 1f..20f,
-            steps = 18,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            listOf("1", "5", "10", "15", "20").forEach { label ->
-                Text(label, style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f))
-            }
-        }
-        Text("Speed Variation", style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = minText, onValueChange = onMinChange,
-                label = { Text("Min (km/h)") }, singleLine = true,
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Speed",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+            Slider(
+                value = speed,
+                onValueChange = onSpeedChange,
+                valueRange = 1f..20f,
+                steps = 18,
                 modifier = Modifier.weight(1f)
             )
-            OutlinedTextField(
-                value = maxText, onValueChange = onMaxChange,
-                label = { Text("Max (km/h)") }, singleLine = true,
-                modifier = Modifier.weight(1f)
+            Text(
+                "${"%.0f".format(speed)} km/h",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
-            // Vary ±N stepper
-            Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Vary ±N km/h", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onVaryDecrease) {
-                        Icon(Icons.Default.Remove, contentDescription = "Decrease vary")
-                    }
-                    Text("${vary.toInt()} ", style = MaterialTheme.typography.bodyMedium)
-                    IconButton(onClick = onVaryIncrease) {
-                        Icon(Icons.Default.Add, contentDescription = "Increase vary")
-                    }
-                }
-            }
         }
     }
 }
@@ -494,7 +440,13 @@ private fun RouteRow(route: SavedRoute, distanceLabel: String, waypointCount: In
 // ── Active: waypoint progress row ────────────────────────────────────────────
 
 @Composable
-private fun WaypointProgressRow(index: Int, point: LocationPoint, distanceKm: String, isNearest: Boolean) {
+private fun WaypointProgressRow(
+    index: Int,
+    point: LocationPoint,
+    distanceKm: String,
+    isNearest: Boolean,
+    onJumpTo: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -512,7 +464,8 @@ private fun WaypointProgressRow(index: Int, point: LocationPoint, distanceKm: St
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isNearest) MaterialTheme.colorScheme.onSurface
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                maxLines = 1, overflow = TextOverflow.Ellipsis
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.clickable { onJumpTo() }
             )
             Text("${"%.5f".format(point.latitude)}  ${"%.5f".format(point.longitude)}",
                 style = MaterialTheme.typography.labelSmall,

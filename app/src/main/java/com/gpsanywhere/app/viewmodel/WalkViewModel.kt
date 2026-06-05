@@ -79,9 +79,6 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun pause() = SpoofService.pause(getApplication())
-    fun resume() = SpoofService.resume(getApplication())
-
     /** End the walk but keep the GPS fixed at whatever position we stopped at. */
     fun stop() {
         val lat = SpoofService.currentLat.value ?: 0.0
@@ -92,6 +89,14 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
             SpoofService.stop(getApplication())
         }
         _activeRoute.value = null
+    }
+
+    fun jumpToWaypoint(index: Int, route: SavedRoute) {
+        val points = WaypointJson.fromJson(route.waypointsJson)
+        if (index in points.indices) {
+            val p = points[index]
+            SpoofService.jumpTo(getApplication(), p.latitude, p.longitude)
+        }
     }
 
     fun distanceKm(route: SavedRoute) = "%.1f km".format(route.distanceMeters / 1000.0)
