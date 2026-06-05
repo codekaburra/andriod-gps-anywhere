@@ -39,9 +39,9 @@ class SpoofService : Service() {
         const val EXTRA_LONGITUDE = "extra_longitude"
         const val EXTRA_LATS = "extra_lats"
         const val EXTRA_LNGS = "extra_lngs"
-        const val EXTRA_SPEED_KMH = "extra_speed_kmh"
-        const val EXTRA_MIN_SPEED_KMH = "extra_min_speed_kmh"
-        const val EXTRA_MAX_SPEED_KMH = "extra_max_speed_kmh"
+        const val EXTRA_SPEED = "extra_speed"
+        const val EXTRA_MIN_SPEED = "extra_min_speed"
+        const val EXTRA_MAX_SPEED = "extra_max_speed"
         const val EXTRA_VARY_KMH = "extra_vary_kmh"
         const val EXTRA_LOOP = "extra_loop"
 
@@ -111,9 +111,9 @@ class SpoofService : Service() {
                 action = ACTION_START_WALK
                 putExtra(EXTRA_LATS, lats)
                 putExtra(EXTRA_LNGS, lngs)
-                putExtra(EXTRA_SPEED_KMH, speedKmh)
-                putExtra(EXTRA_MIN_SPEED_KMH, minSpeedKmh)
-                putExtra(EXTRA_MAX_SPEED_KMH, maxSpeedKmh)
+                putExtra(EXTRA_SPEED, speedKmh)
+                putExtra(EXTRA_MIN_SPEED, minSpeedKmh)
+                putExtra(EXTRA_MAX_SPEED, maxSpeedKmh)
                 putExtra(EXTRA_VARY_KMH, varyKmh)
                 putExtra(EXTRA_LOOP, loop)
             }
@@ -134,7 +134,7 @@ class SpoofService : Service() {
         fun updateSpeed(context: Context, speedKmh: Float) {
             context.startService(Intent(context, SpoofService::class.java).apply {
                 action = ACTION_UPDATE_SPEED
-                putExtra(EXTRA_SPEED_KMH, speedKmh)
+                putExtra(EXTRA_SPEED, speedKmh)
             })
         }
     }
@@ -181,9 +181,9 @@ class SpoofService : Service() {
             ACTION_START_WALK -> {
                 val lats = intent.getDoubleArrayExtra(EXTRA_LATS) ?: DoubleArray(0)
                 val lngs = intent.getDoubleArrayExtra(EXTRA_LNGS) ?: DoubleArray(0)
-                val speedKmh = intent.getFloatExtra(EXTRA_SPEED_KMH, 4f)
-                val minKmh = intent.getFloatExtra(EXTRA_MIN_SPEED_KMH, 0f)
-                val maxKmh = intent.getFloatExtra(EXTRA_MAX_SPEED_KMH, 20f)
+                val speedKmh = intent.getFloatExtra(EXTRA_SPEED, 4f)
+                val minKmh = intent.getFloatExtra(EXTRA_MIN_SPEED, 0f)
+                val maxKmh = intent.getFloatExtra(EXTRA_MAX_SPEED, 20f)
                 val varyKmh = intent.getFloatExtra(EXTRA_VARY_KMH, 0f)
                 val loop = intent.getBooleanExtra(EXTRA_LOOP, false)
                 if (lats.size < 2 || lats.size != lngs.size) return START_NOT_STICKY
@@ -228,7 +228,7 @@ class SpoofService : Service() {
                 stopSpoofing()
             }
             ACTION_UPDATE_SPEED -> {
-                val speedKmh = intent.getFloatExtra(EXTRA_SPEED_KMH, 4f)
+                val speedKmh = intent.getFloatExtra(EXTRA_SPEED, 4f)
                 baseSpeedMps = speedKmh * 1000f / 3600f
                 currentSpeedMps = baseSpeedMps
                 _currentSpeedKmh.postValue(speedKmh)

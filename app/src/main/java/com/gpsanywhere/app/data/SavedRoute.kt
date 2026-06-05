@@ -11,7 +11,6 @@ data class SavedRoute(
     val routeId: String? = null,
     val name: String,
     val waypointsJson: String,
-    val speedKmh: Double = 4.0,
     val routeMethod: String,
     val distanceMeters: Double = 0.0,
     val createdAt: Long = System.currentTimeMillis(),

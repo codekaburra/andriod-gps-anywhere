@@ -2,7 +2,6 @@
   "route_id": "kyoto-scenic-1",
   "route_name": "京都名所巡り",
   "version": 1,
-  "speed_kmh": 4.0,
   "coordinates": [
     {
       "name": "貴船神社 奥宮",

@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [SavedRoute::class, SavedLocation::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,6 +20,39 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `saved_routes_new` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `routeId` TEXT,
+                        `name` TEXT NOT NULL,
+                        `waypointsJson` TEXT NOT NULL,
+                        `routeMethod` TEXT NOT NULL,
+                        `distanceMeters` REAL NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO `saved_routes_new` (
+                        `id`, `routeId`, `name`, `waypointsJson`, `routeMethod`,
+                        `distanceMeters`, `createdAt`, `updatedAt`
+                    )
+                    SELECT
+                        `id`, `routeId`, `name`, `waypointsJson`, `routeMethod`,
+                        `distanceMeters`, `createdAt`, `updatedAt`
+                    FROM `saved_routes`
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE `saved_routes`")
+                db.execSQL("ALTER TABLE `saved_routes_new` RENAME TO `saved_routes`")
+            }
+        }
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -54,7 +87,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "gpsanywhere.db"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
                 INSTANCE = instance
                 instance

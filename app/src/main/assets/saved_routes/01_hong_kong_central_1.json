@@ -2,7 +2,6 @@
   "route_id": "hong-kong-central-1",
   "route_name": "香港中環1",
   "version": 1,
-  "speed_kmh": 4.0,
   "coordinates": [
     {
       "name": "維多利亞公園",
