@@ -31,9 +31,10 @@ class SpoofService : Service() {
         const val ACTION_START_FIXED = "com.gpsanywhere.app.START_FIXED"
         const val ACTION_START_WALK = "com.gpsanywhere.app.START_WALK"
         const val ACTION_STOP = "com.gpsanywhere.app.STOP"
+        const val ACTION_UPDATE_SPEED = "com.gpsanywhere.app.UPDATE_SPEED"
+        const val ACTION_JUMP_TO = "com.gpsanywhere.app.JUMP_TO"
         const val ACTION_PAUSE = "com.gpsanywhere.app.PAUSE"
         const val ACTION_RESUME = "com.gpsanywhere.app.RESUME"
-        const val ACTION_UPDATE_SPEED = "com.gpsanywhere.app.UPDATE_SPEED"
 
         const val EXTRA_LATITUDE = "extra_latitude"
         const val EXTRA_LONGITUDE = "extra_longitude"
@@ -44,12 +45,10 @@ class SpoofService : Service() {
         const val EXTRA_MAX_SPEED = "extra_max_speed"
         const val EXTRA_VARY_KMH = "extra_vary_kmh"
         const val EXTRA_LOOP = "extra_loop"
+        const val EXTRA_INDEX = "extra_index"
 
         private val _isRunning = MutableLiveData(false)
         val isRunning: LiveData<Boolean> = _isRunning
-
-        private val _isPaused = MutableLiveData(false)
-        val isPaused: LiveData<Boolean> = _isPaused
 
         private val _currentLat = MutableLiveData(0.0)
         val currentLat: LiveData<Double> = _currentLat
@@ -63,6 +62,9 @@ class SpoofService : Service() {
         /** True only while a walk route is actively running (not fixed-location spoofing). */
         private val _isWalkMode = MutableLiveData(false)
         val isWalkMode: LiveData<Boolean> = _isWalkMode
+
+        private val _isPaused = MutableLiveData(false)
+        val isPaused: LiveData<Boolean> = _isPaused
 
         private val _stepCount = MutableLiveData(0)
         val stepCount: LiveData<Int> = _stepCount
@@ -83,18 +85,6 @@ class SpoofService : Service() {
             } else {
                 context.startService(intent)
             }
-        }
-
-        fun pause(context: Context) {
-            context.startService(Intent(context, SpoofService::class.java).apply {
-                action = ACTION_PAUSE
-            })
-        }
-
-        fun resume(context: Context) {
-            context.startService(Intent(context, SpoofService::class.java).apply {
-                action = ACTION_RESUME
-            })
         }
 
         fun startWalk(
@@ -137,6 +127,26 @@ class SpoofService : Service() {
                 putExtra(EXTRA_SPEED, speedKmh)
             })
         }
+
+        fun jumpTo(context: Context, lat: Double, lng: Double) {
+            context.startService(Intent(context, SpoofService::class.java).apply {
+                action = ACTION_JUMP_TO
+                putExtra(EXTRA_LATITUDE, lat)
+                putExtra(EXTRA_LONGITUDE, lng)
+            })
+        }
+
+        fun pause(context: Context) {
+            context.startService(Intent(context, SpoofService::class.java).apply {
+                action = ACTION_PAUSE
+            })
+        }
+
+        fun resume(context: Context) {
+            context.startService(Intent(context, SpoofService::class.java).apply {
+                action = ACTION_RESUME
+            })
+        }
     }
 
     private var locationManager: LocationManager? = null
@@ -173,7 +183,6 @@ class SpoofService : Service() {
                 setupTestProvider()
                 startPushLoop()
                 _isRunning.postValue(true)
-                _isPaused.postValue(false)
                 _isWalkMode.postValue(false)
                 _currentLat.postValue(lat)
                 _currentLng.postValue(lng)
@@ -200,29 +209,21 @@ class SpoofService : Service() {
                 startPushLoop()
                 startWalkJob(lats, lngs, loop)
                 _isRunning.postValue(true)
-                _isPaused.postValue(false)
                 _isWalkMode.postValue(true)
                 _currentLat.postValue(lastLat)
                 _currentLng.postValue(lastLng)
             }
+            ACTION_JUMP_TO -> {
+                lastLat = intent.getDoubleExtra(EXTRA_LATITUDE, lastLat)
+                lastLng = intent.getDoubleExtra(EXTRA_LONGITUDE, lastLng)
+                _currentLat.postValue(lastLat)
+                _currentLng.postValue(lastLng)
+            }
             ACTION_PAUSE -> {
-                if (_isRunning.value == true && _isPaused.value == false) {
-                    pushJob?.cancel()
-                    walkJob?.cancel()
-                    cleanupTestProvider()
-                    _isPaused.postValue(true)
-                    val nm = getSystemService(NotificationManager::class.java)
-                    nm.notify(NOTIFICATION_ID, buildNotification("Paused — using real location"))
-                }
+                _isPaused.postValue(true)
             }
             ACTION_RESUME -> {
-                if (_isRunning.value == true && _isPaused.value == true) {
-                    setupTestProvider()
-                    startPushLoop()
-                    _isPaused.postValue(false)
-                    val nm = getSystemService(NotificationManager::class.java)
-                    nm.notify(NOTIFICATION_ID, buildNotification("Custom Location: $lastLat, $lastLng"))
-                }
+                _isPaused.postValue(false)
             }
             ACTION_STOP -> {
                 stopSpoofing()
@@ -247,7 +248,6 @@ class SpoofService : Service() {
         serviceScope.cancel()
         cleanupTestProvider()
         _isRunning.postValue(false)
-        _isPaused.postValue(false)
         super.onDestroy()
     }
 
@@ -308,6 +308,10 @@ class SpoofService : Service() {
                     currentBearing = bearing(aLat, aLng, bLat, bLng).toFloat()
                     var traveled = 0.0
                     while (isActive && traveled < segLen) {
+                        // Suspend here while paused — push location once and wait
+                        while (isActive && _isPaused.value == true) {
+                            delay(200)
+                        }
                         val frac = (traveled / segLen).coerceIn(0.0, 1.0)
                         lastLat = aLat + (bLat - aLat) * frac
                         lastLng = aLng + (bLng - aLng) * frac
@@ -407,10 +411,11 @@ class SpoofService : Service() {
 
     private fun stopSpoofing() {
         pushJob?.cancel()
+        walkJob?.cancel()
         cleanupTestProvider()
         _isRunning.postValue(false)
-        _isPaused.postValue(false)
         _isWalkMode.postValue(false)
+        _isPaused.postValue(false)
         _currentLat.postValue(0.0)
         _currentLng.postValue(0.0)
         _currentSpeedKmh.postValue(0f)
