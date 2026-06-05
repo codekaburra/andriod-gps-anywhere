@@ -240,9 +240,12 @@ Run from project root:
 ```bash
 cd go-route-formater
 go run ./cmd/iframe2json
-go run ./cmd/json2iframe
 ```
-
+```bash
+cd go-route-formater
+go run ./cmd/json2iframe
+go run ./cmd/json2iframe --from-app-routes
+```
 For full flags, examples, and workflow notes, see [`go-route-formater/README.md`](go-route-formater/README.md).
 完整參數、範例與操作流程請參考 [`go-route-formater/README.md`](go-route-formater/README.md)。
 

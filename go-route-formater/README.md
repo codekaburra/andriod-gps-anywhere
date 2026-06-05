@@ -96,7 +96,13 @@ Default behavior (when no flags are passed):
 
 Optional flags:
 
-converting current andriod app prebuilded route to iframe
+Convert current Android app built-in routes to iframe output:
+
+```bash
+go run ./cmd/json2iframe --from-app-routes
+```
+
+Equivalent explicit command:
 
 ```bash
 go run ./cmd/json2iframe \
