@@ -9,20 +9,20 @@ import androidx.compose.ui.graphics.Color
 import com.gpsanywhere.app.settings.ThemeMode
 
 private val LightColorScheme = lightColorScheme(
-    primary = MilkTeaPrimary,
-    secondary = MilkTeaSecondary,
-    tertiary = MilkTeaAccent,
+    primary = MilkTeaAccent,
+    secondary = MilkTeaAccentDeep,
+    tertiary = MilkTeaSecondary,
     background = MilkTeaBackground,
     surface = MilkTeaCard,
     error = ErrorRed,
-    primaryContainer = MilkTeaSecondary,
+    primaryContainer = Color(0xFFF3E8DC),
     onPrimaryContainer = MilkTeaText,
-    secondaryContainer = Color(0xFFF3E8DC),
+    secondaryContainer = Color(0xFFF0D8CB),
     onSecondaryContainer = MilkTeaText,
-    tertiaryContainer = Color(0xFFF0D8CB),
+    tertiaryContainer = Color(0xFFE6D5C3),
     onTertiaryContainer = MilkTeaText,
-    onPrimary = MilkTeaText,
-    onSecondary = MilkTeaText,
+    onPrimary = Color(0xFF12100E),
+    onSecondary = Color(0xFF12100E),
     onTertiary = MilkTeaText,
     onBackground = MilkTeaText,
     onSurface = MilkTeaText,
@@ -32,26 +32,37 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = MilkTeaAccent,
-    secondary = MilkTeaSecondary,
-    tertiary = MilkTeaPrimary,
-    background = MilkTeaBackgroundDark,
-    surface = MilkTeaSurfaceDark,
-    error = ErrorRed,
-    primaryContainer = Color(0xFF5D4D43),
-    onPrimaryContainer = MilkTeaTextOnDark,
-    secondaryContainer = Color(0xFF4E433B),
+    // Accent colours — same warm toffee tones as light mode
+    primary = MilkTeaAccent,           // #DDAA7A — buttons, icons, highlights
+    secondary = MilkTeaAccentDeep,     // #C99464 — secondary actions
+    tertiary = MilkTeaAccent,
+
+    // Backgrounds — layered from darkest to lightest
+    background = MilkTeaBackgroundDark,        // #12100E — app canvas
+    surface = MilkTeaSurfaceDark,              // #1C1815 — cards / panels
+    surfaceVariant = MilkTeaSurfaceVariantDark, // #262019 — input fields, chips
+
+    // Containers (tinted surfaces for buttons, tags, etc.)
+    primaryContainer = Color(0xFF3A2A1A),      // warm dark container for accent elements
+    onPrimaryContainer = MilkTeaTextOnDark,    // #F3EFE8
+    secondaryContainer = Color(0xFF2C2118),    // slightly cooler container
     onSecondaryContainer = MilkTeaTextOnDark,
-    tertiaryContainer = Color(0xFF614B41),
+    tertiaryContainer = Color(0xFF332519),
     onTertiaryContainer = MilkTeaTextOnDark,
-    onPrimary = Color(0xFF2B2420),
-    onSecondary = Color(0xFF2B2420),
-    onTertiary = Color(0xFF2B2420),
-    onBackground = MilkTeaTextOnDark,
-    onSurface = MilkTeaTextOnDark,
-    surfaceVariant = Color(0xFF4E433B),
-    onSurfaceVariant = Color(0xFFD9C9BA),
-    outline = Color(0xFF6F6258)
+
+    // Text on accents — near-black for contrast on warm accent buttons
+    onPrimary = MilkTeaBackgroundDark,         // #12100E
+    onSecondary = MilkTeaBackgroundDark,
+    onTertiary = MilkTeaBackgroundDark,
+
+    // Text on backgrounds/surfaces
+    onBackground = MilkTeaTextOnDark,          // #F3EFE8 — primary text
+    onSurface = MilkTeaTextOnDark,             // #F3EFE8
+    onSurfaceVariant = MilkTeaMutedOnDark,     // #C5B4A5 — secondary / muted text
+
+    // Borders & errors
+    outline = MilkTeaBorderDark,               // #3D342E
+    error = ErrorRed
 )
 
 @Composable

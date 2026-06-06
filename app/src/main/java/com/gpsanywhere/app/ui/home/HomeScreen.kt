@@ -30,8 +30,6 @@ import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.ui.components.CoordinateCard
 import com.gpsanywhere.app.ui.components.PowerToggleButton
-import com.gpsanywhere.app.ui.theme.GalaxyAccent
-import com.gpsanywhere.app.ui.theme.GalaxyMuted
 import com.gpsanywhere.app.viewmodel.MainViewModel
 
 @Composable
@@ -94,7 +92,8 @@ fun HomeScreen(
         Text(
             text = if (isSpoofing) "Custom Location" else "Real Location",
             style = MaterialTheme.typography.headlineMedium,
-            color = if (isSpoofing) GalaxyAccent else GalaxyMuted
+            color = if (isSpoofing) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         if (isSpoofing && (currentLat != 0.0 || currentLng != 0.0)) {

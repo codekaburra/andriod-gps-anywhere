@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -19,10 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.gpsanywhere.app.ui.theme.GalaxyAccent
-import com.gpsanywhere.app.ui.theme.GalaxyPrimaryLight
-import com.gpsanywhere.app.ui.theme.GalaxyMuted
-
 @Composable
 fun PowerToggleButton(
     isActive: Boolean,
@@ -45,8 +42,8 @@ fun PowerToggleButton(
             .scale(scale)
             .clip(CircleShape)
             .background(
-                if (isActive) GalaxyAccent.copy(alpha = glowAlpha)
-                else GalaxyMuted.copy(alpha = glowAlpha)
+                if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha)
+                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = glowAlpha)
             )
             .clickable(onClick = onClick)
             .semantics { contentDescription = if (isActive) "Custom Location active" else "Real Location active" },
@@ -57,8 +54,8 @@ fun PowerToggleButton(
                 .size(120.dp)
                 .clip(CircleShape)
                 .background(
-                    if (isActive) GalaxyPrimaryLight.copy(alpha = 0.9f)
-                    else GalaxyMuted.copy(alpha = 0.6f)
+                    if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 ),
             contentAlignment = Alignment.Center
         ) {
