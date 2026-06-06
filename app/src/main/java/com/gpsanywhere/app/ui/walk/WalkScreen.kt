@@ -38,7 +38,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -61,8 +60,7 @@ import org.osmdroid.util.GeoPoint
 @Composable
 fun WalkScreen(
     viewModel: WalkViewModel,
-    modifier: Modifier = Modifier,
-    onNavigateToAddRoute: () -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
     val routes by viewModel.routes.observeAsState(emptyList())
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
@@ -331,9 +329,6 @@ fun WalkScreen(
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    TextButton(onClick = onNavigateToAddRoute) {
-                        Text("+ New Route", style = MaterialTheme.typography.labelMedium)
-                    }
                 }
             }
 

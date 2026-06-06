@@ -5,6 +5,5 @@ object Routes {
     const val LOCATION = "location"
     const val WALK = "walk"
     const val STEPS = "steps"
-    const val ROUTE = "route"
-    const val SAVED = "saved"
+const val SAVED = "saved"
 }

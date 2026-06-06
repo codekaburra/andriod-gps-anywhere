@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Route
@@ -26,7 +25,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,8 +47,6 @@ import com.gpsanywhere.app.viewmodel.SavedRoutesViewModel
 @Composable
 fun SavedRoutesScreen(
     viewModel: SavedRoutesViewModel,
-    onAddNew: () -> Unit,
-    onEditRoute: (SavedRoute) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val routes by viewModel.routes.observeAsState(emptyList())
@@ -74,7 +70,6 @@ fun SavedRoutesScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Saved Routes", style = MaterialTheme.typography.headlineMedium)
-                OutlinedButton(onClick = onAddNew) { Text("+ Add new") }
             }
         }
 
@@ -130,13 +125,11 @@ fun SavedRoutesScreen(
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        "Create a route on the Route tab and tap Save",
+                        "Routes will appear here once saved",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedButton(onClick = onAddNew) { Text("Go to Route") }
                 }
             }
         } else {
@@ -146,7 +139,6 @@ fun SavedRoutesScreen(
                     distanceLabel = viewModel.distanceKm(route),
                     waypointCount = viewModel.waypointCount(route),
                     onPlay = { viewModel.startRoute(route) },
-                    onEdit = { onEditRoute(route) },
                     onDelete = { routeToDelete = route },
                     onPreview = {
                         previewRoute = route.name to WaypointJson.fromJson(route.waypointsJson)
@@ -243,7 +235,6 @@ private fun SavedRouteCard(
     distanceLabel: String,
     waypointCount: Int,
     onPlay: () -> Unit,
-    onEdit: () -> Unit,
     onDelete: () -> Unit,
     onPreview: () -> Unit
 ) {
@@ -277,9 +268,6 @@ private fun SavedRouteCard(
                 }
                 IconButton(onClick = onPlay) {
                     Icon(Icons.Default.PlayArrow, contentDescription = "Start route")
-                }
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit route")
                 }
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete route")
