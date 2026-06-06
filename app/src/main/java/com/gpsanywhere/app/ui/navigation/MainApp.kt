@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -30,13 +29,11 @@ import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.ui.home.HomeScreen
 import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
-import com.gpsanywhere.app.ui.saved.SavedRoutesScreen
 import com.gpsanywhere.app.ui.steps.StepsScreen
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import com.gpsanywhere.app.ui.walk.WalkScreen
 import com.gpsanywhere.app.viewmodel.MainViewModel
 import com.gpsanywhere.app.viewmodel.SavedLocationsViewModel
-import com.gpsanywhere.app.viewmodel.SavedRoutesViewModel
 import com.gpsanywhere.app.viewmodel.StepsViewModel
 import com.gpsanywhere.app.viewmodel.WalkViewModel
 
@@ -44,7 +41,6 @@ import com.gpsanywhere.app.viewmodel.WalkViewModel
 fun MainApp(preferences: AppPreferences) {
     val mainViewModel: MainViewModel = viewModel()
     val savedLocationsViewModel: SavedLocationsViewModel = viewModel()
-    val savedViewModel: SavedRoutesViewModel = viewModel()
     val walkViewModel: WalkViewModel = viewModel()
     val stepsViewModel: StepsViewModel = viewModel()
 
@@ -86,12 +82,6 @@ fun MainApp(preferences: AppPreferences) {
                         icon = { Icon(Icons.Default.DirectionsRun, contentDescription = "Steps") },
                         label = { Text("Steps") }
                     )
-                    NavigationBarItem(
-                        selected = currentRoute == Routes.SAVED,
-                        onClick = { nav(Routes.SAVED) },
-                        icon = { Icon(Icons.Outlined.Bookmarks, contentDescription = "Saved") },
-                        label = { Text("Saved") }
-                    )
                 }
             }
         ) { innerPadding ->
@@ -108,9 +98,6 @@ fun MainApp(preferences: AppPreferences) {
                 }
                 composable(Routes.STEPS) {
                     StepsScreen(viewModel = stepsViewModel)
-                }
-                composable(Routes.SAVED) {
-                    SavedRoutesScreen(viewModel = savedViewModel)
                 }
             }
         }
