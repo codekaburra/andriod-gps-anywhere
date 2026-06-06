@@ -4,13 +4,16 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import com.gpsanywhere.app.directions.NominatimClient
-import com.gpsanywhere.app.directions.NominatimResult
+import com.gpsanywhere.app.data.AppDatabase
+import com.gpsanywhere.app.data.DefaultLocationSeeder
+import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationAsset
+import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationPack
+import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
+import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
+import com.gpsanywhere.app.routes.SpiralWalkGenerator
 import com.gpsanywhere.app.service.SpoofService
-import androidx.lifecycle.Observer
-import com.gpsanywhere.app.settings.HistoryEntry
-import com.gpsanywhere.app.settings.LocationHistoryStore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,182 +21,115 @@ import kotlinx.coroutines.launch
 
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val dao = AppDatabase.getInstance(application).savedLocationDao()
+
+    val customLocations: LiveData<List<SavedLocation>> = dao.observeCustom()
     val isSpoofing: LiveData<Boolean> = SpoofService.isRunning
-    val isPaused: LiveData<Boolean> = SpoofService.isPaused
 
-    private val historyStore = LocationHistoryStore(application)
-    private val nominatimClient = NominatimClient()
+    private val _locationPacks = MutableStateFlow<List<DefaultLocationPack>>(emptyList())
+    val locationPacks: StateFlow<List<DefaultLocationPack>> = _locationPacks.asStateFlow()
 
-    private val _latitude = MutableStateFlow(
-        CurrentLocationProvider.formatLatitude(
-            SpoofService.currentLat.value?.takeIf { it != 0.0 }
-        ) ?: ""
-    )
-    val latitude: StateFlow<String> = _latitude.asStateFlow()
+    private val _spiralSpeedKmh = MutableStateFlow(4f)
+    val spiralSpeedKmh: StateFlow<Float> = _spiralSpeedKmh.asStateFlow()
 
-    private val _longitude = MutableStateFlow(
-        CurrentLocationProvider.formatLongitude(
-            SpoofService.currentLng.value?.takeIf { it != 0.0 }
-        ) ?: ""
-    )
-    val longitude: StateFlow<String> = _longitude.asStateFlow()
-
-    private val locationObserver = Observer<Double?> {
-        seedCoordinatesFromProviderIfEmpty()
-    }
+    private val _routeHints = MutableStateFlow<Map<String, String>>(emptyMap())
+    val routeHints: StateFlow<Map<String, String>> = _routeHints.asStateFlow()
 
     init {
         CurrentLocationProvider.ensureStarted(getApplication())
-        seedCoordinatesFromProviderIfEmpty()
-        CurrentLocationProvider.latitude.observeForever(locationObserver)
-        CurrentLocationProvider.longitude.observeForever(locationObserver)
-    }
-
-    override fun onCleared() {
-        CurrentLocationProvider.latitude.removeObserver(locationObserver)
-        CurrentLocationProvider.longitude.removeObserver(locationObserver)
-        super.onCleared()
-    }
-
-    private fun seedCoordinatesFromProviderIfEmpty() {
-        if (_latitude.value.isNotEmpty() && _longitude.value.isNotEmpty()) return
-        val lat = CurrentLocationProvider.latitude.value ?: return
-        val lng = CurrentLocationProvider.longitude.value ?: return
-        if (_latitude.value.isEmpty()) {
-            _latitude.value = CurrentLocationProvider.formatLatitude(lat) ?: return
-        }
-        if (_longitude.value.isEmpty()) {
-            _longitude.value = CurrentLocationProvider.formatLongitude(lng) ?: return
-        }
-    }
-
-    private val _inputError = MutableStateFlow<String?>(null)
-    val inputError: StateFlow<String?> = _inputError.asStateFlow()
-
-    private val _locationHistory = MutableStateFlow<List<HistoryEntry>>(historyStore.load())
-    val locationHistory: StateFlow<List<HistoryEntry>> = _locationHistory.asStateFlow()
-
-    // Online name search (Nominatim) for quickly setting a fixed location
-    private val _searchResults = MutableStateFlow<List<NominatimResult>>(emptyList())
-    val searchResults: StateFlow<List<NominatimResult>> = _searchResults.asStateFlow()
-
-    private val _searchLoading = MutableStateFlow(false)
-    val searchLoading: StateFlow<Boolean> = _searchLoading.asStateFlow()
-
-    fun setLatitude(value: String) {
-        _latitude.value = value
-        _inputError.value = null
-    }
-
-    fun setLongitude(value: String) {
-        _longitude.value = value
-        _inputError.value = null
-    }
-
-    fun setCoordinates(lat: Double, lng: Double) {
-        _latitude.value = lat.toBigDecimal().stripTrailingZeros().toPlainString()
-        _longitude.value = lng.toBigDecimal().stripTrailingZeros().toPlainString()
-        _inputError.value = null
-    }
-
-    fun clearInputError() {
-        _inputError.value = null
-    }
-
-    fun startSpoofing(): Boolean {
-        val lat = _latitude.value.toDoubleOrNull()
-        val lng = _longitude.value.toDoubleOrNull()
-
-        if (lat == null || lng == null) {
-            _inputError.value = "Please enter valid numbers for latitude and longitude."
-            return false
-        }
-        if (lat !in -90.0..90.0) {
-            _inputError.value = "Latitude must be between –90 and 90."
-            return false
-        }
-        if (lng !in -180.0..180.0) {
-            _inputError.value = "Longitude must be between –180 and 180."
-            return false
-        }
-
-        if (SpoofService.isPaused.value == true) {
-            SpoofService.resume(getApplication())
-        }
-
-        SpoofService.startFixed(getApplication(), lat, lng)
-
-        historyStore.push(lat, lng)
-        _locationHistory.value = historyStore.load()
-
-        return true
-    }
-
-    fun deleteHistoryEntry(entry: HistoryEntry) {
-        historyStore.remove(entry)
-        _locationHistory.value = historyStore.load()
-    }
-
-    fun renameHistoryEntry(entry: HistoryEntry, newLabel: String) {
-        historyStore.rename(entry, newLabel)
-        _locationHistory.value = historyStore.load()
-    }
-
-    fun clearHistory() {
-        historyStore.clear()
-        _locationHistory.value = emptyList()
-    }
-
-    /**
-     * Search for a location by name/address online.
-     */
-    fun searchByName(query: String) {
-        if (query.isBlank()) {
-            _searchResults.value = emptyList()
-            return
-        }
         viewModelScope.launch {
-            _searchLoading.value = true
-            _inputError.value = null
-            try {
-                val results = nominatimClient.search(query)
-                _searchResults.value = results
-                if (results.isEmpty()) {
-                    _inputError.value = "No results for \"$query\""
-                }
-            } catch (e: Exception) {
-                _inputError.value = "Search failed: ${e.message ?: "network error"}"
-                _searchResults.value = emptyList()
-            } finally {
-                _searchLoading.value = false
-            }
+            DefaultLocationSeeder.seedIfNeeded(getApplication(), dao)
+            _routeHints.value = buildRouteHints()
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            _locationPacks.value = DefaultLocationSeeder.loadAllPacks(getApplication())
         }
     }
 
-    fun clearSearchResults() {
-        _searchResults.value = emptyList()
+    fun setSpiralSpeed(speed: Float) {
+        _spiralSpeedKmh.value = speed.coerceIn(0f, 20f)
+        if (SpoofService.isWalkMode.value == true) {
+            SpoofService.updateSpeed(getApplication(), _spiralSpeedKmh.value)
+        }
     }
 
-    /**
-     * Apply a geocoded result and update both the fields + history entry logic.
-     */
-    fun applySearchResult(result: NominatimResult) {
-        setCoordinates(result.latitude, result.longitude)
-        // Also push to recent history like a normal start would (user can still tap Start)
-        historyStore.push(result.latitude, result.longitude)
-        _locationHistory.value = historyStore.load()
-        clearSearchResults()
+    fun addLocation(name: String, latitude: Double, longitude: Double) {
+        viewModelScope.launch {
+            dao.insert(
+                SavedLocation(
+                    sourceId = null,
+                    name = name.trim(),
+                    latitude = latitude,
+                    longitude = longitude
+                )
+            )
+        }
     }
 
-    fun pauseSpoofing() {
-        SpoofService.pause(getApplication())
+    fun deleteLocation(location: SavedLocation) {
+        if (location.isPreinstalled) return
+        viewModelScope.launch {
+            dao.delete(location)
+        }
     }
 
-    fun resumeSpoofing() {
-        SpoofService.resume(getApplication())
+    fun startSpoofing(location: SavedLocation) {
+        startSpoofing(location.latitude, location.longitude)
+    }
+
+    fun startSpoofing(asset: DefaultLocationAsset) {
+        startSpoofing(asset.latitude, asset.longitude)
+    }
+
+    fun startSpiralWalk(location: SavedLocation) =
+        startSpiralWalk(location.latitude, location.longitude)
+
+    fun startSpiralWalk(asset: DefaultLocationAsset) =
+        startSpiralWalk(asset.latitude, asset.longitude)
+
+    fun startSpiralWalk(lat: Double, lng: Double) {
+        val (lats, lngs) = SpiralWalkGenerator.generate(lat, lng)
+        SpoofService.startWalk(
+            getApplication(),
+            lats = lats,
+            lngs = lngs,
+            speedKmh = _spiralSpeedKmh.value,
+            minSpeedKmh = 0f,
+            maxSpeedKmh = 20f,
+            varyKmh = 1f,
+            loop = false
+        )
     }
 
     fun stopSpoofing() {
         SpoofService.stop(getApplication())
     }
+
+    fun routeHintFor(location: SavedLocation, hints: Map<String, String> = _routeHints.value): String? =
+        routeHintFor(location.name, location.latitude, location.longitude, hints)
+
+    fun routeHintFor(
+        name: String,
+        latitude: Double,
+        longitude: Double,
+        hints: Map<String, String> = _routeHints.value
+    ): String? = hints[locationKey(name, latitude, longitude)]
+
+    private fun startSpoofing(latitude: Double, longitude: Double) {
+        SpoofService.startFixed(getApplication(), latitude, longitude)
+    }
+
+    private fun buildRouteHints(): Map<String, String> {
+        val hints = linkedMapOf<String, String>()
+        DefaultSavedRouteSeeder.loadAllAssets(getApplication()).forEach { route ->
+            route.coordinates.forEach { point ->
+                val key = locationKey(point.name, point.latitude, point.longitude)
+                hints.putIfAbsent(key, route.routeName)
+            }
+        }
+        return hints
+    }
+
+    private fun locationKey(name: String, latitude: Double, longitude: Double): String =
+        "${name.trim()}|${"%.6f".format(latitude)}|${"%.6f".format(longitude)}"
 }

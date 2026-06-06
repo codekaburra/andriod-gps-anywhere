@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -62,12 +61,8 @@ import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
-import com.gpsanywhere.app.settings.HistoryEntry
 import com.gpsanywhere.app.ui.components.MapViewComposable
-import com.gpsanywhere.app.viewmodel.SavedLocationsViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.gpsanywhere.app.viewmodel.LocationViewModel
 import org.osmdroid.util.GeoPoint
 
 private sealed class PendingLocation {
@@ -103,9 +98,6 @@ private fun coordinatesMatch(
     "%.6f".format(lat1) == "%.6f".format(lat2) &&
         "%.6f".format(lng1) == "%.6f".format(lng2)
 
-private val ActiveLocationFill = Color(0xFFF3E8DC)
-private val ActiveLocationBorder = Color(0xFFD9B8A6)
-
 private fun activeLocationKey(
     lat: Double?,
     lng: Double?,
@@ -130,12 +122,11 @@ private fun activeLocationKey(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationScreen(
-    viewModel: SavedLocationsViewModel,
+    viewModel: LocationViewModel,
     modifier: Modifier = Modifier
 ) {
     val locationPacks by viewModel.locationPacks.collectAsState()
     val customLocations by viewModel.customLocations.observeAsState(emptyList())
-    val history by viewModel.history.collectAsState()
     val routeHints by viewModel.routeHints.collectAsState()
 
     val prebuiltLocations = remember(locationPacks) {
@@ -152,12 +143,8 @@ fun LocationScreen(
 
     var showAddSheet by remember { mutableStateOf(false) }
     var selectedLocation by remember { mutableStateOf<PendingLocation?>(null) }
-    var confirmHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var walkBreakLocation by remember { mutableStateOf<PendingLocation?>(null) }
-    var walkBreakHistory by remember { mutableStateOf<HistoryEntry?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
-    var deleteHistory by remember { mutableStateOf<HistoryEntry?>(null) }
-    var clearHistory by remember { mutableStateOf(false) }
 
     val activeLocationKey = remember(
         currentLat,
@@ -213,8 +200,6 @@ fun LocationScreen(
             GeoPoint(currentLat!!, currentLng!!)
         currentLat != null && currentLng != null ->
             GeoPoint(currentLat!!, currentLng!!)
-        history.isNotEmpty() ->
-            GeoPoint(history.first().lat, history.first().lng)
         else -> null
     }
 
@@ -225,8 +210,6 @@ fun LocationScreen(
             LocationPoint(currentLat!!, currentLng!!, "Current position")
         currentLat != null && currentLng != null ->
             LocationPoint(currentLat!!, currentLng!!, "Current position")
-        history.isNotEmpty() ->
-            LocationPoint(history.first().lat, history.first().lng, history.first().label)
         else -> null
     }
 
@@ -361,7 +344,6 @@ fun LocationScreen(
                         latitude = asset.latitude,
                         longitude = asset.longitude,
                         routeHint = viewModel.routeHintFor(asset.name, asset.latitude, asset.longitude, routeHints),
-                        isPreinstalled = true,
                         isSelected = selectedLocation.matches(pending),
                         isActive = !selectedLocation.matches(pending) &&
                             activeLocationKey == pending.selectionKey,
@@ -398,7 +380,6 @@ fun LocationScreen(
                         latitude = loc.latitude,
                         longitude = loc.longitude,
                         routeHint = null,
-                        isPreinstalled = false,
                         isSelected = selectedLocation.matches(pending),
                         isActive = !selectedLocation.matches(pending) &&
                             activeLocationKey == pending.selectionKey,
@@ -411,59 +392,9 @@ fun LocationScreen(
                 }
             }
 
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SectionHeader(title = "記錄")
-                    if (history.isNotEmpty()) {
-                        TextButton(onClick = { clearHistory = true }) {
-                            Text("Clear all")
-                        }
-                    }
-                }
-            }
-
-            if (history.isEmpty()) {
-                item {
-                    EmptyState(
-                        icon = Icons.Default.History,
-                        title = "No recent locations",
-                        body = "Started locations will appear here"
-                    )
-                }
-            } else {
-                items(history, key = { "${it.lat}-${it.lng}-${it.timestamp}" }) { entry ->
-                    HistoryCard(
-                        entry = entry,
-                        onClick = { if (isSpoofing) walkBreakHistory = entry else confirmHistory = entry },
-                        onDelete = { deleteHistory = entry }
-                    )
-                }
-            }
-
             item { Spacer(Modifier.height(16.dp)) }
             }
         }
-    }
-
-    confirmHistory?.let { entry ->
-        AlertDialog(
-            onDismissRequest = { confirmHistory = null },
-            title = { Text("Use this location?") },
-            text = { Text("Use \"${entry.displayName()}\" as custom GPS location?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.startSpoofing(entry)
-                    confirmHistory = null
-                }) { Text("Start") }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmHistory = null }) { Text("Cancel") }
-            }
-        )
     }
 
     // ── Walk-break warning dialogs ────────────────────────────────────────────
@@ -484,23 +415,6 @@ fun LocationScreen(
         )
     }
 
-    walkBreakHistory?.let { entry ->
-        AlertDialog(
-            onDismissRequest = { walkBreakHistory = null },
-            title = { Text("Stop walk mode?") },
-            text = { Text("Setting \"${entry.displayName()}\" as your location will stop the current walk. Continue?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.startSpoofing(entry)
-                    walkBreakHistory = null
-                }) { Text("Stop walk & use location") }
-            },
-            dismissButton = {
-                TextButton(onClick = { walkBreakHistory = null }) { Text("Cancel") }
-            }
-        )
-    }
-
     deleteLocation?.let { loc ->
         AlertDialog(
             onDismissRequest = { deleteLocation = null },
@@ -514,40 +428,6 @@ fun LocationScreen(
             },
             dismissButton = {
                 TextButton(onClick = { deleteLocation = null }) { Text("Cancel") }
-            }
-        )
-    }
-
-    deleteHistory?.let { entry ->
-        AlertDialog(
-            onDismissRequest = { deleteHistory = null },
-            title = { Text("Delete history?") },
-            text = { Text("Remove \"${entry.displayName()}\" from 記錄?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteHistoryEntry(entry)
-                    deleteHistory = null
-                }) { Text("Delete") }
-            },
-            dismissButton = {
-                TextButton(onClick = { deleteHistory = null }) { Text("Cancel") }
-            }
-        )
-    }
-
-    if (clearHistory) {
-        AlertDialog(
-            onDismissRequest = { clearHistory = false },
-            title = { Text("Clear 記錄?") },
-            text = { Text("Remove all recent locations?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.clearHistory()
-                    clearHistory = false
-                }) { Text("Clear") }
-            },
-            dismissButton = {
-                TextButton(onClick = { clearHistory = false }) { Text("Cancel") }
             }
         )
     }
@@ -579,7 +459,6 @@ private fun LocationCard(
     latitude: Double,
     longitude: Double,
     routeHint: String?,
-    isPreinstalled: Boolean,
     isSelected: Boolean,
     isActive: Boolean,
     showJumpButton: Boolean,
@@ -588,20 +467,8 @@ private fun LocationCard(
     onSpiral: () -> Unit,
     onDelete: (() -> Unit)?
 ) {
-    val baseContainerColor = if (isPreinstalled) {
-        MaterialTheme.colorScheme.secondaryContainer
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
-
-    val containerColor = when {
-        isSelected -> MaterialTheme.colorScheme.primaryContainer
-        isActive -> ActiveLocationFill
-        else -> baseContainerColor
-    }
     val border = when {
-        isSelected -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        isActive -> BorderStroke(2.dp, ActiveLocationBorder)
+        isSelected || isActive -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
         else -> null
     }
 
@@ -610,13 +477,11 @@ private fun LocationCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = border,
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected || isActive) 3.dp else 1.dp
-        )
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
             // ── Info row ──────────────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -687,60 +552,6 @@ private fun LocationCard(
                         Text("Walk Around")
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HistoryCard(
-    entry: HistoryEntry,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.History,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp)
-            ) {
-                Text(
-                    entry.displayName(),
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    recentTime(entry.timestamp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-                )
-            }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Delete history",
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
-                )
             }
         }
     }
@@ -919,16 +730,3 @@ private fun parseClipboardCoordinates(raw: String): Pair<Double, Double>? {
     }
 }
 
-private fun HistoryEntry.displayName(): String =
-    label?.takeIf { it.isNotBlank() } ?: "${"%.6f".format(lng)}, ${"%.6f".format(lat)}"
-
-private fun recentTime(timestamp: Long): String {
-    val now = System.currentTimeMillis()
-    val ageMs = now - timestamp
-    val dayMs = 24L * 60L * 60L * 1000L
-    return when {
-        ageMs < dayMs -> "Today ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))}"
-        ageMs < 2L * dayMs -> "Yesterday"
-        else -> SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(Date(timestamp))
-    }
-}

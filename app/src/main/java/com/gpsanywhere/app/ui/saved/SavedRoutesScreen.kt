@@ -42,11 +42,11 @@ import com.gpsanywhere.app.data.DefaultSavedRouteSeeder.DefaultRouteAsset
 import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.ui.components.MapPreviewSheet
-import com.gpsanywhere.app.viewmodel.SavedRoutesViewModel
+import com.gpsanywhere.app.viewmodel.WalkViewModel
 
 @Composable
 fun SavedRoutesScreen(
-    viewModel: SavedRoutesViewModel,
+    viewModel: WalkViewModel,
     modifier: Modifier = Modifier
 ) {
     val routes by viewModel.routes.observeAsState(emptyList())
@@ -138,7 +138,7 @@ fun SavedRoutesScreen(
                     route = route,
                     distanceLabel = viewModel.distanceKm(route),
                     waypointCount = viewModel.waypointCount(route),
-                    onPlay = { viewModel.startRoute(route) },
+                    onPlay = { viewModel.startWalk(route) },
                     onDelete = { routeToDelete = route },
                     onPreview = {
                         previewRoute = route.name to WaypointJson.fromJson(route.waypointsJson)

@@ -31,13 +31,13 @@ import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import com.gpsanywhere.app.ui.walk.WalkScreen
 import com.gpsanywhere.app.viewmodel.MainViewModel
-import com.gpsanywhere.app.viewmodel.SavedLocationsViewModel
+import com.gpsanywhere.app.viewmodel.LocationViewModel
 import com.gpsanywhere.app.viewmodel.WalkViewModel
 
 @Composable
 fun MainApp(preferences: AppPreferences) {
     val mainViewModel: MainViewModel = viewModel()
-    val savedLocationsViewModel: SavedLocationsViewModel = viewModel()
+    val locationViewModel: LocationViewModel = viewModel()
     val walkViewModel: WalkViewModel = viewModel()
 
     val themeMode by mainViewModel.themeMode.observeAsState(ThemeMode.SYSTEM)
@@ -70,7 +70,7 @@ fun MainApp(preferences: AppPreferences) {
                         selected = currentRoute == Routes.WALK,
                         onClick = { nav(Routes.WALK) },
                         icon = { Icon(Icons.Default.DirectionsWalk, contentDescription = "Walk") },
-                        label = { Text("Walk") }
+                        label = { Text("Route") }
                     )
                 }
             }
@@ -81,7 +81,7 @@ fun MainApp(preferences: AppPreferences) {
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Routes.LOCATION) {
-                    LocationScreen(viewModel = savedLocationsViewModel)
+                    LocationScreen(viewModel = locationViewModel)
                 }
                 composable(Routes.WALK) {
                     WalkScreen(viewModel = walkViewModel)
