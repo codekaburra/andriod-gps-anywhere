@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -227,10 +228,19 @@ fun WalkScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (!isWalking) {
-                    // Pre-start: single Start button
+                    // Pre-start: back to list + start
+                    OutlinedButton(
+                        onClick = { selectedRoute = null },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Back")
+                    }
                     Button(
                         onClick = { viewModel.startWalk(route) },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.weight(2f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)

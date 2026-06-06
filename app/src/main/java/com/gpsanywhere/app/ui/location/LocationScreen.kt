@@ -521,7 +521,7 @@ private fun LocationCard(
                         )
                     }
                     Text(
-                        "${"%.6f".format(longitude)}, ${"%.6f".format(latitude)}",
+                        "${"%.6f".format(latitude)}, ${"%.6f".format(longitude)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -661,7 +661,7 @@ private fun AddLocationSheet(
                 Text("Paste Coordinates", modifier = Modifier.padding(start = 8.dp))
             }
             Text(
-                "Accepts latitude, longitude (Google Maps) or longitude, latitude",
+                "Format: latitude, longitude  (e.g. 25.0330, 121.5654)",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
             )
@@ -718,15 +718,9 @@ private fun AddLocationSheet(
 private fun parseClipboardCoordinates(raw: String): Pair<Double, Double>? {
     val parts = raw.split(",")
     if (parts.size != 2) return null
-    val a = parts[0].trim().toDoubleOrNull() ?: return null
-    val b = parts[1].trim().toDoubleOrNull() ?: return null
-    // If second value is outside latitude range it must be longitude → input is lat, lng (Google Maps format)
-    return if (b !in -90.0..90.0) {
-        if (a !in -90.0..90.0 || b !in -180.0..180.0) return null
-        b to a  // return lng, lat
-    } else {
-        if (a !in -180.0..180.0 || b !in -90.0..90.0) return null
-        a to b  // already lng, lat
-    }
+    val lat = parts[0].trim().toDoubleOrNull() ?: return null
+    val lng = parts[1].trim().toDoubleOrNull() ?: return null
+    if (lat !in -90.0..90.0 || lng !in -180.0..180.0) return null
+    return lng to lat  // Pair(lng, lat) as expected by caller
 }
 
