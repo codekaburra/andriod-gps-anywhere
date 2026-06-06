@@ -803,19 +803,19 @@ private fun AddLocationSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedTextField(
-                    value = lngText,
-                    onValueChange = { lngText = it; error = null },
-                    label = { Text("Longitude") },
-                    placeholder = { Text("Longitude") },
+                    value = latText,
+                    onValueChange = { latText = it; error = null },
+                    label = { Text("Latitude") },
+                    placeholder = { Text("Latitude") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
-                    value = latText,
-                    onValueChange = { latText = it; error = null },
-                    label = { Text("Latitude") },
-                    placeholder = { Text("Latitude") },
+                    value = lngText,
+                    onValueChange = { lngText = it; error = null },
+                    label = { Text("Longitude") },
+                    placeholder = { Text("Longitude") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
@@ -827,7 +827,7 @@ private fun AddLocationSheet(
                     val raw = clipboard.getText()?.text?.trim().orEmpty()
                     val parsed = parseClipboardCoordinates(raw)
                     if (parsed == null) {
-                        error = "Clipboard must be longitude, latitude"
+                        error = "Invalid Format [$raw]. Clipboard must be latitude, longitude"
                     } else {
                         lngText = parsed.first.toBigDecimal().stripTrailingZeros().toPlainString()
                         latText = parsed.second.toBigDecimal().stripTrailingZeros().toPlainString()
@@ -840,7 +840,7 @@ private fun AddLocationSheet(
                 Text("Paste Coordinates", modifier = Modifier.padding(start = 8.dp))
             }
             Text(
-                "Expects longitude, latitude",
+                "Accepts latitude, longitude (Google Maps) or longitude, latitude",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
             )
@@ -897,10 +897,16 @@ private fun AddLocationSheet(
 private fun parseClipboardCoordinates(raw: String): Pair<Double, Double>? {
     val parts = raw.split(",")
     if (parts.size != 2) return null
-    val lng = parts[0].trim().toDoubleOrNull() ?: return null
-    val lat = parts[1].trim().toDoubleOrNull() ?: return null
-    if (lng !in -180.0..180.0 || lat !in -90.0..90.0) return null
-    return lng to lat
+    val a = parts[0].trim().toDoubleOrNull() ?: return null
+    val b = parts[1].trim().toDoubleOrNull() ?: return null
+    // If second value is outside latitude range it must be longitude → input is lat, lng (Google Maps format)
+    return if (b !in -90.0..90.0) {
+        if (a !in -90.0..90.0 || b !in -180.0..180.0) return null
+        b to a  // return lng, lat
+    } else {
+        if (a !in -180.0..180.0 || b !in -90.0..90.0) return null
+        a to b  // already lng, lat
+    }
 }
 
 private fun HistoryEntry.displayName(): String =
