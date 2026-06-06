@@ -32,26 +32,37 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = MilkTeaAccent,
-    secondary = MilkTeaAccentDeep,
-    tertiary = MilkTeaAccentDeep,
-    background = MilkTeaBackgroundDark,
-    surface = MilkTeaSurfaceDark,
-    error = ErrorRed,
-    primaryContainer = Color(0xFF3D2E22),
-    onPrimaryContainer = MilkTeaTextOnDark,
-    secondaryContainer = MilkTeaSurfaceVariantDark,
+    // Accent colours — same warm toffee tones as light mode
+    primary = MilkTeaAccent,           // #DDAA7A — buttons, icons, highlights
+    secondary = MilkTeaAccentDeep,     // #C99464 — secondary actions
+    tertiary = MilkTeaAccent,
+
+    // Backgrounds — layered from darkest to lightest
+    background = MilkTeaBackgroundDark,        // #12100E — app canvas
+    surface = MilkTeaSurfaceDark,              // #1C1815 — cards / panels
+    surfaceVariant = MilkTeaSurfaceVariantDark, // #262019 — input fields, chips
+
+    // Containers (tinted surfaces for buttons, tags, etc.)
+    primaryContainer = Color(0xFF3A2A1A),      // warm dark container for accent elements
+    onPrimaryContainer = MilkTeaTextOnDark,    // #F3EFE8
+    secondaryContainer = Color(0xFF2C2118),    // slightly cooler container
     onSecondaryContainer = MilkTeaTextOnDark,
-    tertiaryContainer = Color(0xFF4A3828),
+    tertiaryContainer = Color(0xFF332519),
     onTertiaryContainer = MilkTeaTextOnDark,
-    onPrimary = Color(0xFF12100E),
-    onSecondary = Color(0xFF12100E),
-    onTertiary = Color(0xFF12100E),
-    onBackground = MilkTeaTextOnDark,
-    onSurface = MilkTeaTextOnDark,
-    surfaceVariant = MilkTeaSurfaceVariantDark,
-    onSurfaceVariant = MilkTeaMutedOnDark,
-    outline = MilkTeaBorderDark
+
+    // Text on accents — near-black for contrast on warm accent buttons
+    onPrimary = MilkTeaBackgroundDark,         // #12100E
+    onSecondary = MilkTeaBackgroundDark,
+    onTertiary = MilkTeaBackgroundDark,
+
+    // Text on backgrounds/surfaces
+    onBackground = MilkTeaTextOnDark,          // #F3EFE8 — primary text
+    onSurface = MilkTeaTextOnDark,             // #F3EFE8
+    onSurfaceVariant = MilkTeaMutedOnDark,     // #C5B4A5 — secondary / muted text
+
+    // Borders & errors
+    outline = MilkTeaBorderDark,               // #3D342E
+    error = ErrorRed
 )
 
 @Composable
