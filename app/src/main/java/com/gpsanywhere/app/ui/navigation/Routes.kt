@@ -4,7 +4,4 @@ object Routes {
     const val HOME = "home"
     const val LOCATION = "location"
     const val WALK = "walk"
-    const val STEPS = "steps"
-    const val ROUTE = "route"
-    const val SAVED = "saved"
 }

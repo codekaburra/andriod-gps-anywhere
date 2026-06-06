@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.outlined.Bookmarks
-import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -30,26 +28,17 @@ import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.ui.home.HomeScreen
 import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
-import com.gpsanywhere.app.ui.route.RouteScreen
-import com.gpsanywhere.app.ui.saved.SavedRoutesScreen
-import com.gpsanywhere.app.ui.steps.StepsScreen
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import com.gpsanywhere.app.ui.walk.WalkScreen
 import com.gpsanywhere.app.viewmodel.MainViewModel
-import com.gpsanywhere.app.viewmodel.RouteViewModel
 import com.gpsanywhere.app.viewmodel.SavedLocationsViewModel
-import com.gpsanywhere.app.viewmodel.SavedRoutesViewModel
-import com.gpsanywhere.app.viewmodel.StepsViewModel
 import com.gpsanywhere.app.viewmodel.WalkViewModel
 
 @Composable
 fun MainApp(preferences: AppPreferences) {
     val mainViewModel: MainViewModel = viewModel()
     val savedLocationsViewModel: SavedLocationsViewModel = viewModel()
-    val routeViewModel: RouteViewModel = viewModel()
-    val savedViewModel: SavedRoutesViewModel = viewModel()
     val walkViewModel: WalkViewModel = viewModel()
-    val stepsViewModel: StepsViewModel = viewModel()
 
     val themeMode by mainViewModel.themeMode.observeAsState(ThemeMode.SYSTEM)
     val navController = rememberNavController()
@@ -59,18 +48,6 @@ fun MainApp(preferences: AppPreferences) {
     var showOnboarding by remember { mutableStateOf(!preferences.onboardingShown) }
 
     LaunchedEffect(Unit) { mainViewModel.loadTheme() }
-
-    LaunchedEffect(RouteEditHolder.pendingRoute) {
-        RouteEditHolder.pendingRoute?.let { route ->
-            routeViewModel.loadRoute(route)
-            RouteEditHolder.pendingRoute = null
-            navController.navigate(Routes.ROUTE) {
-                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                launchSingleTop = true
-                restoreState = true
-            }
-        }
-    }
 
     GPSAnywhereTheme(themeMode = themeMode) {
         Scaffold(
@@ -95,18 +72,6 @@ fun MainApp(preferences: AppPreferences) {
                         icon = { Icon(Icons.Default.DirectionsWalk, contentDescription = "Walk") },
                         label = { Text("Walk") }
                     )
-                    NavigationBarItem(
-                        selected = currentRoute == Routes.STEPS,
-                        onClick = { nav(Routes.STEPS) },
-                        icon = { Icon(Icons.Default.DirectionsRun, contentDescription = "Steps") },
-                        label = { Text("Steps") }
-                    )
-                    NavigationBarItem(
-                        selected = currentRoute == Routes.SAVED,
-                        onClick = { nav(Routes.SAVED) },
-                        icon = { Icon(Icons.Outlined.Bookmarks, contentDescription = "Saved") },
-                        label = { Text("Saved") }
-                    )
                 }
             }
         ) { innerPadding ->
@@ -119,31 +84,7 @@ fun MainApp(preferences: AppPreferences) {
                     LocationScreen(viewModel = savedLocationsViewModel)
                 }
                 composable(Routes.WALK) {
-                    WalkScreen(
-                        viewModel = walkViewModel,
-                        onNavigateToAddRoute = {
-                            navController.navigate(Routes.ROUTE) { launchSingleTop = true }
-                        }
-                    )
-                }
-                composable(Routes.STEPS) {
-                    StepsScreen(viewModel = stepsViewModel)
-                }
-                composable(Routes.ROUTE) {
-                    RouteScreen(viewModel = routeViewModel)
-                }
-                composable(Routes.SAVED) {
-                    SavedRoutesScreen(
-                        viewModel = savedViewModel,
-                        onAddNew = {
-                            navController.navigate(Routes.ROUTE) { launchSingleTop = true }
-                        },
-                        onEditRoute = { route ->
-                            RouteEditHolder.pendingRoute = route
-                            routeViewModel.loadRoute(route)
-                            navController.navigate(Routes.ROUTE) { launchSingleTop = true }
-                        }
-                    )
+                    WalkScreen(viewModel = walkViewModel)
                 }
             }
         }

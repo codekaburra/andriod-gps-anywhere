@@ -233,7 +233,7 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addPastedWaypoint(raw: String): Boolean {
         val p = parsePastedLocation(raw) ?: run {
-            _errorMessage.value = "Couldn't parse location"
+            _errorMessage.value = "Invalid Format [$raw]. Clipboard must be latitude, longitude"
             return false
         }
         addWaypoint(p)
@@ -242,7 +242,7 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setStartFromPaste(raw: String): Boolean {
         val p = parsePastedLocation(raw) ?: run {
-            _errorMessage.value = "Couldn't parse location"
+            _errorMessage.value = "Invalid Format [$raw]. Clipboard must be latitude, longitude"
             return false
         }
         _startLat.value = p.latitude.toString()
@@ -252,7 +252,7 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setEndFromPaste(raw: String): Boolean {
         val p = parsePastedLocation(raw) ?: run {
-            _errorMessage.value = "Couldn't parse location"
+            _errorMessage.value = "Invalid Format [$raw]. Clipboard must be latitude, longitude"
             return false
         }
         _endLat.value = p.latitude.toString()
