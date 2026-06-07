@@ -146,6 +146,11 @@ fun LocationScreen(
     var walkBreakLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
 
+    // Custom location jump panel
+    var jumpLat by remember { mutableStateOf("") }
+    var jumpLng by remember { mutableStateOf("") }
+    val clipboardManager = LocalClipboardManager.current
+
     val activeLocationKey = remember(
         currentLat,
         currentLng,
@@ -326,6 +331,36 @@ fun LocationScreen(
                         waypoints = previewPoint?.let { listOf(it) } ?: emptyList()
                     )
                 }
+            }
+
+            item {
+                CustomJumpPanel(
+                    latText = jumpLat,
+                    lngText = jumpLng,
+                    onLatChange = { jumpLat = it },
+                    onLngChange = { jumpLng = it },
+                    onJump = {
+                        val lat = jumpLat.trim().toDoubleOrNull()
+                        val lng = jumpLng.trim().toDoubleOrNull()
+                        if (lat != null && lng != null &&
+                            lat in -90.0..90.0 && lng in -180.0..180.0
+                        ) {
+                            viewModel.startSpiralWalk(lat, lng)
+                        }
+                    },
+                    onPaste = {
+                        val raw = clipboardManager.getText()?.text ?: ""
+                        val parsed = parseClipboardCoordinates(raw)
+                        if (parsed != null) {
+                            // parseClipboardCoordinates returns Pair(lng, lat)
+                            val lat = parsed.second
+                            val lng = parsed.first
+                            jumpLat = "%.6f".format(lat)
+                            jumpLng = "%.6f".format(lng)
+                            viewModel.startSpiralWalk(lat, lng)
+                        }
+                    }
+                )
             }
 
             item {
@@ -711,6 +746,78 @@ private fun AddLocationSheet(
             }
 
             Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun CustomJumpPanel(
+    latText: String,
+    lngText: String,
+    onLatChange: (String) -> Unit,
+    onLngChange: (String) -> Unit,
+    onJump: () -> Unit,
+    onPaste: () -> Unit
+) {
+    val latValid = latText.isBlank() || latText.trim().toDoubleOrNull()?.let { it in -90.0..90.0 } == true
+    val lngValid = lngText.isBlank() || lngText.trim().toDoubleOrNull()?.let { it in -180.0..180.0 } == true
+    val canJump = latText.isNotBlank() && lngText.isNotBlank() && latValid && lngValid
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                OutlinedTextField(
+                    value = latText,
+                    onValueChange = onLatChange,
+                    label = { Text("Latitude") },
+                    placeholder = { Text("e.g. 25.0330") },
+                    isError = !latValid,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = lngText,
+                    onValueChange = onLngChange,
+                    label = { Text("Longitude") },
+                    placeholder = { Text("e.g. 121.5654") },
+                    isError = !lngValid,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.weight(1f)
+                )
+                Button(
+                    onClick = onJump,
+                    enabled = canJump,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Text("Jump")
+                }
+            }
+
+            OutlinedButton(
+                onClick = onPaste,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    Icons.Default.ContentPaste,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.size(6.dp))
+                Text("Paste Coordinate")
+            }
         }
     }
 }
