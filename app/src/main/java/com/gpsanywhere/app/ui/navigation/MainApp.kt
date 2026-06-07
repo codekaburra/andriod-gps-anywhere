@@ -25,7 +25,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.settings.ThemeMode
-import com.gpsanywhere.app.ui.home.HomeScreen
 import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme

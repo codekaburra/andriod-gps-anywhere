@@ -63,6 +63,7 @@ import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.MapViewComposable
+import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
 import org.osmdroid.util.GeoPoint
 
@@ -850,14 +851,5 @@ private fun CustomJumpPanel(
             }
         }
     }
-}
-
-private fun parseClipboardCoordinates(raw: String): Pair<Double, Double>? {
-    val parts = raw.split(",")
-    if (parts.size != 2) return null
-    val lat = parts[0].trim().toDoubleOrNull() ?: return null
-    val lng = parts[1].trim().toDoubleOrNull() ?: return null
-    if (lat !in -90.0..90.0 || lng !in -180.0..180.0) return null
-    return lng to lat  // Pair(lng, lat) as expected by caller
 }
 
