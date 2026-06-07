@@ -1,8 +1,8 @@
 # GPS Anywhere
 
-** Virtually Walk Around The World On Android Phone**
+**Virtually walk around the world from your Android phone**
 
-> **For development & testing use only. **  
+> **For development & testing use only.**  
 > GPS spoofing may violate other apps' terms of service or local laws. Use responsibly.  
 > GPS 模擬可能違反其他 App 的服務條款或當地法規，請負責任地使用。
 
@@ -10,17 +10,17 @@
 
 ## ✨ Screenshots
 
-### 📸 App Screenshots & Explain
+### 📸 Screenshots & Overview
 
 
 ### Location
 
-Edit your Android GPS location to anywhere you like !
-- Just jump to it
- or 
-- Walk around it spiral way 
+Set your Android GPS location anywhere you want:
 
-You can add your custom location by clicking the "+" button on top right corner
+- Jump directly to a saved or custom location.
+- Simulate walking in a spiral pattern from that point.
+
+You can add a custom location by clicking the "+" button in the top-right corner.
 <p align="center">
   <img src="docs/screenshots/Screenshot_202606071852_location_list.png" width="24%" alt="Location — saved list">
   <img src="docs/screenshots/Screenshot_202606071852_location_add.png" width="24%" alt="Location — add new">
@@ -29,14 +29,14 @@ You can add your custom location by clicking the "+" button on top right corner
 </p>
 
 ### Route
-Follow the prebuild route. [Unfortunately Edit function coming soon. Working on it]
+Follow a pre-built route. Custom route editing is not available yet.
 <p align="center">
   <img src="docs/screenshots/Screenshot_202606071852_route_list.png" width="30%" alt="Route — list">
   &nbsp;&nbsp;
   <img src="docs/screenshots/Screenshot_202606071852_route_walking.png" width="30%" alt="Route — walking">
 </p>
 
-**Walk Mode** — Base speed slider (1–20 km/hr with tick marks), Speed vary by ±1 km/hr
+**Walk Mode** — Base speed slider from 1-20 km/h with tick marks. Speed vary by ±1 km/hr randomly
 
 ---
 
@@ -71,13 +71,12 @@ Or hit **Run** in Android Studio.
 
 ---
 
----
-
 ## 🛠 Tech Stack
 
 | Component | Choice |
 |-----------|--------|
-| Language | Kotlin 2.0 |
+| Package | `com.gpsanywhere.app` |
+| Language | Kotlin + Jetpack Compose |
 | UI | Jetpack Compose + Material 3 |
 | Maps | OSMDroid — no Google Play Services dependency |
 | Routing | OSRM (free, no API key) |
@@ -91,11 +90,10 @@ Or hit **Run** in Android Studio.
 
 ---
 
----
-
 ## 📁 Project Structure
 
 ```
+Fill in later
 ```
 
 ---
@@ -114,22 +112,26 @@ The app requests the following Android permissions.
 | `POST_NOTIFICATIONS` | Persistent notification on Android 13+ |
 | `INTERNET` | Map tiles + OSRM route fetching |
 | `ACCESS_NETWORK_STATE` | Pre-flight connectivity check |
+| `android.permission.health.READ_STEPS` | Read Health Connect step data |
+| `android.permission.health.WRITE_STEPS` | Write simulated step data to Health Connect |
 
 ---
 
 ## ⚙️ Build Notes
 
-This project uses **AGP 9 + Kotlin 2.0**, which has some sharp edges:
+This project uses **AGP 9 + the Compose compiler plugin**, which has some sharp edges:
 
 - **Do not** add the `org.jetbrains.kotlin.android` plugin — AGP 9 bundles Kotlin internally and will throw a "duplicate extension" error.
 - Compose needs `org.jetbrains.kotlin.plugin.compose` as a separate plugin.
 - Room uses KSP, not kapt: `ksp(libs.androidx.room.compiler)`.
 - Add `android.disallowKotlinSourceSets=false` to `gradle.properties` to avoid KSP source set conflicts.
 - `kotlinOptions { jvmTarget }` no longer exists in AGP 9 — use `compileOptions` only.
-- GPS Anywhere uses OSMDroid for maps and OSRM for route data. The public OSRM server is free and does not need an API key, but it is rate-limited and intended for light usage. For heavy or commercial use, self-host OSRM or switch to a routing backend you control.
+
 ---
 
-## 📄 Usage Notice , Responsible Use, Disclaimer
+## 📄 Usage Notice, Responsible Use, Disclaimer
 
 Educational and internal testing use only. Do not use it to bypass location restrictions, misrepresent your location to services, or gain unfair advantages in apps or games. 
 Respect the terms of any apps or services you interact with while using simulated locations.
+
+GPS Anywhere uses OSMDroid for maps and OSRM for route data. The public OSRM server is free and does not need an API key, but it is rate-limited and intended for light usage. For heavy or commercial use, self-host OSRM or switch to a routing backend you control.
