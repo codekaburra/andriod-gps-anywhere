@@ -66,6 +66,12 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateLocation(location: SavedLocation, name: String, latitude: Double, longitude: Double) {
+        viewModelScope.launch {
+            dao.update(location.copy(name = name.trim(), latitude = latitude, longitude = longitude))
+        }
+    }
+
     fun deleteLocation(location: SavedLocation) {
         if (location.isPreinstalled) return
         viewModelScope.launch {

@@ -9,6 +9,9 @@ interface SavedLocationDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(location: SavedLocation): Long
 
+    @Update
+    suspend fun update(location: SavedLocation)
+
     @Delete
     suspend fun delete(location: SavedLocation)
 
