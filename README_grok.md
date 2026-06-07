@@ -4,6 +4,16 @@ A lightweight Android tool for developers and testers to simulate GPS locations 
 
 > For development and testing only. GPS spoofing may conflict with app terms or regulations in some regions.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/Screenshot_202606071852_route_list.png" width="30%" alt="Route list">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/Screenshot_202606071852_route_seleted.png" width="30%" alt="Route selected">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/Screenshot_202606071852_route_walking.png" width="30%" alt="Route walking">
+</p>
+
 ## Quick Start
 
 1. Clone the repo and open in Android Studio (Ladybug+ recommended).
@@ -18,7 +28,7 @@ Without the mock location setting, the app installs but will not spoof.
 - Map-based pinning, Google Maps coordinate paste, or manual lat/long entry
 - Persistent foreground service with notification controls
 - History of recent locations with rename, delete, and restore
-- Planned: OSRM-powered route walking simulation with speed controls and saved routes
+- OSRM-powered route walking simulation with speed controls and saved routes
 
 ## Technology
 
@@ -63,11 +73,6 @@ app/src/main/java/com/gpsanywhere/app/
 - Room compilation uses KSP, not kapt.
 - Set `android.disallowKotlinSourceSets=false` in gradle.properties.
 - Only `compileOptions` is used; `kotlinOptions.jvmTarget` is removed.
-
-## Status & Next Steps
-
-Current implementation covers fixed-location spoofing and recent history.  
-Route simulation, saved routes, and UI refinements are scheduled for subsequent development sessions.
 
 ## License & Responsibility
 

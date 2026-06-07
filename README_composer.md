@@ -16,16 +16,31 @@ The app uses Android's official mock-location API (`LocationManager.addTestProvi
 
 ## Screenshots
 
-| Location | Route list | Walk simulation |
-|----------|------------|-----------------|
-| Map preview, saved locations by region, coordinate input | Preset routes, speed slider, speed variation | Live map, waypoint progress, Start / Stop |
+### Location
+
+| Location list | Location selected | Add location | Location walking |
+|---------------|-------------------|--------------|------------------|
+| Saved locations by region | Map preview with selected pin | Add a custom location | Active walk from a location |
 
 <p align="center">
-  <img src="docs/screenshots/Screenshot_20260603_233437.png" width="30%" alt="Location screen">
+  <img src="docs/screenshots/Screenshot_202606071852_location_list.png" width="22%" alt="Location list">
+  <img src="docs/screenshots/Screenshot_202606071852_location_selected.png" width="22%" alt="Location selected">
+  <img src="docs/screenshots/Screenshot_202606071852_location_add.png" width="22%" alt="Add location">
+  <img src="docs/screenshots/Screenshot_202606071852_location_walking.png" width="22%" alt="Location walking">
+</p>
+
+### Route
+
+| Route list | Route selected | Route walking |
+|------------|----------------|---------------|
+| Preset routes and speed controls | Route detail with waypoints | Live walk simulation |
+
+<p align="center">
+  <img src="docs/screenshots/Screenshot_202606071852_route_list.png" width="30%" alt="Route list">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/Screenshot_20260603_233446.png" width="30%" alt="Route list">
+  <img src="docs/screenshots/Screenshot_202606071852_route_seleted.png" width="30%" alt="Route selected">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/Screenshot_20260603_233457.png" width="30%" alt="Walk simulation">
+  <img src="docs/screenshots/Screenshot_202606071852_route_walking.png" width="30%" alt="Route walking">
 </p>
 
 ---
@@ -193,17 +208,6 @@ app/src/main/java/com/gpsanywhere/app/
 - Room uses **KSP**, not kapt: `ksp(libs.androidx.room.compiler)`.
 - Set `android.disallowKotlinSourceSets=false` in `gradle.properties`.
 - Use `compileOptions` only; `kotlinOptions { jvmTarget }` is removed in AGP 9.
-
----
-
-## Roadmap
-
-- [ ] Route builder — manual pins and OSRM auto-route on a dedicated editor screen
-- [ ] Saved routes UI — create, edit, delete custom routes with map thumbnails
-- [ ] Notification polish — live route progress in the foreground notification
-- [ ] Settings / About screen and final theme pass
-
-See `BUILD_PLAN.md` for the session-by-session development plan.
 
 ---
 

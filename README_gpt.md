@@ -4,6 +4,27 @@ GPS Anywhere is an Android app for testing fixed mock locations and simulated wa
 
 > This project is for development and testing only. Mocking GPS can violate app terms, game rules, platform policies, or local regulations. Use it only on devices and services where you have permission.
 
+## Screenshots
+
+### Location
+
+<p align="center">
+  <img src="docs/screenshots/Screenshot_202606071852_location_list.png" width="22%" alt="Location list">
+  <img src="docs/screenshots/Screenshot_202606071852_location_selected.png" width="22%" alt="Location selected">
+  <img src="docs/screenshots/Screenshot_202606071852_location_add.png" width="22%" alt="Add location">
+  <img src="docs/screenshots/Screenshot_202606071852_location_walking.png" width="22%" alt="Location walking">
+</p>
+
+### Route
+
+<p align="center">
+  <img src="docs/screenshots/Screenshot_202606071852_route_list.png" width="30%" alt="Route list">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/Screenshot_202606071852_route_seleted.png" width="30%" alt="Route selected">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/Screenshot_202606071852_route_walking.png" width="30%" alt="Route walking">
+</p>
+
 ## What It Does
 
 - Sets a fixed mock GPS coordinate from a map tap, pasted coordinates, or manual latitude/longitude input.
@@ -131,10 +152,6 @@ This project uses AGP 9 and the Kotlin Compose compiler plugin. A few details ar
 ## Routing Notes
 
 GPS Anywhere uses OSMDroid for maps and OSRM for route data. The public OSRM server is free and does not need an API key, but it is rate-limited and intended for light usage. For heavy or commercial use, self-host OSRM or switch to a routing backend you control.
-
-## Development Status
-
-The project currently focuses on fixed-location spoofing, route playback, saved/default route handling, speed controls, foreground service behavior, and coordinate parsing. Some older planning docs mention additional screens and polish tasks; treat the source code as the latest truth for what is active in the app.
 
 ## Responsible Use
 

@@ -20,19 +20,28 @@ GPS Anywhere turns your phone into a GPS simulator. Point at a spot on the map a
 
 ## Screenshots
 
+### Location
+
 <p align="center">
-  <img src="docs/screenshots/Screenshot_20260603_233437.png" width="30%" alt="Location screen">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/Screenshot_20260603_233446.png" width="30%" alt="Walk screen — route list">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/Screenshot_20260603_233457.png" width="30%" alt="Walk screen — ready to start">
+  <img src="docs/screenshots/Screenshot_202606071852_location_list.png" width="24%" alt="Location — saved list">
+  <img src="docs/screenshots/Screenshot_202606071852_location_add.png" width="24%" alt="Location — add new">
+  <img src="docs/screenshots/Screenshot_202606071852_location_selected.png" width="24%" alt="Location — selected">
+  <img src="docs/screenshots/Screenshot_202606071852_location_walking.png" width="24%" alt="Location — walking">
 </p>
 
-**Left:** Location tab — map preview centred on current GPS, saved locations grouped by region. Tap any entry to jump.
+**Saved list** — quick-access locations grouped by region. **Add** — tap the map or paste coordinates. **Selected** — confirm and preview on map. **Walking** — spoofing active, position locked.
 
-**Centre:** Walk tab — speed slider with tick marks, speed variation panel (min/max/vary), preset routes showing distance and stop count.
+### Route
 
-**Right:** Walk view — live map follows position, waypoint list with distances, Start button to begin simulation.
+<p align="center">
+  <img src="docs/screenshots/Screenshot_202606071852_route_list.png" width="30%" alt="Route — list">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/Screenshot_202606071852_route_seleted.png" width="30%" alt="Route — selected">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/Screenshot_202606071852_route_walking.png" width="30%" alt="Route — walking">
+</p>
+
+**Route list** — preset routes with distance and stop count, speed slider with variation controls. **Selected** — waypoint list with distances, ready to start. **Walking** — live map tracks simulated position along the route.
 
 ---
 
@@ -178,15 +187,6 @@ This project uses **AGP 9 + Kotlin 2.0**, which has some sharp edges:
 - Room uses KSP, not kapt: `ksp(libs.androidx.room.compiler)`.
 - Add `android.disallowKotlinSourceSets=false` to `gradle.properties` to avoid KSP source set conflicts.
 - `kotlinOptions { jvmTarget }` no longer exists in AGP 9 — use `compileOptions` only.
-
----
-
-## Roadmap
-
-- [ ] Smooth GPS interpolation engine for walk routes
-- [ ] Static map thumbnails on saved route cards
-- [ ] Live route progress in background notification
-- [ ] Settings / About screen with theme controls
 
 ---
 

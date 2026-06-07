@@ -19,11 +19,21 @@ GPS Anywhere lets you override your Android device's location with a fake one. U
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/Screenshot_20260603_233437.png" width="30%" alt="Location screen">
+  <img src="docs/screenshots/Screenshot_202606071852_location_add.png" width="22%" alt="Location — add pin">
+  &nbsp;
+  <img src="docs/screenshots/Screenshot_202606071852_location_list.png" width="22%" alt="Location — history list">
+  &nbsp;
+  <img src="docs/screenshots/Screenshot_202606071852_location_selected.png" width="22%" alt="Location — selected">
+  &nbsp;
+  <img src="docs/screenshots/Screenshot_202606071852_location_walking.png" width="22%" alt="Location — walking">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/Screenshot_202606071852_route_list.png" width="30%" alt="Route — list">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/Screenshot_20260603_233446.png" width="30%" alt="Walk screen — route list">
+  <img src="docs/screenshots/Screenshot_202606071852_route_seleted.png" width="30%" alt="Route — selected">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/Screenshot_20260603_233457.png" width="30%" alt="Walk screen — ready to start">
+  <img src="docs/screenshots/Screenshot_202606071852_route_walking.png" width="30%" alt="Route — walking">
 </p>
 
 ---
@@ -185,15 +195,6 @@ A few non-obvious gotchas when building or modifying the project:
 - **Room requires KSP** — use `ksp(libs.androidx.room.compiler)`, not `kapt`
 - **KSP source set conflict** — add `android.disallowKotlinSourceSets=false` to `gradle.properties`
 - **`kotlinOptions { jvmTarget }` is gone in AGP 9** — use `compileOptions` only
-
----
-
-## Roadmap
-
-- [ ] **Session 3** — Walk route simulation with smooth GPS interpolation along OSRM polylines
-- [ ] **Session 4** — Saved routes with static map thumbnails and Nominatim reverse geocoding
-- [ ] **Session 5** — Live route progress in the background notification
-- [ ] **Session 6** — Settings / About screen, final light & dark mode polish
 
 ---
 
