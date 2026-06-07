@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -145,6 +146,7 @@ fun LocationScreen(
     var selectedLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var walkBreakLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
+    var editLocation by remember { mutableStateOf<SavedLocation?>(null) }
 
     // Custom location jump panel
     var jumpLat by remember { mutableStateOf("") }
@@ -353,11 +355,8 @@ fun LocationScreen(
                         val parsed = parseClipboardCoordinates(raw)
                         if (parsed != null) {
                             // parseClipboardCoordinates returns Pair(lng, lat)
-                            val lat = parsed.second
-                            val lng = parsed.first
-                            jumpLat = "%.6f".format(lat)
-                            jumpLng = "%.6f".format(lng)
-                            viewModel.startSpiralWalk(lat, lng)
+                            jumpLat = "%.6f".format(parsed.second)
+                            jumpLng = "%.6f".format(parsed.first)
                         }
                     }
                 )
@@ -422,6 +421,7 @@ fun LocationScreen(
                         onClick = { onLocationSelected(pending) },
                         onJump = { onJump(pending) },
                         onSpiral = { onSpiral(pending) },
+                        onEdit = { editLocation = loc },
                         onDelete = { deleteLocation = loc }
                     )
                 }
@@ -467,6 +467,20 @@ fun LocationScreen(
         )
     }
 
+    editLocation?.let { loc ->
+        AddLocationSheet(
+            title = "Edit Location",
+            initialName = loc.name,
+            initialLat = "%.6f".format(loc.latitude),
+            initialLng = "%.6f".format(loc.longitude),
+            onDismiss = { editLocation = null },
+            onSave = { name, lat, lng ->
+                viewModel.updateLocation(loc, name, lat, lng)
+                editLocation = null
+            }
+        )
+    }
+
     if (showAddSheet) {
         AddLocationSheet(
             onDismiss = { showAddSheet = false },
@@ -500,6 +514,7 @@ private fun LocationCard(
     onClick: () -> Unit,
     onJump: () -> Unit,
     onSpiral: () -> Unit,
+    onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)?
 ) {
     val border = when {
@@ -561,13 +576,24 @@ private fun LocationCard(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
-                if (!showJumpButton && onDelete != null) {
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                if (!showJumpButton && (onEdit != null || onDelete != null)) {
+                    if (onEdit != null) {
+                        IconButton(onClick = onEdit) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    if (onDelete != null) {
+                        IconButton(onClick = onDelete) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
@@ -624,14 +650,18 @@ private fun EmptyState(
 @Composable
 private fun AddLocationSheet(
     onDismiss: () -> Unit,
-    onSave: (name: String, lat: Double, lng: Double) -> Unit
+    onSave: (name: String, lat: Double, lng: Double) -> Unit,
+    title: String = "Add Location",
+    initialName: String = "",
+    initialLat: String = "",
+    initialLng: String = ""
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val clipboard = LocalClipboardManager.current
 
-    var name by remember { mutableStateOf("") }
-    var latText by remember { mutableStateOf("") }
-    var lngText by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(initialName) }
+    var latText by remember { mutableStateOf(initialLat) }
+    var lngText by remember { mutableStateOf(initialLng) }
     var error by remember { mutableStateOf<String?>(null) }
 
     val previewLat = latText.toDoubleOrNull()
@@ -644,7 +674,7 @@ private fun AddLocationSheet(
                 .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Add Location", style = MaterialTheme.typography.titleLarge)
+            Text(title, style = MaterialTheme.typography.titleLarge)
 
             OutlinedTextField(
                 value = name,
