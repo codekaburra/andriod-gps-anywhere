@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
@@ -883,18 +884,22 @@ private fun CustomJumpPanel(
                     onClick = onPaste,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
-                Icon(
-                    Icons.Default.ContentPaste,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                    Icon(
+                        Icons.Default.ContentPaste,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
                 Button(
                     onClick = onJump,
                     enabled = canJump,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
-                    Text("Walk Around")
+                    Icon(
+                            Icons.Default.DirectionsWalk,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
         }
