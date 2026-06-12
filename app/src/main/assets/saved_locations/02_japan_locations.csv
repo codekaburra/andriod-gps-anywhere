@@ -1,5 +1,5 @@
 # pack_name: 日本
 # version: 1
 source_id,latitude,longitude,name_tc,name_eng,tags
-usj,34.66588852857681,135.43236142206771,USJ,Universal Studios Japan,
-kobe-oukoku,34.65485335857569,135.2225038908203,日本神戶動物王國,Japan Kobe Oukoku,
+usj,34.66588852857681,135.43236142206771,USJ,Universal Studios Japan,日本
+kobe-oukoku,34.65485335857569,135.2225038908203,日本神戶動物王國,Japan Kobe Oukoku,日本
