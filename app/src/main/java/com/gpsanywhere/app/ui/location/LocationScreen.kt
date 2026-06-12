@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,9 +31,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Slider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -55,6 +58,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationAsset
@@ -153,6 +160,34 @@ fun LocationScreen(
     var walkBreakLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var editLocation by remember { mutableStateOf<SavedLocation?>(null) }
+    var selectedTags by remember { mutableStateOf(setOf<String>()) }
+
+    val allTags = remember(locationPacks, customLocations) {
+        buildSet {
+            locationPacks.flatMap { it.locations }.forEach { asset ->
+                if (asset.tags.isNotBlank())
+                    asset.tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }.forEach { add(it) }
+            }
+            customLocations.forEach { addAll(it.tagList) }
+        }.sorted()
+    }
+
+    val filteredPacks = remember(locationPacks, selectedTags) {
+        if (selectedTags.isEmpty()) locationPacks
+        else locationPacks.mapNotNull { pack ->
+            val locs = pack.locations.filter { asset ->
+                val t = if (asset.tags.isBlank()) emptyList()
+                    else asset.tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+                t.any { it in selectedTags }
+            }
+            if (locs.isEmpty()) null else pack.copy(locations = locs)
+        }
+    }
+
+    val filteredCustom = remember(customLocations, selectedTags) {
+        if (selectedTags.isEmpty()) customLocations
+        else customLocations.filter { loc -> loc.tagList.any { it in selectedTags } }
+    }
 
     // Custom location jump panel
     var jumpCoordinateText by remember { mutableStateOf("") }
@@ -190,11 +225,11 @@ fun LocationScreen(
     }
 
     fun onJump(pending: PendingLocation) {
-        if (isWalkMode) {
-            walkBreakLocation = pending
-        } else {
-            applySpiral(pending)
+        when (pending) {
+            is PendingLocation.Prebuilt -> viewModel.startSpoofing(pending.asset)
+            is PendingLocation.Custom -> viewModel.startSpoofing(pending.location)
         }
+        selectedLocation = null
     }
 
     fun onSpiral(pending: PendingLocation) {
@@ -364,7 +399,12 @@ fun LocationScreen(
                     onJump = {
                         val parsed = parseClipboardCoordinates(jumpCoordinateText.trim())
                         if (parsed != null) {
-                            // parseClipboardCoordinates returns Pair(lng, lat)
+                            viewModel.startSpoofing(parsed.second, parsed.first)
+                        }
+                    },
+                    onSpiral = {
+                        val parsed = parseClipboardCoordinates(jumpCoordinateText.trim())
+                        if (parsed != null) {
                             viewModel.startSpiralWalk(parsed.second, parsed.first)
                         }
                     },
@@ -372,7 +412,6 @@ fun LocationScreen(
                         val raw = clipboardManager.getText()?.text?.trim().orEmpty()
                         val parsed = parseClipboardCoordinates(raw)
                         if (parsed != null) {
-                            // parseClipboardCoordinates returns Pair(lng, lat)
                             jumpCoordinateText = "%.6f,%.6f".format(parsed.second, parsed.first)
                         } else {
                             jumpCoordinateText = raw
@@ -385,7 +424,19 @@ fun LocationScreen(
                 SectionHeader(title = "Saved Locations")
             }
 
-            locationPacks.filter { it.locations.isNotEmpty() }.forEach { pack ->
+            if (allTags.isNotEmpty()) {
+                item(key = "tag_filter") {
+                    TagFilterRow(
+                        allTags = allTags,
+                        selectedTags = selectedTags,
+                        onTagToggle = { tag ->
+                            selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
+                        }
+                    )
+                }
+            }
+
+            filteredPacks.filter { it.locations.isNotEmpty() }.forEach { pack ->
                 item(key = "pack_header_${pack.packName}") {
                     SectionHeader(title = pack.packName)
                 }
@@ -410,7 +461,7 @@ fun LocationScreen(
                 }
             }
 
-            if (prebuiltLocations.isNotEmpty() && customLocations.isNotEmpty()) {
+            if (filteredPacks.isNotEmpty() && filteredCustom.isNotEmpty()) {
                 item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
             }
 
@@ -427,7 +478,7 @@ fun LocationScreen(
                     )
                 }
             } else {
-                items(customLocations, key = { it.id }) { loc ->
+                items(filteredCustom, key = { it.id }) { loc ->
                     val pending = PendingLocation.Custom(loc)
                     LocationCard(
                         name = loc.name,
@@ -513,6 +564,24 @@ fun LocationScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TagFilterRow(
+    allTags: List<String>,
+    selectedTags: Set<String>,
+    onTagToggle: (String) -> Unit
+) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(allTags) { tag ->
+            FilterChip(
+                selected = tag in selectedTags,
+                onClick = { onTagToggle(tag) },
+                label = { Text(tag) }
+            )
+        }
+    }
+}
+
 @Composable
 private fun SectionHeader(title: String) {
     Text(
@@ -554,7 +623,6 @@ private fun LocationCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
-            // ── Info row ──────────────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -565,51 +633,25 @@ private fun LocationCard(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(26.dp)
                 )
-                Column(
-                    modifier = Modifier.weight(1f).padding(start = 12.dp)
-                ) {
+                val nameAnnotated = buildAnnotatedString {
+                    withStyle(SpanStyle(
+                        fontSize = MaterialTheme.typography.titleSmall.fontSize,
+                        fontWeight = MaterialTheme.typography.titleSmall.fontWeight
+                    )) { append(name) }
+                    if (nameEng.isNotBlank()) {
+                        withStyle(SpanStyle(
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                        )) { append("  $nameEng") }
+                    }
+                }
+                Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(
-                        name,
+                        nameAnnotated,
                         style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    if (nameEng.isNotBlank()) {
-                        Text(
-                            nameEng,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    if (tags.isNotEmpty()) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(top = 4.dp)
-                        ) {
-                            tags.take(3).forEach { tag ->
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer
-                                ) {
-                                    Text(
-                                        tag,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
-                            if (tags.size > 3) {
-                                Text(
-                                    "+${tags.size - 3}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                                )
-                            }
-                        }
-                    }
                     routeHint?.let {
                         Text(
                             it,
@@ -624,6 +666,34 @@ private fun LocationCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
+                }
+                if (tags.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier.padding(start = 8.dp).widthIn(max = 80.dp),
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        tags.take(3).forEach { tag ->
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.secondaryContainer
+                            ) {
+                                Text(
+                                    tag,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                        if (tags.size > 3) {
+                            Text(
+                                "+${tags.size - 3}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
                 }
                 if (!showJumpButton && (onEdit != null || onDelete != null)) {
                     if (onEdit != null) {
@@ -656,7 +726,7 @@ private fun LocationCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(onClick = onJump, modifier = Modifier.weight(1f)) {
-                        Text("Walk Around")
+                        Text("Jump")
                     }
                     Button(onClick = onSpiral, modifier = Modifier.weight(1f)) {
                         Text("Walk Around")
@@ -834,6 +904,7 @@ private fun CustomJumpPanel(
     coordinateText: String,
     onCoordinateChange: (String) -> Unit,
     onJump: () -> Unit,
+    onSpiral: () -> Unit,
     onPaste: () -> Unit
 ) {
     val parsed = parseClipboardCoordinates(coordinateText.trim())
@@ -865,24 +936,35 @@ private fun CustomJumpPanel(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     modifier = Modifier.weight(1f)
                 )
-                Button(
+                FilledIconButton(
                     onClick = onPaste,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Icon(
                         Icons.Default.ContentPaste,
-                        contentDescription = null,
+                        contentDescription = "Paste",
                         modifier = Modifier.size(18.dp)
                     )
                 }
-                Button(
+                FilledIconButton(
                     onClick = onJump,
                     enabled = canJump,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = "Jump",
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                FilledIconButton(
+                    onClick = onSpiral,
+                    enabled = canJump,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Icon(
                         Icons.AutoMirrored.Filled.DirectionsWalk,
-                        contentDescription = null,
+                        contentDescription = "Walk Around",
                         modifier = Modifier.size(18.dp)
                     )
                 }
