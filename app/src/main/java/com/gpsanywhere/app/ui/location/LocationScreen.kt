@@ -880,23 +880,22 @@ private fun CustomJumpPanel(
                     modifier = Modifier.weight(1f)
                 )
                 Button(
+                    onClick = onPaste,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                Icon(
+                    Icons.Default.ContentPaste,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                }
+                Button(
                     onClick = onJump,
                     enabled = canJump,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Text("Walk Around")
                 }
-            }
-
-            OutlinedButton(
-                onClick = onPaste,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    Icons.Default.ContentPaste,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
             }
         }
     }
