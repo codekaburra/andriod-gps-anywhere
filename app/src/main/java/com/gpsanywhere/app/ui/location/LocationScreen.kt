@@ -3,6 +3,7 @@ package com.gpsanywhere.app.ui.location
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,7 +41,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -225,28 +225,7 @@ fun LocationScreen(
         else -> null
     }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text("Location") },
-                actions = {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        IconButton(onClick = { showAddSheet = true }) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add location",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Scaffold(modifier = modifier) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -327,16 +306,54 @@ fun LocationScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-            if (mapCenter != null) {
-                item {
-                    MapViewComposable(
+            item {
+                if (mapCenter != null) {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(180.dp),
-                        center = mapCenter,
-                        zoom = 15.0,
-                        waypoints = previewPoint?.let { listOf(it) } ?: emptyList()
-                    )
+                            .height(180.dp)
+                    ) {
+                        MapViewComposable(
+                            modifier = Modifier.fillMaxSize(),
+                            center = mapCenter,
+                            zoom = 15.0,
+                            waypoints = previewPoint?.let { listOf(it) } ?: emptyList()
+                        )
+
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f),
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                        ) {
+                            IconButton(onClick = { showAddSheet = true }) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Add location",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            IconButton(onClick = { showAddSheet = true }) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Add location",
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -880,8 +897,6 @@ private fun CustomJumpPanel(
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
-                Spacer(Modifier.size(6.dp))
-                Text("Paste Coordinate")
             }
         }
     }
