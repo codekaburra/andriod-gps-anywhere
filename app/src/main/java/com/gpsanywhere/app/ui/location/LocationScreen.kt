@@ -3,6 +3,7 @@ package com.gpsanywhere.app.ui.location
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
@@ -40,7 +42,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -72,12 +73,15 @@ private sealed class PendingLocation {
     abstract val latitude: Double
     abstract val longitude: Double
     abstract val selectionKey: String
+    abstract val tags: List<String>
 
     data class Prebuilt(val asset: DefaultLocationAsset) : PendingLocation() {
         override val name get() = asset.name
         override val latitude get() = asset.latitude
         override val longitude get() = asset.longitude
         override val selectionKey get() = "prebuilt_${asset.sourceId}"
+        override val tags: List<String>
+            get() = if (asset.tags.isBlank()) emptyList() else asset.tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }
     }
 
     data class Custom(val location: SavedLocation) : PendingLocation() {
@@ -85,6 +89,7 @@ private sealed class PendingLocation {
         override val latitude get() = location.latitude
         override val longitude get() = location.longitude
         override val selectionKey get() = "custom_${location.id}"
+        override val tags get() = location.tagList
     }
 }
 
@@ -150,8 +155,7 @@ fun LocationScreen(
     var editLocation by remember { mutableStateOf<SavedLocation?>(null) }
 
     // Custom location jump panel
-    var jumpLat by remember { mutableStateOf("") }
-    var jumpLng by remember { mutableStateOf("") }
+    var jumpCoordinateText by remember { mutableStateOf("") }
     val clipboardManager = LocalClipboardManager.current
 
     val activeLocationKey = remember(
@@ -221,28 +225,7 @@ fun LocationScreen(
         else -> null
     }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text("Location") },
-                actions = {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        IconButton(onClick = { showAddSheet = true }) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add location",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Scaffold(modifier = modifier) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -323,41 +306,76 @@ fun LocationScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-            if (mapCenter != null) {
-                item {
-                    MapViewComposable(
+            item {
+                if (mapCenter != null) {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(180.dp),
-                        center = mapCenter,
-                        zoom = 15.0,
-                        waypoints = previewPoint?.let { listOf(it) } ?: emptyList()
-                    )
+                            .height(180.dp)
+                    ) {
+                        MapViewComposable(
+                            modifier = Modifier.fillMaxSize(),
+                            center = mapCenter,
+                            zoom = 15.0,
+                            waypoints = previewPoint?.let { listOf(it) } ?: emptyList()
+                        )
+
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f),
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                        ) {
+                            IconButton(onClick = { showAddSheet = true }) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Add location",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            IconButton(onClick = { showAddSheet = true }) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Add location",
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
             item {
                 CustomJumpPanel(
-                    latText = jumpLat,
-                    lngText = jumpLng,
-                    onLatChange = { jumpLat = it },
-                    onLngChange = { jumpLng = it },
+                    coordinateText = jumpCoordinateText,
+                    onCoordinateChange = { jumpCoordinateText = it },
                     onJump = {
-                        val lat = jumpLat.trim().toDoubleOrNull()
-                        val lng = jumpLng.trim().toDoubleOrNull()
-                        if (lat != null && lng != null &&
-                            lat in -90.0..90.0 && lng in -180.0..180.0
-                        ) {
-                            viewModel.startSpiralWalk(lat, lng)
+                        val parsed = parseClipboardCoordinates(jumpCoordinateText.trim())
+                        if (parsed != null) {
+                            // parseClipboardCoordinates returns Pair(lng, lat)
+                            viewModel.startSpiralWalk(parsed.second, parsed.first)
                         }
                     },
                     onPaste = {
-                        val raw = clipboardManager.getText()?.text ?: ""
+                        val raw = clipboardManager.getText()?.text?.trim().orEmpty()
                         val parsed = parseClipboardCoordinates(raw)
                         if (parsed != null) {
                             // parseClipboardCoordinates returns Pair(lng, lat)
-                            jumpLat = "%.6f".format(parsed.second)
-                            jumpLng = "%.6f".format(parsed.first)
+                            jumpCoordinateText = "%.6f,%.6f".format(parsed.second, parsed.first)
+                        } else {
+                            jumpCoordinateText = raw
                         }
                     }
                 )
@@ -378,6 +396,7 @@ fun LocationScreen(
                         nameEng = asset.nameEng,
                         latitude = asset.latitude,
                         longitude = asset.longitude,
+                        tags = pending.tags,
                         routeHint = viewModel.routeHintFor(asset.name, asset.latitude, asset.longitude, routeHints),
                         isSelected = selectedLocation.matches(pending),
                         isActive = !selectedLocation.matches(pending) &&
@@ -414,6 +433,7 @@ fun LocationScreen(
                         name = loc.name,
                         latitude = loc.latitude,
                         longitude = loc.longitude,
+                        tags = loc.tagList,
                         routeHint = null,
                         isSelected = selectedLocation.matches(pending),
                         isActive = !selectedLocation.matches(pending) &&
@@ -508,6 +528,7 @@ private fun LocationCard(
     nameEng: String = "",
     latitude: Double,
     longitude: Double,
+    tags: List<String> = emptyList(),
     routeHint: String?,
     isSelected: Boolean,
     isActive: Boolean,
@@ -561,6 +582,33 @@ private fun LocationCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                    }
+                    if (tags.isNotEmpty()) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            tags.take(3).forEach { tag ->
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = MaterialTheme.colorScheme.secondaryContainer
+                                ) {
+                                    Text(
+                                        tag,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            if (tags.size > 3) {
+                                Text(
+                                    "+${tags.size - 3}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
                     }
                     routeHint?.let {
                         Text(
@@ -783,16 +831,15 @@ private fun AddLocationSheet(
 
 @Composable
 private fun CustomJumpPanel(
-    latText: String,
-    lngText: String,
-    onLatChange: (String) -> Unit,
-    onLngChange: (String) -> Unit,
+    coordinateText: String,
+    onCoordinateChange: (String) -> Unit,
     onJump: () -> Unit,
     onPaste: () -> Unit
 ) {
-    val latValid = latText.isBlank() || latText.trim().toDoubleOrNull()?.let { it in -90.0..90.0 } == true
-    val lngValid = lngText.isBlank() || lngText.trim().toDoubleOrNull()?.let { it in -180.0..180.0 } == true
-    val canJump = latText.isNotBlank() && lngText.isNotBlank() && latValid && lngValid
+    val parsed = parseClipboardCoordinates(coordinateText.trim())
+    val hasInput = coordinateText.isNotBlank()
+    val isValid = parsed != null
+    val canJump = hasInput && isValid
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -806,48 +853,47 @@ private fun CustomJumpPanel(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
-                    value = latText,
-                    onValueChange = onLatChange,
-                    label = { Text("Latitude") },
-                    placeholder = { Text("e.g. 25.0330") },
-                    isError = !latValid,
+                    value = coordinateText,
+                    onValueChange = onCoordinateChange,
+                    label = { Text("Coordinate") },
+                    placeholder = { Text("22.3168,114.0451") },
+                    isError = hasInput && !isValid,
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     modifier = Modifier.weight(1f)
                 )
-                OutlinedTextField(
-                    value = lngText,
-                    onValueChange = onLngChange,
-                    label = { Text("Longitude") },
-                    placeholder = { Text("e.g. 121.5654") },
-                    isError = !lngValid,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.weight(1f)
-                )
+                Button(
+                    onClick = onPaste,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Icon(
+                        Icons.Default.ContentPaste,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
                 Button(
                     onClick = onJump,
                     enabled = canJump,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
-                    Text("Walk Around")
+                    Icon(
+                        Icons.AutoMirrored.Filled.DirectionsWalk,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
 
-            OutlinedButton(
-                onClick = onPaste,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    Icons.Default.ContentPaste,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+            if (hasInput && !isValid) {
+                Text(
+                    text = "Use format: latitude,longitude (e.g. 22.3168,114.0451)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
                 )
-                Spacer(Modifier.size(6.dp))
-                Text("Paste Coordinate")
             }
         }
     }

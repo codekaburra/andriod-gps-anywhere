@@ -17,8 +17,14 @@ data class SavedLocation(
     val latitude: Double,
     val longitude: Double,
     val category: String? = null,
+    /** Pipe-separated tags, e.g. "zoo|animals|family". Empty string means no tags. */
+    val tags: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
     val isPreinstalled: Boolean get() = sourceId != null
+
+    /** Returns the tags as a list, or empty list if no tags. */
+    val tagList: List<String>
+        get() = if (tags.isBlank()) emptyList() else tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }
 }

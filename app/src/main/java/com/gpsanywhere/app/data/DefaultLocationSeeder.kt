@@ -6,7 +6,7 @@ import kotlinx.coroutines.withContext
 
 object DefaultLocationSeeder {
     private const val PREFS_NAME = "gpsanywhere_default_locations"
-    private const val KEY_SEEDED = "seeded_v8" // bumped: switched assets from JSON to CSV
+    private const val KEY_SEEDED = "seeded_v9" // bumped: CSV column order changed + tags field
     const val ASSET_FOLDER = "saved_locations"
 
     data class DefaultLocationPack(
@@ -20,7 +20,8 @@ object DefaultLocationSeeder {
         val name: String,
         val nameEng: String = "",
         val latitude: Double,
-        val longitude: Double
+        val longitude: Double,
+        val tags: String = ""
     )
 
     /** Parse a single CSV location pack file. Returns null if malformed. */
@@ -40,15 +41,24 @@ object DefaultLocationSeeder {
                 line.startsWith("#") || line.isEmpty() -> Unit
                 !headerSkipped -> headerSkipped = true // skip header row
                 else -> {
+                    // CSV format: source_id,latitude,longitude,name_tc,name_eng,tags
                     val parts = parseCsvLine(line)
                     if (parts.size >= 5) {
                         val sourceId = parts[0]
-                        val nameTc  = parts[1]
-                        val nameEng = parts[2]
-                        val lat = parts[3].toDoubleOrNull() ?: continue
-                        val lng = parts[4].toDoubleOrNull() ?: continue
+                        val lat = parts[1].toDoubleOrNull() ?: continue
+                        val lng = parts[2].toDoubleOrNull() ?: continue
+                        val nameTc = parts[3]
+                        val nameEng = parts[4]
+                        val tags = parts.getOrElse(5) { "" }
                         if (sourceId.isNotBlank()) {
-                            locations.add(DefaultLocationAsset(sourceId = sourceId, name = nameTc, nameEng = nameEng, latitude = lat, longitude = lng))
+                            locations.add(DefaultLocationAsset(
+                                sourceId = sourceId,
+                                name = nameTc,
+                                nameEng = nameEng,
+                                latitude = lat,
+                                longitude = lng,
+                                tags = tags
+                            ))
                         }
                     }
                 }
@@ -120,7 +130,8 @@ object DefaultLocationSeeder {
                             sourceId = loc.sourceId,
                             name = loc.name,
                             latitude = loc.latitude,
-                            longitude = loc.longitude
+                            longitude = loc.longitude,
+                            tags = loc.tags
                         )
                     )
                 }
