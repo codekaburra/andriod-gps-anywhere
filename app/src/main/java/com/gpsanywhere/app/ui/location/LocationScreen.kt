@@ -72,12 +72,15 @@ private sealed class PendingLocation {
     abstract val latitude: Double
     abstract val longitude: Double
     abstract val selectionKey: String
+    abstract val tags: List<String>
 
     data class Prebuilt(val asset: DefaultLocationAsset) : PendingLocation() {
         override val name get() = asset.name
         override val latitude get() = asset.latitude
         override val longitude get() = asset.longitude
         override val selectionKey get() = "prebuilt_${asset.sourceId}"
+        override val tags: List<String>
+            get() = if (asset.tags.isBlank()) emptyList() else asset.tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }
     }
 
     data class Custom(val location: SavedLocation) : PendingLocation() {
@@ -85,6 +88,7 @@ private sealed class PendingLocation {
         override val latitude get() = location.latitude
         override val longitude get() = location.longitude
         override val selectionKey get() = "custom_${location.id}"
+        override val tags get() = location.tagList
     }
 }
 
@@ -378,6 +382,7 @@ fun LocationScreen(
                         nameEng = asset.nameEng,
                         latitude = asset.latitude,
                         longitude = asset.longitude,
+                        tags = pending.tags,
                         routeHint = viewModel.routeHintFor(asset.name, asset.latitude, asset.longitude, routeHints),
                         isSelected = selectedLocation.matches(pending),
                         isActive = !selectedLocation.matches(pending) &&
@@ -414,6 +419,7 @@ fun LocationScreen(
                         name = loc.name,
                         latitude = loc.latitude,
                         longitude = loc.longitude,
+                        tags = loc.tagList,
                         routeHint = null,
                         isSelected = selectedLocation.matches(pending),
                         isActive = !selectedLocation.matches(pending) &&
@@ -508,6 +514,7 @@ private fun LocationCard(
     nameEng: String = "",
     latitude: Double,
     longitude: Double,
+    tags: List<String> = emptyList(),
     routeHint: String?,
     isSelected: Boolean,
     isActive: Boolean,
@@ -561,6 +568,33 @@ private fun LocationCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                    }
+                    if (tags.isNotEmpty()) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            tags.take(3).forEach { tag ->
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = MaterialTheme.colorScheme.secondaryContainer
+                                ) {
+                                    Text(
+                                        tag,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            if (tags.size > 3) {
+                                Text(
+                                    "+${tags.size - 3}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
                     }
                     routeHint?.let {
                         Text(
