@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Slider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -153,6 +155,34 @@ fun LocationScreen(
     var walkBreakLocation by remember { mutableStateOf<PendingLocation?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var editLocation by remember { mutableStateOf<SavedLocation?>(null) }
+    var selectedTags by remember { mutableStateOf(setOf<String>()) }
+
+    val allTags = remember(locationPacks, customLocations) {
+        buildSet {
+            locationPacks.flatMap { it.locations }.forEach { asset ->
+                if (asset.tags.isNotBlank())
+                    asset.tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }.forEach { add(it) }
+            }
+            customLocations.forEach { addAll(it.tagList) }
+        }.sorted()
+    }
+
+    val filteredPacks = remember(locationPacks, selectedTags) {
+        if (selectedTags.isEmpty()) locationPacks
+        else locationPacks.mapNotNull { pack ->
+            val locs = pack.locations.filter { asset ->
+                val t = if (asset.tags.isBlank()) emptyList()
+                    else asset.tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+                t.any { it in selectedTags }
+            }
+            if (locs.isEmpty()) null else pack.copy(locations = locs)
+        }
+    }
+
+    val filteredCustom = remember(customLocations, selectedTags) {
+        if (selectedTags.isEmpty()) customLocations
+        else customLocations.filter { loc -> loc.tagList.any { it in selectedTags } }
+    }
 
     // Custom location jump panel
     var jumpCoordinateText by remember { mutableStateOf("") }
@@ -385,7 +415,19 @@ fun LocationScreen(
                 SectionHeader(title = "Saved Locations")
             }
 
-            locationPacks.filter { it.locations.isNotEmpty() }.forEach { pack ->
+            if (allTags.isNotEmpty()) {
+                item(key = "tag_filter") {
+                    TagFilterRow(
+                        allTags = allTags,
+                        selectedTags = selectedTags,
+                        onTagToggle = { tag ->
+                            selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
+                        }
+                    )
+                }
+            }
+
+            filteredPacks.filter { it.locations.isNotEmpty() }.forEach { pack ->
                 item(key = "pack_header_${pack.packName}") {
                     SectionHeader(title = pack.packName)
                 }
@@ -410,7 +452,7 @@ fun LocationScreen(
                 }
             }
 
-            if (prebuiltLocations.isNotEmpty() && customLocations.isNotEmpty()) {
+            if (filteredPacks.isNotEmpty() && filteredCustom.isNotEmpty()) {
                 item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
             }
 
@@ -427,7 +469,7 @@ fun LocationScreen(
                     )
                 }
             } else {
-                items(customLocations, key = { it.id }) { loc ->
+                items(filteredCustom, key = { it.id }) { loc ->
                     val pending = PendingLocation.Custom(loc)
                     LocationCard(
                         name = loc.name,
@@ -510,6 +552,24 @@ fun LocationScreen(
                 showAddSheet = false
             }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TagFilterRow(
+    allTags: List<String>,
+    selectedTags: Set<String>,
+    onTagToggle: (String) -> Unit
+) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(allTags) { tag ->
+            FilterChip(
+                selected = tag in selectedTags,
+                onClick = { onTagToggle(tag) },
+                label = { Text(tag) }
+            )
+        }
     }
 }
 
