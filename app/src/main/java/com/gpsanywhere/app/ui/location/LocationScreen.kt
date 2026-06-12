@@ -155,8 +155,7 @@ fun LocationScreen(
     var editLocation by remember { mutableStateOf<SavedLocation?>(null) }
 
     // Custom location jump panel
-    var jumpLat by remember { mutableStateOf("") }
-    var jumpLng by remember { mutableStateOf("") }
+    var jumpCoordinateText by remember { mutableStateOf("") }
     val clipboardManager = LocalClipboardManager.current
 
     val activeLocationKey = remember(
@@ -360,26 +359,23 @@ fun LocationScreen(
 
             item {
                 CustomJumpPanel(
-                    latText = jumpLat,
-                    lngText = jumpLng,
-                    onLatChange = { jumpLat = it },
-                    onLngChange = { jumpLng = it },
+                    coordinateText = jumpCoordinateText,
+                    onCoordinateChange = { jumpCoordinateText = it },
                     onJump = {
-                        val lat = jumpLat.trim().toDoubleOrNull()
-                        val lng = jumpLng.trim().toDoubleOrNull()
-                        if (lat != null && lng != null &&
-                            lat in -90.0..90.0 && lng in -180.0..180.0
-                        ) {
-                            viewModel.startSpiralWalk(lat, lng)
+                        val parsed = parseClipboardCoordinates(jumpCoordinateText.trim())
+                        if (parsed != null) {
+                            // parseClipboardCoordinates returns Pair(lng, lat)
+                            viewModel.startSpiralWalk(parsed.second, parsed.first)
                         }
                     },
                     onPaste = {
-                        val raw = clipboardManager.getText()?.text ?: ""
+                        val raw = clipboardManager.getText()?.text?.trim().orEmpty()
                         val parsed = parseClipboardCoordinates(raw)
                         if (parsed != null) {
                             // parseClipboardCoordinates returns Pair(lng, lat)
-                            jumpLat = "%.6f".format(parsed.second)
-                            jumpLng = "%.6f".format(parsed.first)
+                            jumpCoordinateText = "%.6f,%.6f".format(parsed.second, parsed.first)
+                        } else {
+                            jumpCoordinateText = raw
                         }
                     }
                 )
@@ -835,16 +831,15 @@ private fun AddLocationSheet(
 
 @Composable
 private fun CustomJumpPanel(
-    latText: String,
-    lngText: String,
-    onLatChange: (String) -> Unit,
-    onLngChange: (String) -> Unit,
+    coordinateText: String,
+    onCoordinateChange: (String) -> Unit,
     onJump: () -> Unit,
     onPaste: () -> Unit
 ) {
-    val latValid = latText.isBlank() || latText.trim().toDoubleOrNull()?.let { it in -90.0..90.0 } == true
-    val lngValid = lngText.isBlank() || lngText.trim().toDoubleOrNull()?.let { it in -180.0..180.0 } == true
-    val canJump = latText.isNotBlank() && lngText.isNotBlank() && latValid && lngValid
+    val parsed = parseClipboardCoordinates(coordinateText.trim())
+    val hasInput = coordinateText.isNotBlank()
+    val isValid = parsed != null
+    val canJump = hasInput && isValid
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -858,26 +853,16 @@ private fun CustomJumpPanel(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
-                    value = latText,
-                    onValueChange = onLatChange,
-                    label = { Text("Latitude") },
-                    placeholder = { Text("e.g. 25.0330") },
-                    isError = !latValid,
+                    value = coordinateText,
+                    onValueChange = onCoordinateChange,
+                    label = { Text("Coordinate") },
+                    placeholder = { Text("22.3168,114.0451") },
+                    isError = hasInput && !isValid,
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = lngText,
-                    onValueChange = onLngChange,
-                    label = { Text("Longitude") },
-                    placeholder = { Text("e.g. 121.5654") },
-                    isError = !lngValid,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     modifier = Modifier.weight(1f)
                 )
                 Button(
@@ -896,11 +881,19 @@ private fun CustomJumpPanel(
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Icon(
-                            Icons.Default.DirectionsWalk,
+                        Icons.AutoMirrored.Filled.DirectionsWalk,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
                 }
+            }
+
+            if (hasInput && !isValid) {
+                Text(
+                    text = "Use format: latitude,longitude (e.g. 22.3168,114.0451)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
     }
