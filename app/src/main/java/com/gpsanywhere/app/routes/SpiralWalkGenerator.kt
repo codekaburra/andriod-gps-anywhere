@@ -28,14 +28,14 @@ object SpiralWalkGenerator {
     /**
      * @param centerLat  Starting latitude  (degrees)
      * @param centerLng  Starting longitude (degrees)
-     * @param stepDeg    Size of one step   (degrees). Default 0.0002 ≈ 22 m.
+     * @param stepDeg    Size of one step   (degrees). Default 0.0003 ≈ 33 m.
      * @param rings      Number of full spiral rings.
      * @return Pair of (lats, lngs) DoubleArrays — one entry per GPS step.
      */
     fun generate(
         centerLat: Double,
         centerLng: Double,
-        stepDeg: Double = 0.0002,
+        stepDeg: Double = 0.0003,
         rings: Int = 15
     ): Pair<DoubleArray, DoubleArray> {
         val lats = mutableListOf(centerLat)

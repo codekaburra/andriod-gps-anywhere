@@ -189,7 +189,7 @@ fun LocationScreen(
         if (isWalkMode) {
             walkBreakLocation = pending
         } else {
-            applyJump(pending)
+            applySpiral(pending)
         }
     }
 
@@ -438,12 +438,12 @@ fun LocationScreen(
         AlertDialog(
             onDismissRequest = { walkBreakLocation = null },
             title = { Text("Stop walk mode?") },
-            text = { Text("Setting \"${loc.name}\" as your location will stop the current walk. Continue?") },
+            text = { Text("Starting Walk Around at \"${loc.name}\" will stop the current walk. Continue?") },
             confirmButton = {
                 TextButton(onClick = {
-                    applyJump(loc)
+                    applySpiral(loc)
                     walkBreakLocation = null
-                }) { Text("Stop walk & use location") }
+                }) { Text("Stop & start new walk") }
             },
             dismissButton = {
                 TextButton(onClick = { walkBreakLocation = null }) { Text("Cancel") }
@@ -608,7 +608,7 @@ private fun LocationCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(onClick = onJump, modifier = Modifier.weight(1f)) {
-                        Text("Jump")
+                        Text("Walk Around")
                     }
                     Button(onClick = onSpiral, modifier = Modifier.weight(1f)) {
                         Text("Walk Around")
@@ -833,7 +833,7 @@ private fun CustomJumpPanel(
                     enabled = canJump,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
-                    Text("Jump")
+                    Text("Walk Around")
                 }
             }
 
