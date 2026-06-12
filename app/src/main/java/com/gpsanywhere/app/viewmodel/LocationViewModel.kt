@@ -121,7 +121,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         hints: Map<String, String> = _routeHints.value
     ): String? = hints[locationKey(name, latitude, longitude)]
 
-    private fun startSpoofing(latitude: Double, longitude: Double) {
+    fun startSpoofing(latitude: Double, longitude: Double) {
         SpoofService.startFixed(getApplication(), latitude, longitude)
     }
 
