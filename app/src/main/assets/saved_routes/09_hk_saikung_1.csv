@@ -1,0 +1,19 @@
+# hk_pak_lap_to_cheung_tsui
+# route_name_tc: 香港-白腊至西灣營地及長咀
+# route_name_eng: Hong Kong-Pak Lap to Sai Wan Campsite and Cheung Tsui
+latitude,longitude,name_tc,name_en
+22.359200,114.361500,萬宜路白腊村小巴站（徒步起點）,Man Yee Road Pak Lap Bus Stop (Start)
+22.356800,114.362200,白腊村沙灘步道（白腊營地）,Pak Lap Village Beach Path
+22.358200,114.369800,東丫/糧船灣沿海步道,Tung A Coastal Path
+22.375200,114.373500,萬宜水庫東壩（接回麥理浩徑）,High Island Reservoir East Dam
+22.379500,114.379800,浪茄灣沙灘步道,Long Ke Wan Beach Path
+22.386100,114.386200,西灣山觀景台（全線最高點）,Sai Wan Shan Pavilion (Viewpoint)
+22.395800,114.379200,吹筒坳十字路口（往西灣亭分岔點）,Chui Tung Au Junction
+22.396800,114.373200,大浪西灣營地（麥徑M134）,Sai Wan Campsite (M134)
+22.399500,114.371800,大浪西灣村莊（補給點/海灣茶座）,Sai Wan Village Rest Stop
+22.405500,114.374200,鹹田灣沙灘（安記士多/獨木橋）,Ham Tin Wan Beach (On Kee Store)
+22.414000,114.379800,大灣北端沙灘（長咀山徑入口）,Tai Wan Beach North (Trailhead)
+22.414200,114.386500,東灣山南側橫山路（長咀山脊起點）,Tung Wan Shan South Contour Path
+22.411600,114.408200,長咀紀念碑/無名碑,Cheung Tsui Monuments
+22.412200,114.410200,長咀最東端岬角（徒步終點）,Cheung Tsui Cape (The Easternmost Tip)
+# https://www.google.com/maps/dir/?api=1&origin=22.359200,114.361500&destination=22.412200,114.410200&waypoints=22.356800,114.362200%7C22.358200,114.369800%7C22.375200,114.373500%7C22.379500,114.379800%7C22.386100,114.386200%7C22.395800,114.379200%7C22.396800,114.373200%7C22.399500,114.371800%7C22.405500,114.374200%7C22.414000,114.379800%7C22.414200,114.386500%7C22.411600,114.408200&travelmode=walking&hl=zh-TW

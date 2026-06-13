@@ -1,0 +1,21 @@
+# japan_kyoto_kurama_kibune
+# route_name_tc: 日本-京都-貴船神社
+# route_name_eng: Japan-Kyoto-Kurama-dera to Kifune Shrine
+latitude,longitude,name_tc,name_en
+35.111450,135.772570,叡山電鐵鞍馬站（徒步起點）,Eizan Railway Kurama Station
+35.111860,135.772390,鞍馬寺普明殿（纜車山麓站旁）,Kurama-dera Huminden
+35.114770,135.772320,由岐神社（中央大杉）,Yuki Jinja Shrine
+35.117940,135.771230,鞍馬寺本堂轉折步道,Kurama-dera Path
+35.119020,135.771020,鞍馬寺本堂金堂（本殿前廣場）,Kurama-dera Main Hall
+35.119850,135.768650,鐘樓與冬青之木（登山道入口）,Bell Tower Trailhead
+35.121110,135.766340,大杉權現（經木之根道景觀點）,Osugi Gongen (Kinone-michi Path)
+35.121920,135.764500,奧之院魔王殿（山頂祭祀堂）,Okunoin Maoden
+35.121650,135.763150,鞍馬寺西門（下山出口/跨越貴船川）,Kurama-dera West Gate
+35.122040,135.763070,貴船料理旅館街（府道361號轉折點）,Kibune Ryokan Street
+35.124410,135.762880,貴船神社二之鳥居（紅燈籠石階起點）,Kifune Shrine Nino-Torii
+35.133126,135.764681,貴船神社本宮,Kifune Shrine
+35.137800,135.768220,貴船神社奧宮（沿溪流小徑終點）,Kifune Shrine Okunomiya
+35.133126,135.764681,貴船神社本宮（回程沿府道361號南下）,Kifune Shrine (Return Path)
+35.121500,135.763800,貴船口（府道38號與貴船川交匯點）,Kibuneguchi Junction
+35.114170,135.766320,叡山電鐵貴船口站（徒步終點）,Eizan Railway Kibuneguchi Station
+# https://www.google.com/maps/dir/?api=1&origin=35.111450,135.772570&destination=35.114170,135.766320&waypoints=35.111860,135.772390%7C35.114770,135.772320%7C35.119020,135.771020%7C35.121110,135.766340%7C35.121920,135.764500%7C35.121650,135.763150%7C35.124410,135.762880%7C35.133126,135.764681%7C35.137800,135.768220%7C35.121500,135.763800&travelmode=walking&hl=zh-TW

@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 
 object DefaultSavedRouteSeeder {
     private const val PREFS_NAME = "gpsanywhere_default_saved_routes"
-    private const val KEY_SEEDED = "seeded_v9" // bumped: switched assets from JSON to CSV
+    private const val KEY_SEEDED = "seeded_v10" // bumped: CSV format changed to Latitude,Longitude,Name_TC,Name_EN
     private val mutex = Mutex()
     private const val DEFAULT_ROUTE_METHOD = "MANUAL_MAP"
     const val ASSET_FOLDER = "saved_routes"
@@ -33,7 +33,6 @@ object DefaultSavedRouteSeeder {
 
     /** Parse a single CSV route file. Returns null if the file is malformed. */
     private fun parseCsv(content: String): DefaultRouteAsset? {
-        var routeId: String? = null
         var routeName: String? = null
         var version = 1
         val coordinates = mutableListOf<DefaultLocationAsset>()
@@ -42,8 +41,6 @@ object DefaultSavedRouteSeeder {
         for (rawLine in content.lineSequence()) {
             val line = rawLine.trim()
             when {
-                line.startsWith("# route_id:") ->
-                    routeId = line.removePrefix("# route_id:").trim()
                 line.startsWith("# route_name:") ->
                     routeName = line.removePrefix("# route_name:").trim()
                 line.startsWith("# version:") ->
@@ -52,17 +49,22 @@ object DefaultSavedRouteSeeder {
                 !headerSkipped -> headerSkipped = true // skip "name,latitude,longitude" header
                 else -> {
                     val parts = parseCsvLine(line)
-                    if (parts.size >= 3) {
-                        val lat = parts[1].toDoubleOrNull() ?: continue
-                        val lng = parts[2].toDoubleOrNull() ?: continue
-                        coordinates.add(DefaultLocationAsset(name = parts[0], latitude = lat, longitude = lng))
+                    if (parts.size >= 4) {
+                        val lat = parts[0].toDoubleOrNull() ?: continue
+                        val lng = parts[1].toDoubleOrNull() ?: continue
+                        val name = parts[2].ifBlank { parts[3] }
+                        coordinates.add(DefaultLocationAsset(name = name, latitude = lat, longitude = lng))
+                    } else if (parts.size >= 3) {
+                        val lat = parts[0].toDoubleOrNull() ?: continue
+                        val lng = parts[1].toDoubleOrNull() ?: continue
+                        coordinates.add(DefaultLocationAsset(name = parts[2], latitude = lat, longitude = lng))
                     }
                 }
             }
         }
 
         if (routeName == null || coordinates.isEmpty()) return null
-        return DefaultRouteAsset(routeId = routeId, routeName = routeName, version = version, coordinates = coordinates)
+        return DefaultRouteAsset(routeName = routeName, version = version, coordinates = coordinates)
     }
 
     /**

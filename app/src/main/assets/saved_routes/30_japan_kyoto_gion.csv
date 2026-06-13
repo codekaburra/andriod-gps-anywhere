@@ -1,0 +1,41 @@
+# japan_kyoto_gion
+# route_name_tc: 日本-京都-祇園,平安神宮,清水寺
+# route_name_eng: Japan-Kyoto-Gion,Heian Jingu Shrine,Kiyomizu-dera Temple
+latitude,longitude,name_tc,name_en
+35.005478,135.773647,祇園白川,Gion Shirakawa
+35.004400,135.772500,白川南通至大和大路通轉折點,Shirakawa Minami-dori Curve
+35.003301,135.771912,祗園四条,Gion-Shijo
+35.003450,135.774500,四條通步道（經過花見小路口）,Shijo-dori (near Hanamikoji)
+35.003591,135.776635,漢字博物館・圖書館,Kanji Museum
+35.003610,135.777800,八坂神社西樓門（四條通盡頭）,Yasaka Shrine Nishi-romon Gate
+35.003656,135.778553,八坂神社本殿,Yasaka Shrine Main Hall
+35.004800,135.778600,八坂神社北門（往知恩院前交差點）,Yasaka Shrine North Exit
+35.006200,135.778300,東大路通北行步道（知恩院前）,Higashioji-dori Northbound (Chion-in-mae)
+35.009200,135.778100,東大路通（古門前通路口）,Higashioji-dori (Furumonzen-dori)
+35.011600,135.778300,東大路通與三條通大路口,Higashioji-dori & Sanjo-dori Junction
+35.011500,135.772000,三條通步道（往川端通/三條大橋方向）,Sanjo-dori (towards Kawabata-dori)
+35.013200,135.771800,川端通北行步道（鴨川旁）,Kawabata-dori Northbound
+35.015293,135.769133,川端公園（冷泉通交界/鴨川步道）,Kawabata Park (Reizei-dori)
+35.015200,135.774500,冷泉通步道（沿琵琶湖疏水小徑）,Reizei-dori Path (Lake Biwa Canal)
+35.015400,135.778500,冷泉通與東大路通路口,Reizei-dori & Higashioji-dori Junction
+35.015600,135.781000,武道中心外步道（往平安神宮）,Kyoto Budo Center Path
+35.015800,135.782000,平安神宮應天門（正門）,Heian Jingu (Main Gate)
+35.016000,135.782400,平安神宮大極殿（本殿前廣場）,Heian Jingu Daigokuden
+35.013200,135.783200,岡崎公園旁步道（往京都美術館方向）,Okazaki Park Path
+35.010500,135.782800,神宮道南行步道（過三條通）,Jingu-michi Southbound
+35.006800,135.783100,知恩院古門（白川沿線小徑）,Chion-in Furumon Gate
+35.005199,135.783383,知恩院三門,Chion-in Sanmon Gate
+35.003800,135.783000,圓山公園北側步道,Maruyama Park North Path
+35.002200,135.781800,圓山公園南口（長樂館附近）,Maruyama Park South Exit
+35.000600,135.781500,寧寧之道（高台寺外步道）,Nene-no-Michi Lane (Kodai-ji)
+34.998900,135.782400,二年坂（二寧坂）起點,Ninenzaka Slope Start
+34.997200,135.783300,三年坂（產寧坂）經典轉角,Sannenzaka Slope Corner
+34.996100,135.784200,清水坂（松原通朝聖山道匯合點）,Kiyomizu-zaka (Matsubara-dori)
+34.995300,135.785000,清水寺仁王門前廣場,Kiyomizu-dera Niomon Gate Plaza
+34.994666,135.784661,清水寺本堂（清水舞台）,Kiyomizu-dera Main Hall
+34.994900,135.782500,清水坂下坡段（茶碗坂交界）,Kiyomizu-zaka Downhill
+34.995100,135.780800,五條坂 / 東大路通交界大路口,Gojozaka / Higashioji-dori Junction
+34.994359,135.778249,實報寺,Jippou-ji
+34.995600,135.775800,大和大路通向北步道,Yamato-Oji dori Northbound
+34.997089,135.773663,六波羅蜜寺,Rokuharamitsu-ji
+# https://www.google.com/maps/dir/?api=1&origin=35.005478,135.773647&destination=34.997089,135.773663&waypoints=35.003301,135.771912%7C35.015293,135.769133%7C35.016000,135.782400%7C35.005199,135.783383%7C34.998900,135.782400%7C34.994666,135.784661%7C34.994359,135.778249&travelmode=walking&hl=zh-TW

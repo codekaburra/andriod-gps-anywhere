@@ -1,12 +1,11 @@
 # pack_name: 香港
 # version: 1
-source_id,latitude,longitude,name_tc,name_eng,tags
-hong-kong-museum-of-art,22.2937758,114.1721957,香港藝術館,Hong Kong Museum of Art,香港
-hong-kong-airport-station,22.31455598661017,113.93253631485312,香港機場站,Hong Kong Airport Station,香港
-hong-kong-disneyland,22.310864,114.0415442,香港迪士尼樂園,Hong Kong Disneyland,香港
-hong-kong-kai-tak-sports-park,22.3245331,114.197575,啟德體育園,Kai Tak Sports Park,香港
-kadoorie-farm,22.433309281443957,114.11791256159378,嘉道理農場,Kadoorie Farm,香港
-hong-kong-ocean-park-the-summit,22.2346277,114.1682741,香港海洋公園+高峰樂園,Ocean Park Hong Kong The Summit,香港
-hong-kong-ocean-park-pacific-pier,22.233143640568667,114.16973960017881,海洋公園太平洋海岸,Ocean Park Hong Kong Pacific Pier,香港
-hong-kong-ocean-park-panda-adventure,22.24579795286229,114.17590737261585,香港海洋公園熊貓,Hong Kong Ocean Park Panda Adventure,香港
-hong-kong-zoological-and-botanical-gardens,22.277437042864573,114.15616008111569,香港動植物公園,Hong Kong Zoological and Botanical Gardens,香港
+latitude,longitude,name_tc,name_en,tags
+22.2937758,114.1721957,香港藝術館,Hong Kong Museum of Art,香港
+22.315453372230735,113.93344436391381,香港機場,Hong Kong Airport,香港
+22.312769259152898,114.04191249992681,香港迪士尼樂園,Hong Kong Disneyland,香港
+22.3245331,114.197575,啟德體育園,Kai Tak Sports Park,香港
+22.433309281443957,114.11791256159378,嘉道理農場,Kadoorie Farm,香港
+22.24579795286229,114.17590737261585,香港海洋公園熊貓,Hong Kong Ocean Park Panda Adventure,香港
+22.277437042864573,114.15616008111569,香港動植物公園,Hong Kong Zoological and Botanical Gardens,香港
+22.282673,114.2276718,香港海防博物館,Hong Kong Museum of Coastal Defence,香港

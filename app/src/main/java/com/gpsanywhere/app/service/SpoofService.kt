@@ -298,17 +298,19 @@ class SpoofService : Service() {
                 }
             }
 
+            var forward = true
             do {
+                val walkLats = if (forward) lats else lats.reversedArray()
+                val walkLngs = if (forward) lngs else lngs.reversedArray()
                 var segIdx = 0
-                while (isActive && segIdx < lats.size - 1) {
-                    val aLat = lats[segIdx]; val aLng = lngs[segIdx]
-                    val bLat = lats[segIdx + 1]; val bLng = lngs[segIdx + 1]
+                while (isActive && segIdx < walkLats.size - 1) {
+                    val aLat = walkLats[segIdx]; val aLng = walkLngs[segIdx]
+                    val bLat = walkLats[segIdx + 1]; val bLng = walkLngs[segIdx + 1]
                     val segLen = haversine(aLat, aLng, bLat, bLng)
                     if (segLen < 0.01) { segIdx++; continue }
                     currentBearing = bearing(aLat, aLng, bLat, bLng).toFloat()
                     var traveled = 0.0
                     while (isActive && traveled < segLen) {
-                        // Suspend here while paused — push location once and wait
                         while (isActive && _isPaused.value == true) {
                             delay(200)
                         }
@@ -324,7 +326,6 @@ class SpoofService : Service() {
                         val stepsThis = (distThisTick / 0.78).toInt()
                         if (stepsThis > 0) {
                             SpoofService.incrementSteps(stepsThis)
-                            // Write to HC for games (from walk simulation)
                             launch {
                                 try {
                                     val client = HealthConnectClient.getOrCreate(this@SpoofService)
@@ -344,9 +345,7 @@ class SpoofService : Service() {
                     }
                     segIdx++
                 }
-                if (loop) {
-                    lastLat = lats[0]; lastLng = lngs[0]
-                }
+                if (loop) forward = !forward
             } while (isActive && loop)
             currentSpeedMps = 0f
             _currentSpeedKmh.postValue(0f)

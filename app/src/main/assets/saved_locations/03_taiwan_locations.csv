@@ -1,7 +1,0 @@
-# pack_name: 台灣
-# version: 1
-source_id,latitude,longitude,name_tc,name_eng,tags
-tainan-cultural-center,22.9747562,120.2215652,台南市文化中心,Tainan Cultural Center,台灣
-tainan-confucius-temple,22.990426,120.204555,台南孔子廟,Tainan Confucius Temple,台灣
-tainan-national-museum-history,23.0579365,120.2351629,國立臺灣歷史博物館,National Museum of Taiwan History,台灣
-tainan-airport,22.9481447,120.216182,台南航空站,Tainan Airport,台灣

@@ -6,7 +6,7 @@ import kotlinx.coroutines.withContext
 
 object DefaultLocationSeeder {
     private const val PREFS_NAME = "gpsanywhere_default_locations"
-    private const val KEY_SEEDED = "seeded_v9" // bumped: CSV column order changed + tags field
+    private const val KEY_SEEDED = "seeded_v10" // bumped: removed source_id from CSV, auto-generate from name_en
     const val ASSET_FOLDER = "saved_locations"
 
     data class DefaultLocationPack(
@@ -41,25 +41,26 @@ object DefaultLocationSeeder {
                 line.startsWith("#") || line.isEmpty() -> Unit
                 !headerSkipped -> headerSkipped = true // skip header row
                 else -> {
-                    // CSV format: source_id,latitude,longitude,name_tc,name_eng,tags
+                    // CSV format: latitude,longitude,name_tc,name_en,tags
                     val parts = parseCsvLine(line)
-                    if (parts.size >= 5) {
-                        val sourceId = parts[0]
-                        val lat = parts[1].toDoubleOrNull() ?: continue
-                        val lng = parts[2].toDoubleOrNull() ?: continue
-                        val nameTc = parts[3]
-                        val nameEng = parts[4]
-                        val tags = parts.getOrElse(5) { "" }
-                        if (sourceId.isNotBlank()) {
-                            locations.add(DefaultLocationAsset(
-                                sourceId = sourceId,
-                                name = nameTc,
-                                nameEng = nameEng,
-                                latitude = lat,
-                                longitude = lng,
-                                tags = tags
-                            ))
-                        }
+                    if (parts.size >= 4) {
+                        val lat = parts[0].toDoubleOrNull() ?: continue
+                        val lng = parts[1].toDoubleOrNull() ?: continue
+                        val nameTc = parts[2]
+                        val nameEn = parts[3]
+                        val tags = parts.getOrElse(4) { "" }
+                        val sourceId = nameEn.lowercase()
+                            .replace(Regex("[^a-z0-9]+"), "-")
+                            .trim('-')
+                            .ifBlank { nameTc }
+                        locations.add(DefaultLocationAsset(
+                            sourceId = sourceId,
+                            name = nameTc,
+                            nameEng = nameEn,
+                            latitude = lat,
+                            longitude = lng,
+                            tags = tags
+                        ))
                     }
                 }
             }

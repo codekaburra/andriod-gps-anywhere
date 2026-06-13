@@ -1,0 +1,28 @@
+# version: 1
+# route_name: 港島東至天后
+latitude,longitude,name_tc,name_en
+22.243120,114.258920,哥連臣角砲台遺址（起點）,Cape Collinson Battery Relics (Start)
+22.244450,114.257500,哥連臣角探照燈步道微彎段,Cape Collinson Searchlight Trail Section
+22.246100,114.255800,黑角頭徑/歌連臣角道交界（步道出口）,Cape Collinson Road / Hak Kok Tau Path Junction
+22.250500,114.252300,歌連臣角道（近龍躍徑起點）,Cape Collinson Road (near Dragon Trail)
+22.253600,114.251400,小西灣道起點（藍灣半島外迴旋處）,Siu Sai Wan Road Start (Island Resort Roundabout)
+22.256200,114.248200,小西灣道（小西灣運動場對出）,Siu Sai Wan Road (outside Siu Sai Wan Sports Ground)
+22.258400,114.243100,小西灣道（富欣道交界彎道）,Siu Sai Wan Road (Harmony Road Junction)
+22.261100,114.238500,小西灣道終點 / 柴灣道大交界,Siu Sai Wan Road End / Chai Wan Road Junction
+22.263800,114.234100,柴灣道（港鐵柴灣站外路口）,Chai Wan Road (outside Chai Wan MTR)
+22.265200,114.231200,柴灣道環翠段（斜路起點彎道）,Chai Wan Road Wan Tsui Section (Slope Curve)
+22.264100,114.225500,柴灣道（大潭道交界/「長命斜」中段）,Chai Wan Road (Tai Tam Road Junction)
+22.267800,114.218500,柴灣道終點 / 筲箕灣道起點（阿公岩道交界）,Chai Wan Road End / Shau Kei Wan Road Start
+22.272100,114.221200,筲箕灣道（愛秩序街交界/港鐵筲箕灣站）,Shau Kei Wan Road (Aldrich Street / Shau Kei Wan MTR)
+22.274500,114.223500,筲箕灣道（柴灣道天橋匯合點）,Shau Kei Wan Road (Chai Wan Road Flyover Merge)
+22.277800,114.221000,筲箕灣道（海寧街交界/新成街）,Shau Kei Wan Road (Hoi Ning Street Junction)
+22.281100,114.217500,筲箕灣道終點 / 英皇道起點（太安街交界/太安樓）,Shau Kei Wan Road End / King's Road Start (Tai On Street)
+22.283400,114.214200,英皇道（康山道東交界/港鐵太古站）,King's Road (Kornhill Road East / Tai Koo MTR)
+22.285200,114.210800,英皇道（康山道西交界/太古城中心段）,King's Road (Kornhill Road West)
+22.287800,114.212500,英皇道（民祥街天橋下彎道）,King's Road (under Man Cheung Street Flyover)
+22.291100,114.209800,英皇道（鰂魚涌街交界/港鐵鰂魚涌站）,King's Road (Quarry Bay Street / Quarry Bay MTR)
+22.291800,114.203200,英皇道（健康東街交界/北角官立小學）,King's Road (Healthy Street East)
+22.291500,114.198500,英皇道（書局街交界/港鐵北角站）,King's Road (Shu Kuk Street / North Point MTR)
+22.290200,114.193200,英皇道（油街交界/港鐵炮台山站）,King's Road (Oil Street / Fortress Hill MTR)
+22.287500,114.192100,英皇道（清風街天橋旁大彎道）,King's Road (Tsing Fung Street Flyover Curve)
+22.284500,114.191800,英皇道（留仙街交界/港鐵天后站終點）,King's Road (Lau Sin Street / Tin Hau MTR End)
