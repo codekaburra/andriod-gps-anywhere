@@ -276,19 +276,13 @@ fun WalkScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ── Header ────────────────────────────────────────────────────────
-            item {
-                Spacer(Modifier.height(12.dp))
-                Text("Walk", style = MaterialTheme.typography.headlineMedium)
-            }
-
-            // ── Current location map ──────────────────────────────────────────
+            // ── Current location map (matches Location view header) ───────────
             item {
                 if (positionLat != null && positionLng != null) {
                     MapViewComposable(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(160.dp),
+                            .height(180.dp),
                         center = GeoPoint(positionLat, positionLng),
                         zoom = 15.0,
                         waypoints = currentPin
