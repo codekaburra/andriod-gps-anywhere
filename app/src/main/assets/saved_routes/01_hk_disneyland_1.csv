@@ -1,0 +1,27 @@
+# hk_disneyland_resort
+# route_name_tc: 香港-迪士尼樂園及度假區
+# route_name_eng: Hong Kong-Disneyland Resort
+latitude,longitude,name_tc,name_en
+22.313500,114.039800,迪士尼好萊塢酒店正門行人路,Disney Hollywood Hotel Main Entrance
+22.311200,114.043200,迪士尼探索家度假酒店前沿海步道,Disney Explorers Lodge Coastal Pathway
+22.315000,114.044800,神奇道與神奇道迴旋處行人路,Magic Road Roundabout Pedestrian Path
+22.315100,114.042200,迪士尼樂園巴士總站（往樂園行人道）,Disneyland Resort Public Transport Interchange
+22.313800,114.041200,明日世界星戰極速穿梭旁步道,Tomorrowland Hyperspace Mountain Path
+22.314200,114.038200,幻想世界幻想道（童話園林旁）,Fantasyland Fantasy Road Path
+22.313500,114.036800,魔雪奇緣世界-阿德爾小鎮步道,World of Frozen - Arendelle Village Path
+22.311500,114.037500,灰熊山谷小鎮行人路,Grizzly Gulch Town Path
+22.310800,114.038200,探險世界森林河流之旅入口步道,Adventureland Jungle River Cruise Walkway
+22.310500,114.040200,奇妙夢想城堡前匯聚點,Castle of Magical Dreams Forecourt Path
+22.312000,114.041300,小鎮大街火车站（美國小鎮大街步道）,Main Street Station (Main Street U.S.A.)
+22.312800,114.041800,香港迪士尼樂園驗票閘口（行人路）,Disneyland Park Main Entrance Turnstiles
+22.314800,114.043500,迪士尼樂園正門牌樓（噴泉步道）,Disneyland Resort Main Welcome Arch
+22.315500,114.044100,迪士尼港鐵站/迎樂路步道起點,Disneyland Resort Station / Ying Lok Road
+22.315400,114.042300,神奇道往迪欣湖方向行人路,Magic Road Pedestrian Path to Inspiration Lake
+22.314400,114.043600,迪欣湖活動中心正門入口,Inspiration Lake Recreation Centre Entrance
+22.312800,114.045000,迪欣湖環湖步道東側,Inspiration Lake Lakeside Trail East
+22.309500,114.044500,迪欣湖人工瀑布（美人魚碼頭旁）,Inspiration Lake Artificial Waterfall
+22.312200,114.042500,迪欣湖活動中心主建築旁步道,Inspiration Lake Service Centre Path
+22.314200,114.042800,迪欣湖停車場旁行人路,Inspiration Lake Car Park Pedestrian Path
+22.316200,114.042000,欣澳道與神奇道交界行人路,Sunny Bay Road Pedestrian Path
+22.316800,114.029800,欣澳港鐵站A出口,Sunny Bay MTR Station Exit A
+# https://www.google.com/maps/@22.3134,114.0398,15z/data=!3m1!4b1!4m2!11m1!2s22.313500,114.039800%7C22.311200,114.043200%7C22.315000,114.044800%7C22.315100,114.042200%7C22.313800,114.041200%7C22.314200,114.038200%7C22.313500,114.036800%7C22.311500,114.037500%7C22.310800,114.038200%7C22.310500,114.040200%7C22.312000,114.041300%7C22.312800,114.041800%7C22.314800,114.043500%7C22.315500,114.044100%7C22.315400,114.042300%7C22.314400,114.043600%7C22.312800,114.045000%7C22.309500,114.044500%7C22.312200,114.042500%7C22.314200,114.042800%7C22.316200,114.042000%7C22.316800,114.029800

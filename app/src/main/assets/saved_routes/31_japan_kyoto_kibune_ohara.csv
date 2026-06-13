@@ -1,0 +1,22 @@
+# japan_kyoto_kibune_ohara
+# route_name_tc: 日本-京都-貴船神社,市原,靜原神社,三千院,寂光院
+# route_name_eng: Japan-Kyoto-Kifune Shrine,Ichihara,Shizuhara Shrine,Sanzen-in Temple,Jakkoin Temple
+latitude,longitude,name_tc,name_en
+35.133126,135.764681,貴船神社本宮,Kifune Shrine
+35.126500,135.763500,貴船川沿線步道（經叡電貴船口站附近）,Kibune River Path (near Kibuneguchi Station)
+35.118200,135.766100,府道38號與鞍馬川交匯點,Prefectural Road 38 & Kurama River Junction
+35.115800,135.765600,市原地區（京都洛北住宅區轉折點）,Ichihara Area (Northern Kyoto Path)
+35.116500,135.772500,靜原通向東舊道（經風之峠附近）,Shizuhara-dori Eastbound Old Path
+35.117100,135.789500,靜原川沿線石板路,Shizuhara River Path
+35.117765,135.795400,静原神社,Shizuhara Shrine
+35.118500,135.802000,靜原地區向東登山步道（往江文峠）,Shizuhara Trail (towards Ebumi Ridge)
+35.120500,135.808500,江文峠最高點（大原與靜原交界山道）,Ebumi Pass (Mountain Ridge Path)
+35.119200,135.816800,江文神社外圍林道（大原西側入山口）,Ebumi Shrine Forest Path
+35.118900,135.820200,國道367號大原交差點（大原之里轉折點）,Route 367 Ohara Junction
+35.120500,135.824200,呂川沿線朝聖參道（往三千院上坡段）,Ryo River Pilgrimage Path (Upstream)
+35.121500,135.827200,三千院御殿門前廣場,Sanzen-in Gotenmon Gate Plaza
+35.123051,135.728674,三千院本堂（往北之段）,Sanzen-in Temple
+35.122100,135.824800,大原巴士總站北側步道（跨越高野川）,Ohara Bus Terminal North Path (Takano River)
+35.123800,135.819200,草生川沿線鄉間小徑（寂光院朝聖道）,Kusao River Country Lane (Jakkoin Path)
+35.124233,135.814321,寂光院正門山階,Jakkoin Temple
+# https://www.google.com/maps/dir/?api=1&origin=35.133126,135.764681&destination=35.124233,135.814321&waypoints=35.115800,135.765600%7C35.117765,135.795400%7C35.123051,135.827200&travelmode=walking&hl=zh-TW

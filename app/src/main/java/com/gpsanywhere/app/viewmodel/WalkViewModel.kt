@@ -111,8 +111,9 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
     fun setMaxSpeed(v: Float) { _maxSpeedKmh.value = v.coerceIn(0f, 20f) }
     fun setVary(v: Float) { _varyKmh.value = v.coerceAtLeast(0f) }
 
-    fun startWalk(route: SavedRoute) {
+    fun startWalk(route: SavedRoute, reversed: Boolean = false) {
         val points = WaypointJson.fromJson(route.waypointsJson)
+            .let { if (reversed) it.reversed() else it }
         if (points.size >= 2) {
             val lats = points.map { it.latitude }.toDoubleArray()
             val lngs = points.map { it.longitude }.toDoubleArray()
@@ -121,7 +122,8 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
                 speedKmh = _speedKmh.value,
                 minSpeedKmh = _minSpeedKmh.value,
                 maxSpeedKmh = _maxSpeedKmh.value,
-                varyKmh = _varyKmh.value
+                varyKmh = _varyKmh.value,
+                loop = true
             )
             _activeRoute.value = route
         } else if (points.size == 1) {

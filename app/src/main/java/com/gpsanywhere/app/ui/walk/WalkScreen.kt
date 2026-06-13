@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -228,7 +229,6 @@ fun WalkScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (!isWalking) {
-                    // Pre-start: back to list + start
                     OutlinedButton(
                         onClick = { selectedRoute = null },
                         modifier = Modifier.weight(1f),
@@ -238,9 +238,18 @@ fun WalkScreen(
                         Spacer(Modifier.width(6.dp))
                         Text("Back")
                     }
+                    OutlinedButton(
+                        onClick = { viewModel.startWalk(route, reversed = true) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.SwapVert, contentDescription = null)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Revert")
+                    }
                     Button(
                         onClick = { viewModel.startWalk(route) },
-                        modifier = Modifier.weight(2f),
+                        modifier = Modifier.weight(1.5f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)
@@ -276,19 +285,13 @@ fun WalkScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ── Header ────────────────────────────────────────────────────────
-            item {
-                Spacer(Modifier.height(12.dp))
-                Text("Walk", style = MaterialTheme.typography.headlineMedium)
-            }
-
-            // ── Current location map ──────────────────────────────────────────
+            // ── Current location map (matches Location view header) ───────────
             item {
                 if (positionLat != null && positionLng != null) {
                     MapViewComposable(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(160.dp),
+                            .height(180.dp),
                         center = GeoPoint(positionLat, positionLng),
                         zoom = 15.0,
                         waypoints = currentPin

@@ -1,0 +1,20 @@
+# japan_kyoto_kinkakuji_walk
+# route_name_tc: 日本-京都-金閣寺,龍安寺
+# route_name_eng: Japan-Kyoto-Kinkaku-ji,Ryoan-ji,Ninna-ji 
+latitude,longitude,name_tc,name_en
+35.039200,135.731000,金閣寺道巴士站（徒步起點）,Kinkakuji-michi Bus Stop
+35.039300,135.729200,金閣寺黑門（總門前參道）,Kinkaku-ji Kuromon Gate
+35.039414,135.728212,金閣寺舍利殿（鏡湖池畔）,Kinkaku-ji (Golden Pavilion)
+35.039800,135.727500,金閣寺不動堂（出口步道）,Kinkaku-ji Fudo-do
+35.038500,135.725800,衣掛之路西行步道（往龍安寺）,Kinukake-no-michi Road
+35.035200,135.720800,龍安寺前參道入口,Ryoan-ji Approach
+35.034444,135.718056,龍安寺方丈（枯山水石庭）,Ryoan-ji Temple (Rock Garden)
+35.033100,135.719500,鏡容池旁步道（龍安寺出口）,Kyoyochi Pond Path
+35.031500,135.717500,衣掛之路南行轉折點（往仁和寺）,Kinukake-no-michi Junction
+35.029800,135.714200,仁和寺東門外步道,Ninna-ji East Entrance Path
+35.027200,135.713200,仁和寺二王門（正門）,Ninna-ji Nio-mon Gate
+35.028889,135.713889,仁和寺金堂（本堂）,Ninna-ji Kondo (Main Hall)
+35.028200,135.714500,仁和寺五重塔,Ninna-ji Five-Story Pagoda
+35.027200,135.713200,仁和寺二王門（回程出入口）,Ninna-ji Nio-mon Gate (Exit)
+35.025400,135.713600,嵐電御室仁和寺站（徒步終點）,Randen Omuro-Ninnaji Station
+# https://www.google.com/maps/dir/?api=1&origin=35.039200,135.731000&destination=35.025400,135.713600&waypoints=35.039300,135.729200%7C35.039414,135.728212%7C35.039800,135.727500%7C35.038500,135.725800%7C35.035200,135.720800%7C35.034444,135.718056%7C35.033100,135.719500%7C35.031500,135.717500%7C35.029800,135.714200%7C35.027200,135.713200%7C35.028889,135.713889%7C35.028200,135.714500&travelmode=walking&hl=zh-TW
