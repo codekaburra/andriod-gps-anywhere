@@ -200,7 +200,7 @@ class SpoofService : Service() {
                 lastLng = lngs[0]
                 baseSpeedMps = speedKmh * 1000f / 3600f
                 minSpeedMps = minKmh * 1000f / 3600f
-                maxSpeedMps = minOf(maxKmh, 20f) * 1000f / 3600f
+                maxSpeedMps = maxKmh * 1000f / 3600f
                 varyMps = varyKmh * 1000f / 3600f
                 currentSpeedMps = baseSpeedMps
                 _currentSpeedKmh.postValue(speedKmh)
