@@ -22,13 +22,13 @@ import kotlinx.coroutines.launch
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
-        const val MAX_SPEED_KMH = 500f
+        const val MAX_SPEED_KMH = 2000f
         const val SPIRAL_RESET_INTERVAL_MS = 30L * 60L * 1000L
 
         /** Preset cruising speeds for the Fly buttons. */
-        const val FLY_CAR_KMH = 80f
-        const val FLY_FLIGHT_KMH = 200f
-        const val FLY_ROCKET_KMH = 500f
+        const val FLY_HELI_KMH = 150f
+        const val FLY_FLIGHT_KMH = 500f
+        const val FLY_ROCKET_KMH = 2000f
     }
 
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
