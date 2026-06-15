@@ -24,7 +24,8 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.ui.res.painterResource
+import com.gpsanywhere.app.R
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.Edit
@@ -79,7 +80,7 @@ import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
-import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_CAR_KMH
+import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_HELI_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_FLIGHT_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_ROCKET_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MAX_SPEED_KMH
@@ -800,16 +801,16 @@ private fun FlySpeedButtons(
     onFly: (Float) -> Unit,
     enabled: Boolean = true
 ) {
-    FilledIconButton(onClick = { onFly(FLY_CAR_KMH) }, enabled = enabled) {
-        Icon(Icons.Default.DirectionsCar, contentDescription = "80 km/h", modifier = Modifier.size(20.dp))
+    FilledIconButton(onClick = { onFly(FLY_HELI_KMH) }, enabled = enabled) {
+        Icon(painterResource(R.drawable.ic_helicopter), contentDescription = "80 km/h", modifier = Modifier.size(20.dp))
     }
     Spacer(Modifier.width(4.dp))
     FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled) {
-        Icon(Icons.Default.Flight, contentDescription = "200 km/h", modifier = Modifier.size(20.dp))
+        Icon(Icons.Default.Flight, contentDescription = "500 km/h", modifier = Modifier.size(20.dp))
     }
     Spacer(Modifier.width(4.dp))
     FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled) {
-        Icon(Icons.Default.RocketLaunch, contentDescription = "500 km/h", modifier = Modifier.size(20.dp))
+        Icon(Icons.Default.RocketLaunch, contentDescription = "2000 km/h", modifier = Modifier.size(20.dp))
     }
 }
 
