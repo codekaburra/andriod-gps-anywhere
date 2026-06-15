@@ -23,6 +23,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     companion object {
         const val MAX_SPEED_KMH = 500f
+        const val SPIRAL_RESET_INTERVAL_MS = 30L * 60L * 1000L
     }
 
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
@@ -107,7 +108,8 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             minSpeedKmh = 0f,
             maxSpeedKmh = MAX_SPEED_KMH,
             varyKmh = 1f,
-            loop = false
+            loop = false,
+            resetIntervalMs = SPIRAL_RESET_INTERVAL_MS
         )
     }
 

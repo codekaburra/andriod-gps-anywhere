@@ -45,6 +45,7 @@ class SpoofService : Service() {
         const val EXTRA_MAX_SPEED = "extra_max_speed"
         const val EXTRA_VARY_KMH = "extra_vary_kmh"
         const val EXTRA_LOOP = "extra_loop"
+        const val EXTRA_RESET_INTERVAL_MS = "extra_reset_interval_ms"
         const val EXTRA_INDEX = "extra_index"
 
         private val _isRunning = MutableLiveData(false)
@@ -95,7 +96,8 @@ class SpoofService : Service() {
             minSpeedKmh: Float = 0f,
             maxSpeedKmh: Float = 20f,
             varyKmh: Float = 0f,
-            loop: Boolean = false
+            loop: Boolean = false,
+            resetIntervalMs: Long = 0L
         ) {
             val intent = Intent(context, SpoofService::class.java).apply {
                 action = ACTION_START_WALK
@@ -106,6 +108,7 @@ class SpoofService : Service() {
                 putExtra(EXTRA_MAX_SPEED, maxSpeedKmh)
                 putExtra(EXTRA_VARY_KMH, varyKmh)
                 putExtra(EXTRA_LOOP, loop)
+                putExtra(EXTRA_RESET_INTERVAL_MS, resetIntervalMs)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
@@ -195,6 +198,7 @@ class SpoofService : Service() {
                 val maxKmh = intent.getFloatExtra(EXTRA_MAX_SPEED, 20f)
                 val varyKmh = intent.getFloatExtra(EXTRA_VARY_KMH, 0f)
                 val loop = intent.getBooleanExtra(EXTRA_LOOP, false)
+                val resetIntervalMs = intent.getLongExtra(EXTRA_RESET_INTERVAL_MS, 0L)
                 if (lats.size < 2 || lats.size != lngs.size) return START_NOT_STICKY
                 lastLat = lats[0]
                 lastLng = lngs[0]
@@ -207,7 +211,7 @@ class SpoofService : Service() {
                 startForeground(NOTIFICATION_ID, buildNotification("Walking @ ${"%.1f".format(speedKmh)} km/h"))
                 setupTestProvider()
                 startPushLoop()
-                startWalkJob(lats, lngs, loop)
+                startWalkJob(lats, lngs, loop, resetIntervalMs)
                 _isRunning.postValue(true)
                 _isWalkMode.postValue(true)
                 _currentLat.postValue(lastLat)
@@ -282,11 +286,10 @@ class SpoofService : Service() {
         }
     }
 
-    private fun startWalkJob(lats: DoubleArray, lngs: DoubleArray, loop: Boolean) {
+    private fun startWalkJob(lats: DoubleArray, lngs: DoubleArray, loop: Boolean, resetIntervalMs: Long = 0L) {
         walkJob?.cancel()
         val tickMs = 500L
         walkJob = serviceScope.launch {
-            // Speed variation coroutine: every random 1–3 s, nudge speed by ±varyMps
             launch {
                 while (isActive) {
                     delay(Random.nextLong(1000L, 3001L))
@@ -298,12 +301,21 @@ class SpoofService : Service() {
                 }
             }
 
+            val originLat = lats[0]
+            val originLng = lngs[0]
+
             var forward = true
             do {
+                val walkStartTime = System.currentTimeMillis()
                 val walkLats = if (forward) lats else lats.reversedArray()
                 val walkLngs = if (forward) lngs else lngs.reversedArray()
                 var segIdx = 0
+                var resetTriggered = false
                 while (isActive && segIdx < walkLats.size - 1) {
+                    if (resetIntervalMs > 0 && System.currentTimeMillis() - walkStartTime >= resetIntervalMs) {
+                        resetTriggered = true
+                        break
+                    }
                     val aLat = walkLats[segIdx]; val aLng = walkLngs[segIdx]
                     val bLat = walkLats[segIdx + 1]; val bLng = walkLngs[segIdx + 1]
                     val segLen = haversine(aLat, aLng, bLat, bLng)
@@ -311,6 +323,10 @@ class SpoofService : Service() {
                     currentBearing = bearing(aLat, aLng, bLat, bLng).toFloat()
                     var traveled = 0.0
                     while (isActive && traveled < segLen) {
+                        if (resetIntervalMs > 0 && System.currentTimeMillis() - walkStartTime >= resetIntervalMs) {
+                            resetTriggered = true
+                            break
+                        }
                         while (isActive && _isPaused.value == true) {
                             delay(200)
                         }
@@ -343,10 +359,39 @@ class SpoofService : Service() {
                             }
                         }
                     }
+                    if (resetTriggered) break
                     segIdx++
                 }
+
+                if (resetTriggered && isActive) {
+                    val returnDist = haversine(lastLat, lastLng, originLat, originLng)
+                    if (returnDist > 0.5) {
+                        currentBearing = bearing(lastLat, lastLng, originLat, originLng).toFloat()
+                        val startRetLat = lastLat
+                        val startRetLng = lastLng
+                        var retTraveled = 0.0
+                        while (isActive && retTraveled < returnDist) {
+                            while (isActive && _isPaused.value == true) { delay(200) }
+                            val frac = (retTraveled / returnDist).coerceIn(0.0, 1.0)
+                            lastLat = startRetLat + (originLat - startRetLat) * frac
+                            lastLng = startRetLng + (originLng - startRetLng) * frac
+                            _currentLat.postValue(lastLat)
+                            _currentLng.postValue(lastLng)
+                            delay(tickMs)
+                            val metersPerSec = currentSpeedMps.toDouble().coerceAtLeast(0.1)
+                            retTraveled += metersPerSec * (tickMs / 1000.0)
+                        }
+                        lastLat = originLat
+                        lastLng = originLng
+                        _currentLat.postValue(lastLat)
+                        _currentLng.postValue(lastLng)
+                    }
+                    forward = true
+                    continue
+                }
+
                 if (loop) forward = !forward
-            } while (isActive && loop)
+            } while (isActive && (loop || resetTriggered))
             currentSpeedMps = 0f
             _currentSpeedKmh.postValue(0f)
         }
