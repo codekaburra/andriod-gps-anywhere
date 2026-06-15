@@ -21,6 +21,11 @@ import kotlinx.coroutines.launch
 
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
 
+    companion object {
+        const val MAX_SPEED_KMH = 500f
+        const val SPIRAL_RESET_INTERVAL_MS = 30L * 60L * 1000L
+    }
+
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
 
     val customLocations: LiveData<List<SavedLocation>> = dao.observeCustom()
@@ -47,7 +52,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setSpiralSpeed(speed: Float) {
-        _spiralSpeedKmh.value = speed.coerceIn(0f, 20f)
+        _spiralSpeedKmh.value = speed.coerceIn(0f, MAX_SPEED_KMH)
         if (SpoofService.isWalkMode.value == true) {
             SpoofService.updateSpeed(getApplication(), _spiralSpeedKmh.value)
         }
@@ -101,11 +106,32 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             lngs = lngs,
             speedKmh = _spiralSpeedKmh.value,
             minSpeedKmh = 0f,
-            maxSpeedKmh = 20f,
+            maxSpeedKmh = MAX_SPEED_KMH,
             varyKmh = 1f,
+            loop = false,
+            resetIntervalMs = SPIRAL_RESET_INTERVAL_MS
+        )
+    }
+
+    fun flyTo(lat: Double, lng: Double) {
+        val fromLat = SpoofService.currentLat.value ?: return
+        val fromLng = SpoofService.currentLng.value ?: return
+        if (fromLat == 0.0 && fromLng == 0.0) return
+        SpoofService.startWalk(
+            getApplication(),
+            lats = doubleArrayOf(fromLat, lat),
+            lngs = doubleArrayOf(fromLng, lng),
+            speedKmh = MAX_SPEED_KMH,
+            minSpeedKmh = 0f,
+            maxSpeedKmh = MAX_SPEED_KMH,
+            varyKmh = 0f,
             loop = false
         )
     }
+
+    fun flyTo(location: SavedLocation) = flyTo(location.latitude, location.longitude)
+
+    fun flyTo(asset: DefaultLocationAsset) = flyTo(asset.latitude, asset.longitude)
 
     fun stopSpoofing() {
         SpoofService.stop(getApplication())

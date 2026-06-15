@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -74,7 +75,27 @@ import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
+import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MAX_SPEED_KMH
 import org.osmdroid.util.GeoPoint
+
+private const val WALK_ZONE_KMH = 20f
+private const val WALK_ZONE_FRAC = 0.8f
+
+private fun speedToSlider(kmh: Float): Float {
+    return if (kmh <= WALK_ZONE_KMH) {
+        (kmh / WALK_ZONE_KMH) * WALK_ZONE_FRAC
+    } else {
+        WALK_ZONE_FRAC + ((kmh - WALK_ZONE_KMH) / (MAX_SPEED_KMH - WALK_ZONE_KMH)) * (1f - WALK_ZONE_FRAC)
+    }
+}
+
+private fun sliderToSpeed(frac: Float): Float {
+    return if (frac <= WALK_ZONE_FRAC) {
+        (frac / WALK_ZONE_FRAC) * WALK_ZONE_KMH
+    } else {
+        WALK_ZONE_KMH + ((frac - WALK_ZONE_FRAC) / (1f - WALK_ZONE_FRAC)) * (MAX_SPEED_KMH - WALK_ZONE_KMH)
+    }
+}
 
 private sealed class PendingLocation {
     abstract val name: String
@@ -233,6 +254,14 @@ fun LocationScreen(
         selectedLocation = null
     }
 
+    fun onFly(pending: PendingLocation) {
+        when (pending) {
+            is PendingLocation.Prebuilt -> viewModel.flyTo(pending.asset)
+            is PendingLocation.Custom -> viewModel.flyTo(pending.location)
+        }
+        selectedLocation = null
+    }
+
     fun onSpiral(pending: PendingLocation) {
         if (isWalkMode) {
             walkBreakLocation = pending  // reuse same walk-break dialog; user confirms stop+restart
@@ -314,13 +343,14 @@ fun LocationScreen(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
                             Slider(
-                                value = spiralSpeed,
-                                onValueChange = { viewModel.setSpiralSpeed(it) },
-                                valueRange = 0f..20f,
+                                value = speedToSlider(spiralSpeed),
+                                onValueChange = { viewModel.setSpiralSpeed(sliderToSpeed(it)) },
+                                valueRange = 0f..1f,
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                "${"%.0f".format(spiralSpeed)} km/h",
+                                if (spiralSpeed < 10f) "${"%.1f".format(spiralSpeed)} km/h"
+                                else "${"%.0f".format(spiralSpeed)} km/h",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
@@ -409,6 +439,13 @@ fun LocationScreen(
                             viewModel.startSpiralWalk(parsed.second, parsed.first)
                         }
                     },
+                    onFly = {
+                        val parsed = parseClipboardCoordinates(jumpCoordinateText.trim())
+                        if (parsed != null) {
+                            viewModel.flyTo(parsed.second, parsed.first)
+                        }
+                    },
+                    showFly = isSpoofing,
                     onPaste = {
                         val raw = clipboardManager.getText()?.text?.trim().orEmpty()
                         val parsed = parseClipboardCoordinates(raw)
@@ -454,9 +491,11 @@ fun LocationScreen(
                         isActive = !selectedLocation.matches(pending) &&
                             activeLocationKey == pending.selectionKey,
                         showJumpButton = selectedLocation.matches(pending),
+                        showFlyButton = selectedLocation.matches(pending) && isSpoofing,
                         onClick = { onLocationSelected(pending) },
                         onJump = { onJump(pending) },
                         onSpiral = { onSpiral(pending) },
+                        onFly = { onFly(pending) },
                         onDelete = null
                     )
                 }
@@ -491,9 +530,11 @@ fun LocationScreen(
                         isActive = !selectedLocation.matches(pending) &&
                             activeLocationKey == pending.selectionKey,
                         showJumpButton = selectedLocation.matches(pending),
+                        showFlyButton = selectedLocation.matches(pending) && isSpoofing,
                         onClick = { onLocationSelected(pending) },
                         onJump = { onJump(pending) },
                         onSpiral = { onSpiral(pending) },
+                        onFly = { onFly(pending) },
                         onEdit = { editLocation = loc },
                         onDelete = { deleteLocation = loc }
                     )
@@ -606,9 +647,11 @@ private fun LocationCard(
     isSelected: Boolean,
     isActive: Boolean,
     showJumpButton: Boolean,
+    showFlyButton: Boolean,
     onClick: () -> Unit,
     onJump: () -> Unit,
     onSpiral: () -> Unit,
+    onFly: () -> Unit,
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)?
 ) {
@@ -727,13 +770,23 @@ private fun LocationCard(
                 // Action buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(onClick = onJump, modifier = Modifier.weight(1f)) {
                         Text("Jump")
                     }
                     Button(onClick = onSpiral, modifier = Modifier.weight(1f)) {
                         Text("Walk Around")
+                    }
+                    if (showFlyButton) {
+                        FilledIconButton(onClick = onFly) {
+                            Icon(
+                                Icons.Default.FlightTakeoff,
+                                contentDescription = "Fly",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -909,6 +962,8 @@ private fun CustomJumpPanel(
     onCoordinateChange: (String) -> Unit,
     onJump: () -> Unit,
     onSpiral: () -> Unit,
+    onFly: () -> Unit,
+    showFly: Boolean,
     onPaste: () -> Unit
 ) {
     val parsed = parseClipboardCoordinates(coordinateText.trim())
@@ -972,7 +1027,20 @@ private fun CustomJumpPanel(
                         modifier = Modifier.size(18.dp)
                     )
                 }
-            }
+                if (showFly) {
+                    FilledIconButton(
+                        onClick = onFly,
+                        enabled = canJump,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    ) {
+                        Icon(
+                            Icons.Default.FlightTakeoff,
+                            contentDescription = "Fly",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+}
 
             if (hasInput && !isValid) {
                 Text(

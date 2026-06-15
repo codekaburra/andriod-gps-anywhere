@@ -45,6 +45,7 @@ class SpoofService : Service() {
         const val EXTRA_MAX_SPEED = "extra_max_speed"
         const val EXTRA_VARY_KMH = "extra_vary_kmh"
         const val EXTRA_LOOP = "extra_loop"
+        const val EXTRA_RESET_INTERVAL_MS = "extra_reset_interval_ms"
         const val EXTRA_INDEX = "extra_index"
 
         private val _isRunning = MutableLiveData(false)
@@ -95,7 +96,8 @@ class SpoofService : Service() {
             minSpeedKmh: Float = 0f,
             maxSpeedKmh: Float = 20f,
             varyKmh: Float = 0f,
-            loop: Boolean = false
+            loop: Boolean = false,
+            resetIntervalMs: Long = 0L
         ) {
             val intent = Intent(context, SpoofService::class.java).apply {
                 action = ACTION_START_WALK
@@ -106,6 +108,7 @@ class SpoofService : Service() {
                 putExtra(EXTRA_MAX_SPEED, maxSpeedKmh)
                 putExtra(EXTRA_VARY_KMH, varyKmh)
                 putExtra(EXTRA_LOOP, loop)
+                putExtra(EXTRA_RESET_INTERVAL_MS, resetIntervalMs)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
@@ -195,19 +198,20 @@ class SpoofService : Service() {
                 val maxKmh = intent.getFloatExtra(EXTRA_MAX_SPEED, 20f)
                 val varyKmh = intent.getFloatExtra(EXTRA_VARY_KMH, 0f)
                 val loop = intent.getBooleanExtra(EXTRA_LOOP, false)
+                val resetIntervalMs = intent.getLongExtra(EXTRA_RESET_INTERVAL_MS, 0L)
                 if (lats.size < 2 || lats.size != lngs.size) return START_NOT_STICKY
                 lastLat = lats[0]
                 lastLng = lngs[0]
                 baseSpeedMps = speedKmh * 1000f / 3600f
                 minSpeedMps = minKmh * 1000f / 3600f
-                maxSpeedMps = minOf(maxKmh, 20f) * 1000f / 3600f
+                maxSpeedMps = maxKmh * 1000f / 3600f
                 varyMps = varyKmh * 1000f / 3600f
                 currentSpeedMps = baseSpeedMps
                 _currentSpeedKmh.postValue(speedKmh)
                 startForeground(NOTIFICATION_ID, buildNotification("Walking @ ${"%.1f".format(speedKmh)} km/h"))
                 setupTestProvider()
                 startPushLoop()
-                startWalkJob(lats, lngs, loop)
+                startWalkJob(lats, lngs, loop, resetIntervalMs)
                 _isRunning.postValue(true)
                 _isWalkMode.postValue(true)
                 _currentLat.postValue(lastLat)
@@ -282,7 +286,7 @@ class SpoofService : Service() {
         }
     }
 
-    private fun startWalkJob(lats: DoubleArray, lngs: DoubleArray, loop: Boolean) {
+    private fun startWalkJob(lats: DoubleArray, lngs: DoubleArray, loop: Boolean, resetIntervalMs: Long = 0L) {
         walkJob?.cancel()
         val tickMs = 500L
         walkJob = serviceScope.launch {
@@ -298,57 +302,103 @@ class SpoofService : Service() {
                 }
             }
 
+            val originLat = lats[0]
+            val originLng = lngs[0]
+            val shouldReset = resetIntervalMs > 0
+
             var forward = true
             do {
                 val walkLats = if (forward) lats else lats.reversedArray()
                 val walkLngs = if (forward) lngs else lngs.reversedArray()
-                var segIdx = 0
-                while (isActive && segIdx < walkLats.size - 1) {
-                    val aLat = walkLats[segIdx]; val aLng = walkLngs[segIdx]
-                    val bLat = walkLats[segIdx + 1]; val bLng = walkLngs[segIdx + 1]
-                    val segLen = haversine(aLat, aLng, bLat, bLng)
-                    if (segLen < 0.01) { segIdx++; continue }
-                    currentBearing = bearing(aLat, aLng, bLat, bLng).toFloat()
-                    var traveled = 0.0
-                    while (isActive && traveled < segLen) {
-                        while (isActive && _isPaused.value == true) {
-                            delay(200)
-                        }
-                        val frac = (traveled / segLen).coerceIn(0.0, 1.0)
-                        lastLat = aLat + (bLat - aLat) * frac
-                        lastLng = aLng + (bLng - aLng) * frac
-                        _currentLat.postValue(lastLat)
-                        _currentLng.postValue(lastLng)
-                        delay(tickMs)
-                        val metersPerSec = currentSpeedMps.toDouble().coerceAtLeast(0.1)
-                        val distThisTick = metersPerSec * (tickMs / 1000.0)
-                        traveled += distThisTick
-                        val stepsThis = (distThisTick / 0.78).toInt()
-                        if (stepsThis > 0) {
-                            SpoofService.incrementSteps(stepsThis)
-                            launch {
-                                try {
-                                    val client = HealthConnectClient.getOrCreate(this@SpoofService)
-                                    val now = Instant.now()
-                                    val start = now.minus(1, ChronoUnit.MINUTES)
-                                    val record = StepsRecord(
-                                        count = stepsThis.toLong(),
-                                        startTime = start,
-                                        endTime = now,
-                                        startZoneOffset = ZoneOffset.systemDefault().rules.getOffset(start),
-                                        endZoneOffset = ZoneOffset.systemDefault().rules.getOffset(now)
-                                    )
-                                    client.insertRecords(listOf(record))
-                                } catch (_: Exception) {}
-                            }
-                        }
-                    }
-                    segIdx++
+                val deadline = if (shouldReset) System.currentTimeMillis() + resetIntervalMs else Long.MAX_VALUE
+
+                // Walk the route until it finishes or the reset deadline arrives.
+                walkPath(walkLats, walkLngs, tickMs, countSteps = true, deadlineMs = deadline)
+
+                // In reset mode, head straight back to the origin and start over.
+                if (shouldReset && isActive) {
+                    walkPath(
+                        doubleArrayOf(lastLat, originLat),
+                        doubleArrayOf(lastLng, originLng),
+                        tickMs,
+                        countSteps = false
+                    )
+                    lastLat = originLat
+                    lastLng = originLng
+                    _currentLat.postValue(lastLat)
+                    _currentLng.postValue(lastLng)
+                    forward = true
+                    continue
                 }
+
                 if (loop) forward = !forward
-            } while (isActive && loop)
+            } while (isActive && (loop || shouldReset))
             currentSpeedMps = 0f
             _currentSpeedKmh.postValue(0f)
+        }
+    }
+
+    /**
+     * Walks through [lats]/[lngs] at the current speed, ticking every [tickMs].
+     * Stops when the path is exhausted or [deadlineMs] (absolute epoch millis) passes.
+     * @return true if it returned because the deadline passed, false if the path completed.
+     */
+    private suspend fun walkPath(
+        lats: DoubleArray,
+        lngs: DoubleArray,
+        tickMs: Long,
+        countSteps: Boolean,
+        deadlineMs: Long = Long.MAX_VALUE
+    ): Boolean {
+        var segIdx = 0
+        while (currentCoroutineContext().isActive && segIdx < lats.size - 1) {
+            if (System.currentTimeMillis() >= deadlineMs) return true
+            val aLat = lats[segIdx]; val aLng = lngs[segIdx]
+            val bLat = lats[segIdx + 1]; val bLng = lngs[segIdx + 1]
+            val segLen = haversine(aLat, aLng, bLat, bLng)
+            if (segLen < 0.01) { segIdx++; continue }
+            currentBearing = bearing(aLat, aLng, bLat, bLng).toFloat()
+            var traveled = 0.0
+            while (currentCoroutineContext().isActive && traveled < segLen) {
+                if (System.currentTimeMillis() >= deadlineMs) return true
+                while (currentCoroutineContext().isActive && _isPaused.value == true) {
+                    delay(200)
+                }
+                val frac = (traveled / segLen).coerceIn(0.0, 1.0)
+                lastLat = aLat + (bLat - aLat) * frac
+                lastLng = aLng + (bLng - aLng) * frac
+                _currentLat.postValue(lastLat)
+                _currentLng.postValue(lastLng)
+                delay(tickMs)
+                val metersPerSec = currentSpeedMps.toDouble().coerceAtLeast(0.1)
+                val distThisTick = metersPerSec * (tickMs / 1000.0)
+                traveled += distThisTick
+                if (countSteps) recordSteps((distThisTick / 0.78).toInt())
+            }
+            segIdx++
+        }
+        return false
+    }
+
+    /** Add [steps] to the live counter and write them to Health Connect (best-effort). */
+    private fun recordSteps(steps: Int) {
+        if (steps <= 0) return
+        SpoofService.incrementSteps(steps)
+        serviceScope.launch {
+            try {
+                val client = HealthConnectClient.getOrCreate(this@SpoofService)
+                val now = Instant.now()
+                val start = now.minus(1, ChronoUnit.MINUTES)
+                client.insertRecords(listOf(
+                    StepsRecord(
+                        count = steps.toLong(),
+                        startTime = start,
+                        endTime = now,
+                        startZoneOffset = ZoneOffset.systemDefault().rules.getOffset(start),
+                        endZoneOffset = ZoneOffset.systemDefault().rules.getOffset(now)
+                    )
+                ))
+            } catch (_: Exception) {}
         }
     }
 
