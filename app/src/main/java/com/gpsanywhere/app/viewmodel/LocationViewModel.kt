@@ -24,6 +24,11 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     companion object {
         const val MAX_SPEED_KMH = 500f
         const val SPIRAL_RESET_INTERVAL_MS = 30L * 60L * 1000L
+
+        /** Preset cruising speeds for the Fly buttons. */
+        const val FLY_BIRD_KMH = 80f
+        const val FLY_CAR_KMH = 200f
+        const val FLY_PLANE_KMH = 500f
     }
 
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
@@ -113,15 +118,23 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
-    fun flyTo(lat: Double, lng: Double) {
-        val fromLat = SpoofService.currentLat.value ?: return
-        val fromLng = SpoofService.currentLng.value ?: return
-        if (fromLat == 0.0 && fromLng == 0.0) return
+    fun flyTo(lat: Double, lng: Double, speedKmh: Float = MAX_SPEED_KMH) {
+        val spoofLat = SpoofService.currentLat.value ?: 0.0
+        val spoofLng = SpoofService.currentLng.value ?: 0.0
+        val fromLat: Double
+        val fromLng: Double
+        if (spoofLat != 0.0 || spoofLng != 0.0) {
+            fromLat = spoofLat
+            fromLng = spoofLng
+        } else {
+            fromLat = CurrentLocationProvider.latitude.value ?: return
+            fromLng = CurrentLocationProvider.longitude.value ?: return
+        }
         SpoofService.startWalk(
             getApplication(),
             lats = doubleArrayOf(fromLat, lat),
             lngs = doubleArrayOf(fromLng, lng),
-            speedKmh = MAX_SPEED_KMH,
+            speedKmh = speedKmh.coerceIn(0f, MAX_SPEED_KMH),
             minSpeedKmh = 0f,
             maxSpeedKmh = MAX_SPEED_KMH,
             varyKmh = 0f,
@@ -129,9 +142,11 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
-    fun flyTo(location: SavedLocation) = flyTo(location.latitude, location.longitude)
+    fun flyTo(location: SavedLocation, speedKmh: Float = MAX_SPEED_KMH) =
+        flyTo(location.latitude, location.longitude, speedKmh)
 
-    fun flyTo(asset: DefaultLocationAsset) = flyTo(asset.latitude, asset.longitude)
+    fun flyTo(asset: DefaultLocationAsset, speedKmh: Float = MAX_SPEED_KMH) =
+        flyTo(asset.latitude, asset.longitude, speedKmh)
 
     fun stopSpoofing() {
         SpoofService.stop(getApplication())
