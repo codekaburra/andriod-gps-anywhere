@@ -159,6 +159,14 @@ class SpoofService : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var pushJob: Job? = null
     private var walkJob: Job? = null
+
+    /**
+     * Bumped every time a walk is started or cancelled. A running walk loop carries the
+     * generation it was launched with and stops touching shared state the moment it no
+     * longer matches, so a cancelled job that resumes once from a `delay` can't post a
+     * stale position over the job that replaced it.
+     */
+    @Volatile private var walkGeneration = 0
     private var currentBearing: Float = 0f
     private var currentSpeedMps: Float = 0f
     private var baseSpeedMps: Float = 0f
@@ -177,7 +185,7 @@ class SpoofService : Service() {
             ACTION_START_FIXED -> {
                 val lat = intent.getDoubleExtra(EXTRA_LATITUDE, 0.0)
                 val lng = intent.getDoubleExtra(EXTRA_LONGITUDE, 0.0)
-                walkJob?.cancel()
+                cancelWalkJob()
                 lastLat = lat
                 lastLng = lng
                 currentBearing = 0f
@@ -248,7 +256,7 @@ class SpoofService : Service() {
 
     override fun onDestroy() {
         pushJob?.cancel()
-        walkJob?.cancel()
+        cancelWalkJob()
         serviceScope.cancel()
         cleanupTestProvider()
         _isRunning.postValue(false)
@@ -286,13 +294,21 @@ class SpoofService : Service() {
         }
     }
 
+    /** Invalidate and cancel any running walk loop. */
+    private fun cancelWalkJob() {
+        walkGeneration++
+        walkJob?.cancel()
+        walkJob = null
+    }
+
     private fun startWalkJob(lats: DoubleArray, lngs: DoubleArray, loop: Boolean, resetIntervalMs: Long = 0L) {
+        val gen = ++walkGeneration
         walkJob?.cancel()
         val tickMs = 500L
         walkJob = serviceScope.launch {
             // Speed variation coroutine: every random 1–3 s, nudge speed by ±varyMps
             launch {
-                while (isActive) {
+                while (isActive && walkGeneration == gen) {
                     delay(Random.nextLong(1000L, 3001L))
                     if (varyMps > 0f) {
                         val delta = (Random.nextFloat() * 2f - 1f) * varyMps
@@ -313,16 +329,18 @@ class SpoofService : Service() {
                 val deadline = if (shouldReset) System.currentTimeMillis() + resetIntervalMs else Long.MAX_VALUE
 
                 // Walk the route until it finishes or the reset deadline arrives.
-                walkPath(walkLats, walkLngs, tickMs, countSteps = true, deadlineMs = deadline)
+                walkPath(walkLats, walkLngs, tickMs, gen, countSteps = true, deadlineMs = deadline)
 
                 // In reset mode, head straight back to the origin and start over.
-                if (shouldReset && isActive) {
+                if (shouldReset && isActive && walkGeneration == gen) {
                     walkPath(
                         doubleArrayOf(lastLat, originLat),
                         doubleArrayOf(lastLng, originLng),
                         tickMs,
+                        gen,
                         countSteps = false
                     )
+                    if (walkGeneration != gen) break
                     lastLat = originLat
                     lastLng = originLng
                     _currentLat.postValue(lastLat)
@@ -332,9 +350,11 @@ class SpoofService : Service() {
                 }
 
                 if (loop) forward = !forward
-            } while (isActive && (loop || shouldReset))
-            currentSpeedMps = 0f
-            _currentSpeedKmh.postValue(0f)
+            } while (isActive && walkGeneration == gen && (loop || shouldReset))
+            if (walkGeneration == gen) {
+                currentSpeedMps = 0f
+                _currentSpeedKmh.postValue(0f)
+            }
         }
     }
 
@@ -347,11 +367,12 @@ class SpoofService : Service() {
         lats: DoubleArray,
         lngs: DoubleArray,
         tickMs: Long,
+        gen: Int,
         countSteps: Boolean,
         deadlineMs: Long = Long.MAX_VALUE
     ): Boolean {
         var segIdx = 0
-        while (currentCoroutineContext().isActive && segIdx < lats.size - 1) {
+        while (currentCoroutineContext().isActive && walkGeneration == gen && segIdx < lats.size - 1) {
             if (System.currentTimeMillis() >= deadlineMs) return true
             val aLat = lats[segIdx]; val aLng = lngs[segIdx]
             val bLat = lats[segIdx + 1]; val bLng = lngs[segIdx + 1]
@@ -359,7 +380,7 @@ class SpoofService : Service() {
             if (segLen < 0.01) { segIdx++; continue }
             currentBearing = bearing(aLat, aLng, bLat, bLng).toFloat()
             var traveled = 0.0
-            while (currentCoroutineContext().isActive && traveled < segLen) {
+            while (currentCoroutineContext().isActive && walkGeneration == gen && traveled < segLen) {
                 if (System.currentTimeMillis() >= deadlineMs) return true
                 while (currentCoroutineContext().isActive && _isPaused.value == true) {
                     delay(200)
@@ -460,7 +481,7 @@ class SpoofService : Service() {
 
     private fun stopSpoofing() {
         pushJob?.cancel()
-        walkJob?.cancel()
+        cancelWalkJob()
         cleanupTestProvider()
         _isRunning.postValue(false)
         _isWalkMode.postValue(false)
