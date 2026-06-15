@@ -28,8 +28,8 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FlightTakeoff
-import androidx.compose.material.icons.filled.FlutterDash
+import androidx.compose.material.icons.filled.Flight
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -79,9 +79,9 @@ import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
-import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_BIRD_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_CAR_KMH
-import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_PLANE_KMH
+import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_FLIGHT_KMH
+import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_ROCKET_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MAX_SPEED_KMH
 import org.osmdroid.util.GeoPoint
 
@@ -772,17 +772,17 @@ private fun LocationCard(
                 Spacer(Modifier.height(10.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(Modifier.weight(1f))
                     FilledIconButton(onClick = onJump) {
                         Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(20.dp))
                     }
+                    Spacer(Modifier.width(4.dp))
                     FilledIconButton(onClick = onSpiral) {
                         Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(20.dp))
                     }
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(12.dp))
                     FlySpeedButtons(onFly = onFly)
                 }
             }
@@ -800,14 +800,16 @@ private fun FlySpeedButtons(
     onFly: (Float) -> Unit,
     enabled: Boolean = true
 ) {
-    FilledIconButton(onClick = { onFly(FLY_BIRD_KMH) }, enabled = enabled) {
-        Icon(Icons.Default.FlutterDash, contentDescription = "80 km/h", modifier = Modifier.size(20.dp))
-    }
     FilledIconButton(onClick = { onFly(FLY_CAR_KMH) }, enabled = enabled) {
-        Icon(Icons.Default.DirectionsCar, contentDescription = "200 km/h", modifier = Modifier.size(20.dp))
+        Icon(Icons.Default.DirectionsCar, contentDescription = "80 km/h", modifier = Modifier.size(20.dp))
     }
-    FilledIconButton(onClick = { onFly(FLY_PLANE_KMH) }, enabled = enabled) {
-        Icon(Icons.Default.FlightTakeoff, contentDescription = "500 km/h", modifier = Modifier.size(20.dp))
+    Spacer(Modifier.width(4.dp))
+    FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled) {
+        Icon(Icons.Default.Flight, contentDescription = "200 km/h", modifier = Modifier.size(20.dp))
+    }
+    Spacer(Modifier.width(4.dp))
+    FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled) {
+        Icon(Icons.Default.RocketLaunch, contentDescription = "500 km/h", modifier = Modifier.size(20.dp))
     }
 }
 
@@ -1025,15 +1027,17 @@ private fun CustomJumpPanel(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FilledIconButton(onClick = onJump, enabled = canJump) {
                     Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(18.dp))
                 }
+                Spacer(Modifier.width(4.dp))
                 FilledIconButton(onClick = onSpiral, enabled = canJump) {
                     Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(18.dp))
                 }
+                Spacer(Modifier.width(12.dp))
                 FlySpeedButtons(onFly = onFly, enabled = canJump)
             }
 

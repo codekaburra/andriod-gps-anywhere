@@ -26,9 +26,9 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         const val SPIRAL_RESET_INTERVAL_MS = 30L * 60L * 1000L
 
         /** Preset cruising speeds for the Fly buttons. */
-        const val FLY_BIRD_KMH = 80f
-        const val FLY_CAR_KMH = 200f
-        const val FLY_PLANE_KMH = 500f
+        const val FLY_CAR_KMH = 80f
+        const val FLY_FLIGHT_KMH = 200f
+        const val FLY_ROCKET_KMH = 500f
     }
 
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
