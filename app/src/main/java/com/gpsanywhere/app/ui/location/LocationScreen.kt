@@ -24,9 +24,12 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FlightTakeoff
+import androidx.compose.material.icons.filled.Flight
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -60,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -75,6 +79,9 @@ import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
+import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_CAR_KMH
+import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_FLIGHT_KMH
+import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_ROCKET_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MAX_SPEED_KMH
 import org.osmdroid.util.GeoPoint
 
@@ -254,10 +261,10 @@ fun LocationScreen(
         selectedLocation = null
     }
 
-    fun onFly(pending: PendingLocation) {
+    fun onFly(pending: PendingLocation, speedKmh: Float) {
         when (pending) {
-            is PendingLocation.Prebuilt -> viewModel.flyTo(pending.asset)
-            is PendingLocation.Custom -> viewModel.flyTo(pending.location)
+            is PendingLocation.Prebuilt -> viewModel.flyTo(pending.asset, speedKmh)
+            is PendingLocation.Custom -> viewModel.flyTo(pending.location, speedKmh)
         }
         selectedLocation = null
     }
@@ -439,13 +446,12 @@ fun LocationScreen(
                             viewModel.startSpiralWalk(parsed.second, parsed.first)
                         }
                     },
-                    onFly = {
+                    onFly = { speed ->
                         val parsed = parseClipboardCoordinates(jumpCoordinateText.trim())
                         if (parsed != null) {
-                            viewModel.flyTo(parsed.second, parsed.first)
+                            viewModel.flyTo(parsed.second, parsed.first, speed)
                         }
                     },
-                    showFly = isSpoofing,
                     onPaste = {
                         val raw = clipboardManager.getText()?.text?.trim().orEmpty()
                         val parsed = parseClipboardCoordinates(raw)
@@ -491,11 +497,10 @@ fun LocationScreen(
                         isActive = !selectedLocation.matches(pending) &&
                             activeLocationKey == pending.selectionKey,
                         showJumpButton = selectedLocation.matches(pending),
-                        showFlyButton = selectedLocation.matches(pending) && isSpoofing,
                         onClick = { onLocationSelected(pending) },
                         onJump = { onJump(pending) },
                         onSpiral = { onSpiral(pending) },
-                        onFly = { onFly(pending) },
+                        onFly = { speed -> onFly(pending, speed) },
                         onDelete = null
                     )
                 }
@@ -530,11 +535,10 @@ fun LocationScreen(
                         isActive = !selectedLocation.matches(pending) &&
                             activeLocationKey == pending.selectionKey,
                         showJumpButton = selectedLocation.matches(pending),
-                        showFlyButton = selectedLocation.matches(pending) && isSpoofing,
                         onClick = { onLocationSelected(pending) },
                         onJump = { onJump(pending) },
                         onSpiral = { onSpiral(pending) },
-                        onFly = { onFly(pending) },
+                        onFly = { speed -> onFly(pending, speed) },
                         onEdit = { editLocation = loc },
                         onDelete = { deleteLocation = loc }
                     )
@@ -647,11 +651,10 @@ private fun LocationCard(
     isSelected: Boolean,
     isActive: Boolean,
     showJumpButton: Boolean,
-    showFlyButton: Boolean,
     onClick: () -> Unit,
     onJump: () -> Unit,
     onSpiral: () -> Unit,
-    onFly: () -> Unit,
+    onFly: (Float) -> Unit,
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)?
 ) {
@@ -767,30 +770,46 @@ private fun LocationCard(
             // ── Expanded: speed + action buttons ──────────────────────────────
             if (showJumpButton) {
                 Spacer(Modifier.height(10.dp))
-                // Action buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedButton(onClick = onJump, modifier = Modifier.weight(1f)) {
-                        Text("Jump")
+                    FilledIconButton(onClick = onJump) {
+                        Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(20.dp))
                     }
-                    Button(onClick = onSpiral, modifier = Modifier.weight(1f)) {
-                        Text("Walk Around")
+                    Spacer(Modifier.width(4.dp))
+                    FilledIconButton(onClick = onSpiral) {
+                        Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(20.dp))
                     }
-                    if (showFlyButton) {
-                        FilledIconButton(onClick = onFly) {
-                            Icon(
-                                Icons.Default.FlightTakeoff,
-                                contentDescription = "Fly",
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
+                    Spacer(Modifier.width(12.dp))
+                    FlySpeedButtons(onFly = onFly)
                 }
             }
         }
+    }
+}
+
+/**
+ * Three Fly buttons that move the GPS toward the target at a preset cruising speed:
+ * bird (80 km/h), car (200 km/h) and airplane (500 km/h). Speed can still be adjusted
+ * afterwards via the speed control panel.
+ */
+@Composable
+private fun FlySpeedButtons(
+    onFly: (Float) -> Unit,
+    enabled: Boolean = true
+) {
+    FilledIconButton(onClick = { onFly(FLY_CAR_KMH) }, enabled = enabled) {
+        Icon(Icons.Default.DirectionsCar, contentDescription = "80 km/h", modifier = Modifier.size(20.dp))
+    }
+    Spacer(Modifier.width(4.dp))
+    FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled) {
+        Icon(Icons.Default.Flight, contentDescription = "200 km/h", modifier = Modifier.size(20.dp))
+    }
+    Spacer(Modifier.width(4.dp))
+    FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled) {
+        Icon(Icons.Default.RocketLaunch, contentDescription = "500 km/h", modifier = Modifier.size(20.dp))
     }
 }
 
@@ -962,8 +981,7 @@ private fun CustomJumpPanel(
     onCoordinateChange: (String) -> Unit,
     onJump: () -> Unit,
     onSpiral: () -> Unit,
-    onFly: () -> Unit,
-    showFly: Boolean,
+    onFly: (Float) -> Unit,
     onPaste: () -> Unit
 ) {
     val parsed = parseClipboardCoordinates(coordinateText.trim())
@@ -1005,42 +1023,23 @@ private fun CustomJumpPanel(
                         modifier = Modifier.size(18.dp)
                     )
                 }
-                FilledIconButton(
-                    onClick = onJump,
-                    enabled = canJump,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = "Jump",
-                        modifier = Modifier.size(18.dp)
-                    )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FilledIconButton(onClick = onJump, enabled = canJump) {
+                    Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(18.dp))
                 }
-                FilledIconButton(
-                    onClick = onSpiral,
-                    enabled = canJump,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.DirectionsWalk,
-                        contentDescription = "Walk Around",
-                        modifier = Modifier.size(18.dp)
-                    )
+                Spacer(Modifier.width(4.dp))
+                FilledIconButton(onClick = onSpiral, enabled = canJump) {
+                    Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(18.dp))
                 }
-                if (showFly) {
-                    FilledIconButton(
-                        onClick = onFly,
-                        enabled = canJump,
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    ) {
-                        Icon(
-                            Icons.Default.FlightTakeoff,
-                            contentDescription = "Fly",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-}
+                Spacer(Modifier.width(12.dp))
+                FlySpeedButtons(onFly = onFly, enabled = canJump)
+            }
 
             if (hasInput && !isValid) {
                 Text(
