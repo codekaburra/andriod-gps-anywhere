@@ -119,6 +119,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun flyTo(lat: Double, lng: Double, speedKmh: Float = MAX_SPEED_KMH) {
+        _spiralSpeedKmh.value = speedKmh.coerceIn(0f, MAX_SPEED_KMH)
         val spoofLat = SpoofService.currentLat.value ?: 0.0
         val spoofLng = SpoofService.currentLng.value ?: 0.0
         val fromLat: Double
