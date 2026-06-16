@@ -10,27 +10,27 @@ import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
 
 private val LightColorScheme = lightColorScheme(
-    primary = CocoaSagePrimaryDeep,
+    primary = CocoaSagePrimary,
     secondary = CocoaSageSage,
-    tertiary = CocoaSageCocoa,
+    tertiary = CocoaSageTerracotta,
     background = CocoaSageBackground,
     surface = CocoaSageSurface,
     error = ErrorRed,
-    primaryContainer = Color(0xFFD8F6F9),
-    onPrimaryContainer = Color(0xFF08373E),
-    secondaryContainer = Color(0xFFE0E9DF),
-    onSecondaryContainer = Color(0xFF21362B),
-    tertiaryContainer = Color(0xFFEADDD2),
-    onTertiaryContainer = Color(0xFF3E281D),
-    onPrimary = Color(0xFF041214),
-    onSecondary = Color(0xFF102018),
-    onTertiary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFE8D7CA),
+    onPrimaryContainer = CocoaSageCharcoal,
+    secondaryContainer = Color(0xFFD7DDD5),
+    onSecondaryContainer = CocoaSageCharcoal,
+    tertiaryContainer = Color(0xFFECD8CA),
+    onTertiaryContainer = CocoaSageCharcoal,
+    onPrimary = Color(0xFFFFF8F0),
+    onSecondary = Color(0xFFFFF8F0),
+    onTertiary = CocoaSageCharcoal,
     onBackground = CocoaSageText,
     onSurface = CocoaSageText,
     surfaceVariant = CocoaSageSurfaceVariant,
     onSurfaceVariant = CocoaSageMuted,
     outline = CocoaSageBorder,
-    outlineVariant = Color(0xFFE3DFD5)
+    outlineVariant = Color(0xFFD6DBD2)
 )
 
 private val DarkColorScheme = darkColorScheme(

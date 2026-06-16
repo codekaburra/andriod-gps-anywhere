@@ -661,7 +661,7 @@ private fun LocationCard(
 ) {
     val border = when {
         isSelected || isActive -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        else -> null
+        else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
     }
 
     Card(
@@ -669,9 +669,9 @@ private fun LocationCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)),
         border = border,
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
             Row(
@@ -1052,4 +1052,3 @@ private fun CustomJumpPanel(
         }
     }
 }
-

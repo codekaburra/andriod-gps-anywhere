@@ -2,18 +2,22 @@ package com.gpsanywhere.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Cocoa Sage keeps the app grounded while cyan marks live GPS motion.
-val CocoaSagePrimary = Color(0xFF55D7E7)
-val CocoaSagePrimaryDeep = Color(0xFF16A6B7)
-val CocoaSageSage = Color(0xFF8FAE9B)
-val CocoaSageCocoa = Color(0xFF7A5B47)
+// LP-01 Sage Canvas: sage base, cocoa actions, charcoal text, translucent cream cards.
+val CocoaSageBlueGray = Color(0xFFAEC1C3)
+val CocoaSageSage = Color(0xFF808F89)
+val CocoaSageTerracotta = Color(0xFFC79B7B)
+val CocoaSageCocoa = Color(0xFF805D3E)
+val CocoaSageCharcoal = Color(0xFF414942)
 
-val CocoaSageBackground = Color(0xFFF7F5EF)
-val CocoaSageSurface = Color(0xFFFFFFFF)
-val CocoaSageSurfaceVariant = Color(0xFFEAE6DC)
-val CocoaSageText = Color(0xFF28322E)
-val CocoaSageMuted = Color(0xFF66736D)
-val CocoaSageBorder = Color(0xFFD8D4C8)
+val CocoaSagePrimary = CocoaSageCocoa
+val CocoaSagePrimaryDeep = Color(0xFF65452B)
+
+val CocoaSageBackground = Color(0xFFE3E7DE)
+val CocoaSageSurface = Color(0xFFFFF8F0)
+val CocoaSageSurfaceVariant = Color(0xFFD8E0DE)
+val CocoaSageText = CocoaSageCharcoal
+val CocoaSageMuted = Color(0xFF65716B)
+val CocoaSageBorder = Color(0xFFC9D0C8)
 
 val CocoaSageBackgroundDark = Color(0xFF071013)
 val CocoaSageSurfaceDark = Color(0xFF10191B)

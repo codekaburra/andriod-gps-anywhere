@@ -120,7 +120,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             label = {
                                 Text(
                                     when (theme) {
-                                        ColorTheme.COCOA_SAGE -> "Cocoa Sage"
+                                        ColorTheme.COCOA_SAGE -> "LP-01 Sage Canvas"
                                         ColorTheme.CHAMPAGNE_TOAST -> "Champagne Toast"
                                         ColorTheme.GOLDEN_HOUR -> "Golden Hour"
                                     }
