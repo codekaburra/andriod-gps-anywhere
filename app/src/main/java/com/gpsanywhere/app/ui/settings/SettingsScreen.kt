@@ -64,7 +64,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -100,7 +100,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -136,7 +136,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
         ) {
             Column(
                 modifier = Modifier.padding(16.dp).fillMaxWidth(),
