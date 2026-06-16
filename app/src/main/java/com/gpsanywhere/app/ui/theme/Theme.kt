@@ -9,28 +9,29 @@ import androidx.compose.ui.graphics.Color
 import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
 
+// Terracotta Olive light scheme.
 private val LightColorScheme = lightColorScheme(
     primary = CocoaSagePrimary,
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFE7C5B7),
+    onPrimaryContainer = Color(0xFF3A140B),
     secondary = CocoaSageSage,
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFDADCCD),
+    onSecondaryContainer = Color(0xFF24281A),
     tertiary = CocoaSageTerracotta,
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFE6D4C2),
+    onTertiaryContainer = CocoaSageText,
     background = CocoaSageBackground,
-    surface = CocoaSageSurface,
-    error = ErrorRed,
-    primaryContainer = Color(0xFFE8D7CA),
-    onPrimaryContainer = CocoaSageCharcoal,
-    secondaryContainer = Color(0xFFD7DDD5),
-    onSecondaryContainer = CocoaSageCharcoal,
-    tertiaryContainer = Color(0xFFECD8CA),
-    onTertiaryContainer = CocoaSageCharcoal,
-    onPrimary = Color(0xFFFFF8F0),
-    onSecondary = Color(0xFFFFF8F0),
-    onTertiary = CocoaSageCharcoal,
     onBackground = CocoaSageText,
+    surface = CocoaSageSurface,
     onSurface = CocoaSageText,
     surfaceVariant = CocoaSageSurfaceVariant,
     onSurfaceVariant = CocoaSageMuted,
     outline = CocoaSageBorder,
-    outlineVariant = Color(0xFFD6DBD2)
+    outlineVariant = Color(0xFFD8C9B2),
+    error = ErrorRed
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -57,57 +58,7 @@ private val DarkColorScheme = darkColorScheme(
     error = ErrorRed
 )
 
-// ── Champagne Toast ──────────────────────────────────────────────────────────
-
-private val ChampagneLightColorScheme = lightColorScheme(
-    primary = ChampagneTerra,
-    secondary = ChampagneTan,
-    tertiary = ChampagnePeach,
-    background = ChampagneBackground,
-    surface = ChampagneSurface,
-    error = ErrorRed,
-    primaryContainer = Color(0xFFF5DDD2),
-    onPrimaryContainer = Color(0xFF3B1A0E),
-    secondaryContainer = Color(0xFFEDE2DE),
-    onSecondaryContainer = Color(0xFF352825),
-    tertiaryContainer = Color(0xFFF0E0D2),
-    onTertiaryContainer = Color(0xFF3A2A1D),
-    onPrimary = Color(0xFFFFFFFF),
-    onSecondary = Color(0xFFFFFFFF),
-    onTertiary = Color(0xFF3A2A1D),
-    onBackground = ChampagneText,
-    onSurface = ChampagneText,
-    surfaceVariant = ChampagneSurfaceVariant,
-    onSurfaceVariant = ChampagneMuted,
-    outline = ChampagneBorder,
-    outlineVariant = Color(0xFFE5DDD5)
-)
-
-private val ChampagneDarkColorScheme = darkColorScheme(
-    primary = ChampagnePeach,
-    secondary = ChampagneTan,
-    tertiary = ChampagneTerra,
-    background = ChampagneBackgroundDark,
-    surface = ChampagneSurfaceDark,
-    surfaceVariant = ChampagneSurfaceVariantDark,
-    primaryContainer = Color(0xFF5A2E1E),
-    onPrimaryContainer = ChampagneTextOnDark,
-    secondaryContainer = Color(0xFF3E302C),
-    onSecondaryContainer = ChampagneTextOnDark,
-    tertiaryContainer = Color(0xFF4A2E20),
-    onTertiaryContainer = ChampagneTextOnDark,
-    onPrimary = Color(0xFF1A0E08),
-    onSecondary = Color(0xFF1A1412),
-    onTertiary = ChampagneTextOnDark,
-    onBackground = ChampagneTextOnDark,
-    onSurface = ChampagneTextOnDark,
-    onSurfaceVariant = ChampagneMutedOnDark,
-    outline = ChampagneBorderDark,
-    outlineVariant = Color(0xFF3E3530),
-    error = ErrorRed
-)
-
-// ── Golden Hour ──────────────────────────────────────────────────────────────
+// ── Wine ───────────────────────────────────────────────────────────────────
 
 private val GoldenLightColorScheme = lightColorScheme(
     primary = GoldenCopper,
@@ -171,7 +122,6 @@ fun GPSAnywhereTheme(
 
     val colorScheme = when (colorTheme) {
         ColorTheme.COCOA_SAGE -> if (darkTheme) DarkColorScheme else LightColorScheme
-        ColorTheme.CHAMPAGNE_TOAST -> if (darkTheme) ChampagneDarkColorScheme else ChampagneLightColorScheme
         ColorTheme.GOLDEN_HOUR -> if (darkTheme) GoldenDarkColorScheme else GoldenLightColorScheme
     }
 

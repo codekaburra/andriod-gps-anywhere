@@ -2,22 +2,22 @@ package com.gpsanywhere.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// LP-01 Sage Canvas: sage base, cocoa actions, charcoal text, translucent cream cards.
-val CocoaSageBlueGray = Color(0xFFAEC1C3)
-val CocoaSageSage = Color(0xFF808F89)
-val CocoaSageTerracotta = Color(0xFFC79B7B)
-val CocoaSageCocoa = Color(0xFF805D3E)
-val CocoaSageCharcoal = Color(0xFF414942)
+// Terracotta Olive: warm beige canvas, terracotta actions, olive support.
+val CocoaSageBlueGray = Color(0xFFC0C0AB)
+val CocoaSageSage = Color(0xFF6A6F55)
+val CocoaSageTerracotta = Color(0xFFAF492D)
+val CocoaSageCocoa = Color(0xFFA57754)
+val CocoaSageCharcoal = Color(0xFF343B2F)
 
-val CocoaSagePrimary = CocoaSageCocoa
-val CocoaSagePrimaryDeep = Color(0xFF65452B)
+val CocoaSagePrimary = CocoaSageTerracotta
+val CocoaSagePrimaryDeep = Color(0xFF8D3420)
 
-val CocoaSageBackground = Color(0xFFE3E7DE)
-val CocoaSageSurface = Color(0xFFFFF8F0)
-val CocoaSageSurfaceVariant = Color(0xFFD8E0DE)
+val CocoaSageBackground = Color(0xFFF5F2ED)
+val CocoaSageSurface = Color(0xFFEDE6DB)
+val CocoaSageSurfaceVariant = Color(0xFFC0C0AB)
 val CocoaSageText = CocoaSageCharcoal
-val CocoaSageMuted = Color(0xFF65716B)
-val CocoaSageBorder = Color(0xFFC9D0C8)
+val CocoaSageMuted = Color(0xFF727566)
+val CocoaSageBorder = Color(0xFFC4AC8A)
 
 val CocoaSageBackgroundDark = Color(0xFF071013)
 val CocoaSageSurfaceDark = Color(0xFF10191B)
@@ -28,27 +28,6 @@ val CocoaSageMutedOnDark = Color(0xFFB1C0BA)
 val CocoaSageBorderDark = Color(0xFF314144)
 
 val ErrorRed = Color(0xFFE54848)
-
-// Champagne Toast — warm earthy palette from brown to forest green.
-val ChampagneBrown = Color(0xFFAEC1C3)      // muted teal-grey (originally listed as brown in palette)
-val ChampagneTan = Color(0xFFB08F89)         // dusty rose-tan
-val ChampagnePeach = Color(0xFFC79B7B)       // warm peach
-val ChampagneTerra = Color(0xFFB05D3E)       // terracotta
-val ChampagneForest = Color(0xFF414942)      // dark forest green
-
-val ChampagneBackground = Color(0xFFF5F0EB)
-val ChampagneSurface = Color(0xFFFFFFFF)
-val ChampagneSurfaceVariant = Color(0xFFEDE6DF)
-val ChampagneText = Color(0xFF3B3330)
-val ChampagneMuted = Color(0xFF7A6E68)
-val ChampagneBorder = Color(0xFFD8CFC7)
-
-val ChampagneBackgroundDark = Color(0xFF1A1412)
-val ChampagneSurfaceDark = Color(0xFF241D1A)
-val ChampagneSurfaceVariantDark = Color(0xFF332A26)
-val ChampagneTextOnDark = Color(0xFFF4EDE8)
-val ChampagneMutedOnDark = Color(0xFFB8A99F)
-val ChampagneBorderDark = Color(0xFF4A3F3A)
 
 // Golden Hour — moody sequin-night palette from cream to near-black.
 val GoldenCream = Color(0xFFE3D2B4)     // soft cream

@@ -94,7 +94,7 @@ fun MapViewComposable(
             val polyline = Polyline(mapView).apply {
                 setPoints(waypoints.map { GeoPoint(it.latitude, it.longitude) })
                 outlinePaint.strokeWidth = 8f
-                outlinePaint.color = android.graphics.Color.parseColor("#805D3E")
+                outlinePaint.color = android.graphics.Color.parseColor("#AF492D")
             }
             mapView.overlays.add(polyline)
         } else if (waypoints.size == 1) {
