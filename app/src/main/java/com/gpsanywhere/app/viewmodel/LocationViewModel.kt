@@ -88,24 +88,42 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun addLocation(name: String, latitude: Double, longitude: Double) {
+    fun addLocation(name: String, latitude: Double, longitude: Double, tags: String = "") {
         viewModelScope.launch {
             dao.insert(
                 SavedLocation(
                     sourceId = null,
                     name = name.trim(),
                     latitude = latitude,
-                    longitude = longitude
+                    longitude = longitude,
+                    tags = normalizeTags(tags)
                 )
             )
         }
     }
 
-    fun updateLocation(location: SavedLocation, name: String, latitude: Double, longitude: Double) {
+    fun updateLocation(
+        location: SavedLocation,
+        name: String,
+        latitude: Double,
+        longitude: Double,
+        tags: String = location.tags
+    ) {
         viewModelScope.launch {
-            dao.update(location.copy(name = name.trim(), latitude = latitude, longitude = longitude))
+            dao.update(
+                location.copy(
+                    name = name.trim(),
+                    latitude = latitude,
+                    longitude = longitude,
+                    tags = normalizeTags(tags)
+                )
+            )
         }
     }
+
+    /** Accepts comma- or pipe-separated tag input and stores it pipe-separated. */
+    private fun normalizeTags(raw: String): String =
+        raw.split(",", "|").map { it.trim() }.filter { it.isNotEmpty() }.joinToString("|")
 
     fun deleteLocation(location: SavedLocation) {
         if (location.isPreinstalled) return

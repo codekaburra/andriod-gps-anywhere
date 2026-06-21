@@ -32,7 +32,7 @@ import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.ui.location.LocationScreen
-import com.gpsanywhere.app.ui.spiral.SpiralScreen
+import com.gpsanywhere.app.ui.manual.ManualScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import com.gpsanywhere.app.ui.settings.SettingsScreen
@@ -87,17 +87,17 @@ fun MainApp(preferences: AppPreferences) {
                         colors = navigationItemColors()
                     )
                     NavigationBarItem(
+                        selected = currentRoute == Routes.MANUAL,
+                        onClick = { nav(Routes.MANUAL) },
+                        icon = { Icon(Icons.Default.Loop, contentDescription = "Manual") },
+                        label = { Text("Manual") },
+                        colors = navigationItemColors()
+                    )
+                    NavigationBarItem(
                         selected = currentRoute == Routes.SETTINGS,
                         onClick = { nav(Routes.SETTINGS) },
                         icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
                         label = { Text("Settings") },
-                        colors = navigationItemColors()
-                    )
-                    NavigationBarItem(
-                        selected = currentRoute == Routes.SPIRAL,
-                        onClick = { nav(Routes.SPIRAL) },
-                        icon = { Icon(Icons.Default.Loop, contentDescription = "Spiral") },
-                        label = { Text("Spiral") },
                         colors = navigationItemColors()
                     )
                 }
@@ -114,8 +114,8 @@ fun MainApp(preferences: AppPreferences) {
                 composable(Routes.WALK) {
                     WalkScreen(viewModel = walkViewModel)
                 }
-                composable(Routes.SPIRAL) {
-                    SpiralScreen(viewModel = locationViewModel)
+                composable(Routes.MANUAL) {
+                    ManualScreen(viewModel = locationViewModel)
                 }
                 composable(Routes.SETTINGS) {
                     SettingsScreen(viewModel = mainViewModel)

@@ -24,8 +24,6 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.ui.res.painterResource
-import com.gpsanywhere.app.R
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.Edit
@@ -79,16 +77,14 @@ import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
+import com.gpsanywhere.app.ui.components.CustomJumpPanel
+import com.gpsanywhere.app.ui.components.FlySpeedButtons
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.ui.components.StepperInput
 import com.gpsanywhere.app.ui.components.speedToSlider
 import com.gpsanywhere.app.ui.components.sliderToSpeed
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
-import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_HELI_KMH
-import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_FLIGHT_KMH
-import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_ROCKET_KMH
-import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MAX_SPEED_KMH
 import org.osmdroid.util.GeoPoint
 
 private sealed class PendingLocation {
@@ -593,9 +589,10 @@ fun LocationScreen(
             initialName = loc.name,
             initialLat = "%.6f".format(loc.latitude),
             initialLng = "%.6f".format(loc.longitude),
+            initialTags = loc.tagList.joinToString(", "),
             onDismiss = { editLocation = null },
-            onSave = { name, lat, lng ->
-                viewModel.updateLocation(loc, name, lat, lng)
+            onSave = { name, lat, lng, tags ->
+                viewModel.updateLocation(loc, name, lat, lng, tags)
                 editLocation = null
             }
         )
@@ -604,8 +601,8 @@ fun LocationScreen(
     if (showAddSheet) {
         AddLocationSheet(
             onDismiss = { showAddSheet = false },
-            onSave = { name, lat, lng ->
-                viewModel.addLocation(name, lat, lng)
+            onSave = { name, lat, lng, tags ->
+                viewModel.addLocation(name, lat, lng, tags)
                 showAddSheet = false
             }
         )
@@ -796,28 +793,6 @@ private fun LocationCard(
     }
 }
 
-/**
- * Three Fly buttons that move the GPS toward the target at a preset cruising speed:
- * bird (80 km/h), car (200 km/h) and airplane (500 km/h). Speed can still be adjusted
- * afterwards via the speed control panel.
- */
-@Composable
-private fun FlySpeedButtons(
-    onFly: (Float) -> Unit,
-    enabled: Boolean = true
-) {
-    FilledIconButton(onClick = { onFly(FLY_HELI_KMH) }, enabled = enabled) {
-        Icon(painterResource(R.drawable.ic_helicopter), contentDescription = "80 km/h", modifier = Modifier.size(20.dp))
-    }
-    Spacer(Modifier.width(4.dp))
-    FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled) {
-        Icon(Icons.Default.Flight, contentDescription = "500 km/h", modifier = Modifier.size(20.dp))
-    }
-    Spacer(Modifier.width(4.dp))
-    FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled) {
-        Icon(Icons.Default.RocketLaunch, contentDescription = "2000 km/h", modifier = Modifier.size(20.dp))
-    }
-}
 
 @Composable
 private fun EmptyState(
@@ -851,11 +826,12 @@ private fun EmptyState(
 @Composable
 private fun AddLocationSheet(
     onDismiss: () -> Unit,
-    onSave: (name: String, lat: Double, lng: Double) -> Unit,
+    onSave: (name: String, lat: Double, lng: Double, tags: String) -> Unit,
     title: String = "Add Location",
     initialName: String = "",
     initialLat: String = "",
-    initialLng: String = ""
+    initialLng: String = "",
+    initialTags: String = ""
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val clipboard = LocalClipboardManager.current
@@ -863,6 +839,7 @@ private fun AddLocationSheet(
     var name by remember { mutableStateOf(initialName) }
     var latText by remember { mutableStateOf(initialLat) }
     var lngText by remember { mutableStateOf(initialLng) }
+    var tagsText by remember { mutableStateOf(initialTags) }
     var error by remember { mutableStateOf<String?>(null) }
 
     val previewLat = latText.toDoubleOrNull()
@@ -908,6 +885,16 @@ private fun AddLocationSheet(
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            OutlinedTextField(
+                value = tagsText,
+                onValueChange = { tagsText = it },
+                label = { Text("Tags") },
+                placeholder = { Text("e.g. zoo, family, outdoor") },
+                supportingText = { Text("Separate tags with commas") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             OutlinedButton(
                 onClick = {
@@ -971,7 +958,7 @@ private fun AddLocationSheet(
                         n.isEmpty() -> error = "Name is required"
                         lng == null || lng !in -180.0..180.0 -> error = "Longitude must be between -180 and 180"
                         lat == null || lat !in -90.0..90.0 -> error = "Latitude must be between -90 and 90"
-                        else -> onSave(n, lat, lng)
+                        else -> onSave(n, lat, lng, tagsText.trim())
                     }
                 }) { Text("Save") }
             }
@@ -981,99 +968,3 @@ private fun AddLocationSheet(
     }
 }
 
-@Composable
-private fun CustomJumpPanel(
-    coordinateText: String,
-    onCoordinateChange: (String) -> Unit,
-    onJump: () -> Unit,
-    onSpiral: () -> Unit,
-    onFly: (Float) -> Unit,
-    onPaste: () -> Unit
-) {
-    val parsed = parseClipboardCoordinates(coordinateText.trim())
-    val hasInput = coordinateText.isNotBlank()
-    val isValid = parsed != null
-    val canJump = hasInput && isValid
-    val actionButtonColors = IconButtonDefaults.filledIconButtonColors(
-        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.78f),
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        disabledContainerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
-    )
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = coordinateText,
-                    onValueChange = onCoordinateChange,
-                    label = { Text("Coordinate") },
-                    placeholder = { Text("22.3168,114.0451") },
-                    isError = hasInput && !isValid,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.45f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.45f),
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
-                        focusedLabelColor = MaterialTheme.colorScheme.primary,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier.weight(1f)
-                )
-                FilledIconButton(
-                    onClick = onPaste,
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        Icons.Default.ContentPaste,
-                        contentDescription = "Paste",
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                FilledIconButton(onClick = onJump, enabled = canJump, colors = actionButtonColors) {
-                    Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(18.dp))
-                }
-                Spacer(Modifier.width(4.dp))
-                FilledIconButton(onClick = onSpiral, enabled = canJump, colors = actionButtonColors) {
-                    Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(18.dp))
-                }
-                Spacer(Modifier.width(12.dp))
-                FlySpeedButtons(onFly = onFly, enabled = canJump)
-            }
-
-            if (hasInput && !isValid) {
-                Text(
-                    text = "Use format: latitude,longitude (e.g. 22.3168,114.0451)",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-        }
-    }
-}
