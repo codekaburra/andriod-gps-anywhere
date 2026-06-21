@@ -27,6 +27,10 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.LocationOn
@@ -36,7 +40,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Slider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledIconButton
@@ -53,6 +56,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -79,12 +83,11 @@ import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.CustomJumpPanel
 import com.gpsanywhere.app.ui.components.FlySpeedButtons
+import com.gpsanywhere.app.ui.components.SpeedPanel
 import com.gpsanywhere.app.ui.components.MapViewComposable
-import com.gpsanywhere.app.ui.components.StepperInput
-import com.gpsanywhere.app.ui.components.speedToSlider
-import com.gpsanywhere.app.ui.components.sliderToSpeed
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
+import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MOVE_STEP_DEG
 import org.osmdroid.util.GeoPoint
 
 private sealed class PendingLocation {
@@ -164,7 +167,6 @@ fun LocationScreen(
     val currentLat by CurrentLocationProvider.latitude.observeAsState()
     val currentLng by CurrentLocationProvider.longitude.observeAsState()
     val spiralSpeed by viewModel.spiralSpeedKmh.collectAsState()
-    val spiralResetMinutes by viewModel.spiralResetMinutes.collectAsState()
     val liveSpeedKmh by SpoofService.currentSpeedKmh.observeAsState(0f)
 
 
@@ -315,50 +317,24 @@ fun LocationScreen(
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
-                            // Live speed badge
-                            Text(
-                                "${"%.1f".format(liveSpeedKmh)} km/h",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                ResetCountdown()
+                                Text(
+                                    "${"%.1f".format(liveSpeedKmh)} km/h",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                         Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                "Speed",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                            )
-                            Slider(
-                                value = speedToSlider(spiralSpeed),
-                                onValueChange = { viewModel.setSpiralSpeed(sliderToSpeed(it)) },
-                                valueRange = 0f..1f,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                if (spiralSpeed < 10f) "${"%.1f".format(spiralSpeed)} km/h"
-                                else "${"%.0f".format(spiralSpeed)} km/h",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                            )
-                        }
-                        Spacer(Modifier.height(4.dp))
-                        // Reset-interval config: how often the spiral returns to its origin
-                        Text(
-                            "Return to start every",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        StepperInput(
-                            value = spiralResetMinutes,
-                            onValueChange = { viewModel.setSpiralResetMinutes(it) },
-                            unit = "min",
-                            fieldWidth = 72
+                        SpeedPanel(
+                            speed = spiralSpeed,
+                            onSpeedChange = { viewModel.setSpiralSpeed(it) },
+                            maxKmh = LocationViewModel.MAX_SPEED_KMH,
+                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                         )
                         // Stop button
                         OutlinedButton(
@@ -429,6 +405,26 @@ fun LocationScreen(
             }
 
             item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Move target", style = MaterialTheme.typography.titleSmall)
+                        Spacer(Modifier.height(8.dp))
+                        DirectionPad(
+                            enabled = currentLat != null && currentLng != null,
+                            onMove = { dLat, dLng -> viewModel.nudgeSpiral(dLat, dLng) }
+                        )
+                    }
+                }
+            }
+
+            item {
                 CustomJumpPanel(
                     coordinateText = jumpCoordinateText,
                     onCoordinateChange = { jumpCoordinateText = it },
@@ -461,6 +457,8 @@ fun LocationScreen(
                     }
                 )
             }
+
+
 
             item {
                 SectionHeader(title = "Saved Locations")
@@ -968,3 +966,61 @@ private fun AddLocationSheet(
     }
 }
 
+@Composable
+private fun DirectionPad(
+    enabled: Boolean,
+    onMove: (dLat: Double, dLng: Double) -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        DirectionButton(Icons.Default.KeyboardArrowUp, "North", enabled) { onMove(MOVE_STEP_DEG, 0.0) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            DirectionButton(Icons.Default.KeyboardArrowLeft, "West", enabled) { onMove(0.0, -MOVE_STEP_DEG) }
+            Spacer(Modifier.size(64.dp))
+            DirectionButton(Icons.Default.KeyboardArrowRight, "East", enabled) { onMove(0.0, MOVE_STEP_DEG) }
+        }
+        DirectionButton(Icons.Default.KeyboardArrowDown, "South", enabled) { onMove(-MOVE_STEP_DEG, 0.0) }
+    }
+}
+
+@Composable
+private fun DirectionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    FilledIconButton(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.size(64.dp)
+    ) {
+        Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(32.dp))
+    }
+}
+
+@Composable
+private fun ResetCountdown() {
+    val deadline by SpoofService.resetDeadlineMs.observeAsState(0L)
+    if (deadline <= 0L) return
+    var remainingSec by remember { mutableStateOf(0L) }
+    LaunchedEffect(deadline) {
+        while (true) {
+            val left = (deadline - System.currentTimeMillis()) / 1000L
+            remainingSec = if (left > 0) left else 0
+            kotlinx.coroutines.delay(1000)
+        }
+    }
+    if (remainingSec > 0) {
+        val mins = remainingSec / 60
+        val secs = remainingSec % 60
+        Text(
+            "%d:%02d".format(mins, secs),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+        )
+    }
+}

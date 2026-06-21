@@ -54,7 +54,9 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     private val prefs = AppPreferences(application)
 
-    private val _spiralResetMinutes = MutableStateFlow(prefs.spiralResetMinutes)
+    private val _spiralResetMinutes = MutableStateFlow(prefs.spiralResetMinutes.also {
+        SpoofService.liveResetIntervalMs = it * 60L * 1000L
+    })
     /** How often (minutes) a spiral walk returns to its origin and restarts. User-configurable. */
     val spiralResetMinutes: StateFlow<Int> = _spiralResetMinutes.asStateFlow()
 
@@ -65,6 +67,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         val clamped = minutes.coerceIn(MIN_SPIRAL_RESET_MIN, MAX_SPIRAL_RESET_MIN)
         _spiralResetMinutes.value = clamped
         prefs.spiralResetMinutes = clamped
+        SpoofService.liveResetIntervalMs = clamped * 60L * 1000L
     }
 
     private val _routeHints = MutableStateFlow<Map<String, String>>(emptyMap())

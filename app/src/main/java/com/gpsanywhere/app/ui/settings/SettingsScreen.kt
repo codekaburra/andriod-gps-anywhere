@@ -10,18 +10,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -29,13 +35,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
+import androidx.compose.ui.text.input.KeyboardType
+import com.gpsanywhere.app.viewmodel.LocationViewModel
 import com.gpsanywhere.app.viewmodel.MainViewModel
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(viewModel: MainViewModel) {
+fun SettingsScreen(viewModel: MainViewModel, locationViewModel: LocationViewModel) {
     val themeMode by viewModel.themeMode.observeAsState(ThemeMode.SYSTEM)
     val colorTheme by viewModel.colorTheme.observeAsState(ColorTheme.COCOA_SAGE)
+    val spiralResetMinutes by locationViewModel.spiralResetMinutes.collectAsState()
     val context = LocalContext.current
     val packageInfo = remember {
         context.packageManager.getPackageInfo(context.packageName, 0)
@@ -128,6 +137,39 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         )
                     }
                 }
+            }
+        }
+
+        // Reset interval
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+        ) {
+            var resetText by remember(spiralResetMinutes) {
+                mutableStateOf(spiralResetMinutes.toString())
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    "Go back to starting position every",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = resetText,
+                    onValueChange = { input ->
+                        resetText = input.filter { it.isDigit() }.take(3)
+                        resetText.toIntOrNull()?.let { locationViewModel.setSpiralResetMinutes(it) }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.width(72.dp)
+                )
+                Text("mins", style = MaterialTheme.typography.bodyMedium)
             }
         }
 

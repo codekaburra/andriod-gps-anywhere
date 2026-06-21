@@ -3,7 +3,6 @@ package com.gpsanywhere.app.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Loop
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -32,7 +31,6 @@ import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.ui.location.LocationScreen
-import com.gpsanywhere.app.ui.manual.ManualScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import com.gpsanywhere.app.ui.settings.SettingsScreen
@@ -87,13 +85,6 @@ fun MainApp(preferences: AppPreferences) {
                         colors = navigationItemColors()
                     )
                     NavigationBarItem(
-                        selected = currentRoute == Routes.MANUAL,
-                        onClick = { nav(Routes.MANUAL) },
-                        icon = { Icon(Icons.Default.Loop, contentDescription = "Manual") },
-                        label = { Text("Manual") },
-                        colors = navigationItemColors()
-                    )
-                    NavigationBarItem(
                         selected = currentRoute == Routes.SETTINGS,
                         onClick = { nav(Routes.SETTINGS) },
                         icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
@@ -114,11 +105,8 @@ fun MainApp(preferences: AppPreferences) {
                 composable(Routes.WALK) {
                     WalkScreen(viewModel = walkViewModel)
                 }
-                composable(Routes.MANUAL) {
-                    ManualScreen(viewModel = locationViewModel)
-                }
                 composable(Routes.SETTINGS) {
-                    SettingsScreen(viewModel = mainViewModel)
+                    SettingsScreen(viewModel = mainViewModel, locationViewModel = locationViewModel)
                 }
             }
         }
