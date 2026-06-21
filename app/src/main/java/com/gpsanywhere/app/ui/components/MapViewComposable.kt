@@ -105,7 +105,7 @@ fun MapViewComposable(
             val polyline = Polyline(mapView).apply {
                 setPoints(waypoints.map { GeoPoint(it.latitude, it.longitude) })
                 outlinePaint.strokeWidth = 8f
-                outlinePaint.color = android.graphics.Color.parseColor("#42A5F5")
+                outlinePaint.color = com.gpsanywhere.app.ui.theme.MapPolylineBlue
             }
             mapView.overlays.add(polyline)
         } else if (waypoints.size == 1) {
@@ -144,7 +144,7 @@ private fun createNumberedPin(
 
     // Teardrop body
     val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.parseColor("#42A5F5")
+        color = com.gpsanywhere.app.ui.theme.MapPolylineBlue
         style = Paint.Style.FILL
     }
     canvas.drawCircle(cx, headCy, headRadius, bodyPaint)
@@ -165,7 +165,7 @@ private fun createNumberedPin(
 
     // Number
     val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.parseColor("#42A5F5")
+        color = com.gpsanywhere.app.ui.theme.MapPolylineBlue
         textSize = headRadius * 0.7f
         textAlign = Paint.Align.CENTER
         typeface = android.graphics.Typeface.DEFAULT_BOLD

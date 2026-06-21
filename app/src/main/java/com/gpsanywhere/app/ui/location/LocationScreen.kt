@@ -310,8 +310,9 @@ fun LocationScreen(
             // ── Walk-mode banner ──────────────────────────────────────────────
             if (isWalkMode) {
                 Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     shape = RoundedCornerShape(0.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
@@ -327,19 +328,19 @@ fun LocationScreen(
                                 Icon(
                                     Icons.AutoMirrored.Filled.DirectionsWalk,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                 )
                                 Text(
-                                    "Walk Around active",
+                                    "",
                                     style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             // Live speed badge
                             Text(
                                 "${"%.1f".format(liveSpeedKmh)} km/h",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                         Spacer(Modifier.height(8.dp))
@@ -351,7 +352,7 @@ fun LocationScreen(
                             Text(
                                 "Speed",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = com.gpsanywhere.app.ui.theme.CandyBlue
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Slider(
                                 value = speedToSlider(spiralSpeed),
@@ -359,16 +360,16 @@ fun LocationScreen(
                                 valueRange = 0f..1f,
                                 modifier = Modifier.weight(1f),
                                 colors = androidx.compose.material3.SliderDefaults.colors(
-                                    thumbColor = com.gpsanywhere.app.ui.theme.StopRed,
-                                    activeTrackColor = com.gpsanywhere.app.ui.theme.CandyOrange.copy(alpha = 0.7f),
-                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.3f)
+                                    thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb,
+                                    activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.7f),
+                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.3f)
                                 )
                             )
                             Text(
                                 if (spiralSpeed < 10f) "${"%.1f".format(spiralSpeed)} km/h"
                                 else "${"%.0f".format(spiralSpeed)} km/h",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                         }
                         // Stop button
@@ -409,7 +410,7 @@ fun LocationScreen(
 
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = com.gpsanywhere.app.ui.theme.DustyRose,
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .padding(8.dp)
@@ -418,7 +419,7 @@ fun LocationScreen(
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "Add location",
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    tint = Color.White
                                 )
                             }
                         }
@@ -430,13 +431,13 @@ fun LocationScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary
+                            color = com.gpsanywhere.app.ui.theme.DustyRose
                         ) {
                             IconButton(onClick = { showAddSheet = true }) {
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "Add location",
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    tint = Color.White
                                 )
                             }
                         }
@@ -635,23 +636,24 @@ private fun TagFilterRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        allTags.forEachIndexed { index, tag ->
-            val candyColor = com.gpsanywhere.app.ui.theme.CandyTagColors[index % com.gpsanywhere.app.ui.theme.CandyTagColors.size]
+        allTags.forEach { tag ->
+            val isSelected = tag in selectedTags
+            val green = com.gpsanywhere.app.ui.theme.CandyGreen
             FilterChip(
-                selected = tag in selectedTags,
+                selected = isSelected,
                 onClick = { onTagToggle(tag) },
                 label = { Text(tag) },
                 colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = candyColor.copy(alpha = 0.2f),
-                    selectedLabelColor = candyColor,
-                    containerColor = candyColor.copy(alpha = 0.08f),
-                    labelColor = candyColor
+                    selectedContainerColor = green.copy(alpha = 0.2f),
+                    selectedLabelColor = green,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
                     enabled = true,
-                    selected = tag in selectedTags,
-                    borderColor = candyColor.copy(alpha = 0.4f),
-                    selectedBorderColor = candyColor
+                    selected = isSelected,
+                    borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                    selectedBorderColor = green
                 )
             )
         }
@@ -710,7 +712,7 @@ private fun LocationCard(
                     tint = if (isSelected || isActive) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.secondary
+                        com.gpsanywhere.app.ui.theme.DustyRose
                     },
                     modifier = Modifier.size(26.dp)
                 )
@@ -755,17 +757,14 @@ private fun LocationCard(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         tags.take(3).forEach { tag ->
-                            val tagColor = com.gpsanywhere.app.ui.theme.CandyTagColors[
-                                (tag.hashCode().and(0x7fffffff)) % com.gpsanywhere.app.ui.theme.CandyTagColors.size
-                            ]
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
-                                color = tagColor.copy(alpha = 0.15f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                             ) {
                                 Text(
                                     tag,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = tagColor,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }

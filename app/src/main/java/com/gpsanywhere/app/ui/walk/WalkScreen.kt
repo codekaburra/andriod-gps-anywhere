@@ -235,8 +235,8 @@ fun WalkScreen(
                     FilledIconButton(
                         onClick = { selectedRoute = null },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = androidx.compose.ui.graphics.Color(0xFFF0F0F0),
-                            contentColor = androidx.compose.ui.graphics.Color(0xFF424242)
+                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg,
+                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                         )
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -244,8 +244,8 @@ fun WalkScreen(
                     FilledIconButton(
                         onClick = { viewModel.startWalk(route, reversed = true) },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = androidx.compose.ui.graphics.Color(0xFFF0F0F0),
-                            contentColor = androidx.compose.ui.graphics.Color(0xFF424242)
+                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg,
+                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                         )
                     ) {
                         Icon(Icons.Default.SwapVert, contentDescription = "Revert")
@@ -394,6 +394,43 @@ fun WalkScreen(
 
 }
 
+// ── Route speed slider: 0───20 | 100 | 200 | 500 ─────────────────────────────
+
+private const val ROUTE_WALK_ZONE_KMH = 20f
+private const val ROUTE_WALK_ZONE_FRAC = 0.8f
+private const val ROUTE_MAX_SPEED_KMH = 500f
+
+private fun routeSpeedToSlider(kmh: Float): Float {
+    val tailFrac = (1f - ROUTE_WALK_ZONE_FRAC) / 3f
+    return when {
+        kmh <= ROUTE_WALK_ZONE_KMH ->
+            (kmh / ROUTE_WALK_ZONE_KMH) * ROUTE_WALK_ZONE_FRAC
+        kmh <= 100f ->
+            ROUTE_WALK_ZONE_FRAC + ((kmh - ROUTE_WALK_ZONE_KMH) / 80f) * tailFrac
+        kmh <= 200f ->
+            ROUTE_WALK_ZONE_FRAC + tailFrac + ((kmh - 100f) / 100f) * tailFrac
+        else ->
+            ROUTE_WALK_ZONE_FRAC + 2f * tailFrac + ((kmh - 200f) / 300f) * tailFrac
+    }.coerceIn(0f, 1f)
+}
+
+private fun routeSliderToSpeed(frac: Float): Float {
+    val tailFrac = (1f - ROUTE_WALK_ZONE_FRAC) / 3f
+    return when {
+        frac <= ROUTE_WALK_ZONE_FRAC ->
+            (frac / ROUTE_WALK_ZONE_FRAC) * ROUTE_WALK_ZONE_KMH
+        frac <= ROUTE_WALK_ZONE_FRAC + tailFrac ->
+            ROUTE_WALK_ZONE_KMH + ((frac - ROUTE_WALK_ZONE_FRAC) / tailFrac) * 80f
+        frac <= ROUTE_WALK_ZONE_FRAC + 2f * tailFrac ->
+            100f + ((frac - ROUTE_WALK_ZONE_FRAC - tailFrac) / tailFrac) * 100f
+        else ->
+            200f + ((frac - ROUTE_WALK_ZONE_FRAC - 2f * tailFrac) / tailFrac) * 300f
+    }.coerceIn(0f, ROUTE_MAX_SPEED_KMH)
+}
+
+private fun formatRouteSpeed(kmh: Float): String =
+    if (kmh < 10f) "${"%.1f".format(kmh)} km/h" else "${"%.0f".format(kmh)} km/h"
+
 // ── Shared speed control panel ───────────────────────────────────────────────
 
 @Composable
@@ -404,8 +441,9 @@ private fun SpeedControlPanel(
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = androidx.compose.ui.graphics.Color.White
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
         ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -423,19 +461,18 @@ private fun SpeedControlPanel(
                     color = com.gpsanywhere.app.ui.theme.CandyBlue
                 )
                 Slider(
-                    value = speed,
-                    onValueChange = onSpeedChange,
-                    valueRange = 1f..20f,
-                    steps = 18,
+                    value = routeSpeedToSlider(speed),
+                    onValueChange = { onSpeedChange(routeSliderToSpeed(it)) },
+                    valueRange = 0f..1f,
                     modifier = Modifier.weight(1f),
                     colors = androidx.compose.material3.SliderDefaults.colors(
-                        thumbColor = com.gpsanywhere.app.ui.theme.StopRed,
-                        activeTrackColor = com.gpsanywhere.app.ui.theme.CandyOrange.copy(alpha = 0.7f),
-                        inactiveTrackColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.3f)
+                        thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb,
+                        activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.7f),
+                        inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.3f)
                     )
                 )
                 Text(
-                    "${"%.0f".format(speed)} km/h",
+                    formatRouteSpeed(speed),
                     style = MaterialTheme.typography.labelMedium,
                     color = com.gpsanywhere.app.ui.theme.CandyBlue
                 )
