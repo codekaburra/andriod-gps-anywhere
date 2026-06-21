@@ -2,7 +2,6 @@ package com.gpsanywhere.app.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,15 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
-import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.viewmodel.MainViewModel
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(viewModel: MainViewModel) {
-    val themeMode by viewModel.themeMode.observeAsState(ThemeMode.SYSTEM)
-    val colorTheme by viewModel.colorTheme.observeAsState(ColorTheme.COCOA_SAGE)
+    val themeMode by viewModel.themeMode.observeAsState(ThemeMode.LIGHT)
     val context = LocalContext.current
     val packageInfo = remember {
         context.packageManager.getPackageInfo(context.packageName, 0)
@@ -77,51 +74,16 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ThemeMode.entries.forEach { mode ->
+                    listOf(ThemeMode.LIGHT, ThemeMode.DARK).forEach { mode ->
                         FilterChip(
                             selected = themeMode == mode,
                             onClick = { viewModel.setTheme(mode) },
                             label = {
                                 Text(
                                     when (mode) {
-                                        ThemeMode.SYSTEM -> "System"
                                         ThemeMode.LIGHT -> "Light"
                                         ThemeMode.DARK -> "Dark"
-                                    }
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-        }
-
-        // Colour theme section
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    "Colour Palette",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(Modifier.height(12.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ColorTheme.entries.forEach { theme ->
-                        FilterChip(
-                            selected = colorTheme == theme,
-                            onClick = { viewModel.setColorTheme(theme) },
-                            label = {
-                                Text(
-                                    when (theme) {
-                                        ColorTheme.COCOA_SAGE -> "Wine"
-                                        ColorTheme.GOLDEN_HOUR -> "Golden Hour"
+                                        else -> ""
                                     }
                                 )
                             }

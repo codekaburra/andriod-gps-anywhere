@@ -45,8 +45,8 @@ fun MainApp(preferences: AppPreferences) {
     val locationViewModel: LocationViewModel = viewModel()
     val walkViewModel: WalkViewModel = viewModel()
 
-    val themeMode by mainViewModel.themeMode.observeAsState(ThemeMode.SYSTEM)
-    val colorTheme by mainViewModel.colorTheme.observeAsState(ColorTheme.COCOA_SAGE)
+    val themeMode by mainViewModel.themeMode.observeAsState(ThemeMode.LIGHT)
+    val colorTheme = if (themeMode == ThemeMode.DARK) ColorTheme.GOLDEN_HOUR else ColorTheme.COCOA_SAGE
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Routes.WALK
