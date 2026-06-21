@@ -55,8 +55,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -992,11 +999,29 @@ private fun DirectionButton(
     enabled: Boolean,
     onClick: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
     FilledIconButton(
-        onClick = onClick,
+        onClick = {},
         enabled = enabled,
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.size(64.dp)
+        modifier = Modifier
+            .size(64.dp)
+            .pointerInput(enabled) {
+                if (!enabled) return@pointerInput
+                awaitEachGesture {
+                    awaitFirstDown()
+                    onClick()
+                    val repeatJob = scope.launch {
+                        delay(300)
+                        while (true) {
+                            onClick()
+                            delay(120)
+                        }
+                    }
+                    waitForUpOrCancellation()
+                    repeatJob.cancel()
+                }
+            }
     ) {
         Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(32.dp))
     }
