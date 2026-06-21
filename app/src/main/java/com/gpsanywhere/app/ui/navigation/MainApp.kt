@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Loop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -26,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.ui.location.LocationScreen
+import com.gpsanywhere.app.ui.spiral.SpiralScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import com.gpsanywhere.app.ui.walk.WalkScreen
@@ -71,6 +73,12 @@ fun MainApp(preferences: AppPreferences) {
                         icon = { Icon(Icons.Default.DirectionsWalk, contentDescription = "Walk") },
                         label = { Text("Route") }
                     )
+                    NavigationBarItem(
+                        selected = currentRoute == Routes.SPIRAL,
+                        onClick = { nav(Routes.SPIRAL) },
+                        icon = { Icon(Icons.Default.Loop, contentDescription = "Spiral") },
+                        label = { Text("Spiral") }
+                    )
                 }
             }
         ) { innerPadding ->
@@ -84,6 +92,9 @@ fun MainApp(preferences: AppPreferences) {
                 }
                 composable(Routes.WALK) {
                     WalkScreen(viewModel = walkViewModel)
+                }
+                composable(Routes.SPIRAL) {
+                    SpiralScreen(viewModel = locationViewModel)
                 }
             }
         }

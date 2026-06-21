@@ -34,15 +34,23 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_COMPLIANCE_ACK, false)
         set(value) = prefs.edit().putBoolean(KEY_COMPLIANCE_ACK, value).apply()
 
+    /** How often (in minutes) a spiral walk returns to its origin and restarts. */
+    var spiralResetMinutes: Int
+        get() = prefs.getInt(KEY_SPIRAL_RESET_MIN, DEFAULT_SPIRAL_RESET_MIN)
+        set(value) = prefs.edit().putInt(KEY_SPIRAL_RESET_MIN, value).apply()
+
     fun applySavedTheme() {
         val nightMode = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         AppCompatDelegate.setDefaultNightMode(nightMode)
     }
 
     companion object {
+        const val DEFAULT_SPIRAL_RESET_MIN = 15
+
         private const val PREFS_NAME = "gpsanywhere_prefs"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_ONBOARDING_SHOWN = "onboarding_shown"
         private const val KEY_COMPLIANCE_ACK = "compliance_ack"
+        private const val KEY_SPIRAL_RESET_MIN = "spiral_reset_min"
     }
 }

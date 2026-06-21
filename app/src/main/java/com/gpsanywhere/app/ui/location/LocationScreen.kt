@@ -78,6 +78,9 @@ import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.MapViewComposable
+import com.gpsanywhere.app.ui.components.StepperInput
+import com.gpsanywhere.app.ui.components.speedToSlider
+import com.gpsanywhere.app.ui.components.sliderToSpeed
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_HELI_KMH
@@ -85,25 +88,6 @@ import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_FLIGHT_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_ROCKET_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MAX_SPEED_KMH
 import org.osmdroid.util.GeoPoint
-
-private const val WALK_ZONE_KMH = 20f
-private const val WALK_ZONE_FRAC = 0.8f
-
-private fun speedToSlider(kmh: Float): Float {
-    return if (kmh <= WALK_ZONE_KMH) {
-        (kmh / WALK_ZONE_KMH) * WALK_ZONE_FRAC
-    } else {
-        WALK_ZONE_FRAC + ((kmh - WALK_ZONE_KMH) / (MAX_SPEED_KMH - WALK_ZONE_KMH)) * (1f - WALK_ZONE_FRAC)
-    }
-}
-
-private fun sliderToSpeed(frac: Float): Float {
-    return if (frac <= WALK_ZONE_FRAC) {
-        (frac / WALK_ZONE_FRAC) * WALK_ZONE_KMH
-    } else {
-        WALK_ZONE_KMH + ((frac - WALK_ZONE_FRAC) / (1f - WALK_ZONE_FRAC)) * (MAX_SPEED_KMH - WALK_ZONE_KMH)
-    }
-}
 
 private sealed class PendingLocation {
     abstract val name: String
@@ -182,6 +166,7 @@ fun LocationScreen(
     val currentLat by CurrentLocationProvider.latitude.observeAsState()
     val currentLng by CurrentLocationProvider.longitude.observeAsState()
     val spiralSpeed by viewModel.spiralSpeedKmh.collectAsState()
+    val spiralResetMinutes by viewModel.spiralResetMinutes.collectAsState()
     val liveSpeedKmh by SpoofService.currentSpeedKmh.observeAsState(0f)
 
 
@@ -363,6 +348,20 @@ fun LocationScreen(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
                         }
+                        Spacer(Modifier.height(4.dp))
+                        // Reset-interval config: how often the spiral returns to its origin
+                        Text(
+                            "Return to start every",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        StepperInput(
+                            value = spiralResetMinutes,
+                            onValueChange = { viewModel.setSpiralResetMinutes(it) },
+                            unit = "min",
+                            fieldWidth = 72
+                        )
                         // Stop button
                         OutlinedButton(
                             onClick = { viewModel.stopSpoofing() },
