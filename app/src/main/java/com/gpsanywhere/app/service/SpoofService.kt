@@ -14,6 +14,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.gpsanywhere.app.MainActivity
 import com.gpsanywhere.app.R
+import com.gpsanywhere.app.routes.SpiralWalkGenerator
 import kotlinx.coroutines.*
 import kotlin.random.Random
 import androidx.health.connect.client.HealthConnectClient
@@ -46,6 +47,7 @@ class SpoofService : Service() {
         const val EXTRA_VARY_KMH = "extra_vary_kmh"
         const val EXTRA_LOOP = "extra_loop"
         const val EXTRA_RESET_INTERVAL_MS = "extra_reset_interval_ms"
+        const val EXTRA_SPIRAL_AFTER_KMH = "extra_spiral_after_kmh"
         const val EXTRA_INDEX = "extra_index"
 
         private val _isRunning = MutableLiveData(false)
@@ -97,7 +99,8 @@ class SpoofService : Service() {
             maxSpeedKmh: Float = 20f,
             varyKmh: Float = 0f,
             loop: Boolean = false,
-            resetIntervalMs: Long = 0L
+            resetIntervalMs: Long = 0L,
+            spiralAfterKmh: Float = 0f
         ) {
             val intent = Intent(context, SpoofService::class.java).apply {
                 action = ACTION_START_WALK
@@ -109,6 +112,7 @@ class SpoofService : Service() {
                 putExtra(EXTRA_VARY_KMH, varyKmh)
                 putExtra(EXTRA_LOOP, loop)
                 putExtra(EXTRA_RESET_INTERVAL_MS, resetIntervalMs)
+                putExtra(EXTRA_SPIRAL_AFTER_KMH, spiralAfterKmh)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
@@ -207,6 +211,7 @@ class SpoofService : Service() {
                 val varyKmh = intent.getFloatExtra(EXTRA_VARY_KMH, 0f)
                 val loop = intent.getBooleanExtra(EXTRA_LOOP, false)
                 val resetIntervalMs = intent.getLongExtra(EXTRA_RESET_INTERVAL_MS, 0L)
+                val spiralAfterKmh = intent.getFloatExtra(EXTRA_SPIRAL_AFTER_KMH, 0f)
                 if (lats.size < 2 || lats.size != lngs.size) return START_NOT_STICKY
                 lastLat = lats[0]
                 lastLng = lngs[0]
@@ -219,7 +224,7 @@ class SpoofService : Service() {
                 startForeground(NOTIFICATION_ID, buildNotification("Walking @ ${"%.1f".format(speedKmh)} km/h"))
                 setupTestProvider()
                 startPushLoop()
-                startWalkJob(lats, lngs, loop, resetIntervalMs)
+                startWalkJob(lats, lngs, loop, resetIntervalMs, spiralAfterKmh)
                 _isRunning.postValue(true)
                 _isWalkMode.postValue(true)
                 _currentLat.postValue(lastLat)
@@ -301,7 +306,13 @@ class SpoofService : Service() {
         walkJob = null
     }
 
-    private fun startWalkJob(lats: DoubleArray, lngs: DoubleArray, loop: Boolean, resetIntervalMs: Long = 0L) {
+    private fun startWalkJob(
+        lats: DoubleArray,
+        lngs: DoubleArray,
+        loop: Boolean,
+        resetIntervalMs: Long = 0L,
+        spiralAfterKmh: Float = 0f
+    ) {
         val gen = ++walkGeneration
         walkJob?.cancel()
         val tickMs = 500L
@@ -318,44 +329,72 @@ class SpoofService : Service() {
                 }
             }
 
-            val originLat = lats[0]
-            val originLng = lngs[0]
-            val shouldReset = resetIntervalMs > 0
+            if (spiralAfterKmh > 0f) {
+                // Phase 1: fly straight to the target at the current (fast) speed.
+                walkPath(lats, lngs, tickMs, gen, countSteps = false)
+                if (walkGeneration != gen) return@launch
 
-            var forward = true
-            do {
-                val walkLats = if (forward) lats else lats.reversedArray()
-                val walkLngs = if (forward) lngs else lngs.reversedArray()
-                val deadline = if (shouldReset) System.currentTimeMillis() + resetIntervalMs else Long.MAX_VALUE
+                // Phase 2: settle into a self-resetting spiral walk at the slower speed.
+                val spiralMps = spiralAfterKmh * 1000f / 3600f
+                baseSpeedMps = spiralMps
+                currentSpeedMps = spiralMps
+                varyMps = 1f * 1000f / 3600f
+                _currentSpeedKmh.postValue(spiralAfterKmh)
+                val (spiralLats, spiralLngs) = SpiralWalkGenerator.generate(lastLat, lastLng)
+                runWalkLoop(spiralLats, spiralLngs, loop = false, resetIntervalMs = resetIntervalMs, tickMs = tickMs, gen = gen)
+            } else {
+                runWalkLoop(lats, lngs, loop, resetIntervalMs, tickMs, gen)
+            }
 
-                // Walk the route until it finishes or the reset deadline arrives.
-                walkPath(walkLats, walkLngs, tickMs, gen, countSteps = true, deadlineMs = deadline)
-
-                // In reset mode, head straight back to the origin and start over.
-                if (shouldReset && isActive && walkGeneration == gen) {
-                    walkPath(
-                        doubleArrayOf(lastLat, originLat),
-                        doubleArrayOf(lastLng, originLng),
-                        tickMs,
-                        gen,
-                        countSteps = false
-                    )
-                    if (walkGeneration != gen) break
-                    lastLat = originLat
-                    lastLng = originLng
-                    _currentLat.postValue(lastLat)
-                    _currentLng.postValue(lastLng)
-                    forward = true
-                    continue
-                }
-
-                if (loop) forward = !forward
-            } while (isActive && walkGeneration == gen && (loop || shouldReset))
             if (walkGeneration == gen) {
                 currentSpeedMps = 0f
                 _currentSpeedKmh.postValue(0f)
             }
         }
+    }
+
+    /** Walks [lats]/[lngs] with optional back-and-forth looping and periodic return-to-origin reset. */
+    private suspend fun runWalkLoop(
+        lats: DoubleArray,
+        lngs: DoubleArray,
+        loop: Boolean,
+        resetIntervalMs: Long,
+        tickMs: Long,
+        gen: Int
+    ) {
+        val originLat = lats[0]
+        val originLng = lngs[0]
+        val shouldReset = resetIntervalMs > 0
+
+        var forward = true
+        do {
+            val walkLats = if (forward) lats else lats.reversedArray()
+            val walkLngs = if (forward) lngs else lngs.reversedArray()
+            val deadline = if (shouldReset) System.currentTimeMillis() + resetIntervalMs else Long.MAX_VALUE
+
+            // Walk the route until it finishes or the reset deadline arrives.
+            walkPath(walkLats, walkLngs, tickMs, gen, countSteps = true, deadlineMs = deadline)
+
+            // In reset mode, head straight back to the origin and start over.
+            if (shouldReset && currentCoroutineContext().isActive && walkGeneration == gen) {
+                walkPath(
+                    doubleArrayOf(lastLat, originLat),
+                    doubleArrayOf(lastLng, originLng),
+                    tickMs,
+                    gen,
+                    countSteps = false
+                )
+                if (walkGeneration != gen) break
+                lastLat = originLat
+                lastLng = originLng
+                _currentLat.postValue(lastLat)
+                _currentLng.postValue(lastLng)
+                forward = true
+                continue
+            }
+
+            if (loop) forward = !forward
+        } while (currentCoroutineContext().isActive && walkGeneration == gen && (loop || shouldReset))
     }
 
     /**
