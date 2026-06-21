@@ -635,23 +635,24 @@ private fun TagFilterRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        allTags.forEachIndexed { index, tag ->
-            val candyColor = com.gpsanywhere.app.ui.theme.CandyTagColors[index % com.gpsanywhere.app.ui.theme.CandyTagColors.size]
+        allTags.forEach { tag ->
+            val isSelected = tag in selectedTags
+            val green = com.gpsanywhere.app.ui.theme.CandyGreen
             FilterChip(
-                selected = tag in selectedTags,
+                selected = isSelected,
                 onClick = { onTagToggle(tag) },
                 label = { Text(tag) },
                 colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = candyColor.copy(alpha = 0.2f),
-                    selectedLabelColor = candyColor,
-                    containerColor = candyColor.copy(alpha = 0.08f),
-                    labelColor = candyColor
+                    selectedContainerColor = green.copy(alpha = 0.2f),
+                    selectedLabelColor = green,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
                     enabled = true,
-                    selected = tag in selectedTags,
-                    borderColor = candyColor.copy(alpha = 0.4f),
-                    selectedBorderColor = candyColor
+                    selected = isSelected,
+                    borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                    selectedBorderColor = green
                 )
             )
         }
@@ -755,17 +756,14 @@ private fun LocationCard(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         tags.take(3).forEach { tag ->
-                            val tagColor = com.gpsanywhere.app.ui.theme.CandyTagColors[
-                                (tag.hashCode().and(0x7fffffff)) % com.gpsanywhere.app.ui.theme.CandyTagColors.size
-                            ]
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
-                                color = tagColor.copy(alpha = 0.15f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                             ) {
                                 Text(
                                     tag,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = tagColor,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
