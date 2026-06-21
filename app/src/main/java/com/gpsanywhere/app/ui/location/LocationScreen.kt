@@ -2,6 +2,10 @@ package com.gpsanywhere.app.ui.location
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +35,10 @@ import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -56,6 +64,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -87,6 +99,7 @@ import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_HELI_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_FLIGHT_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_ROCKET_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MAX_SPEED_KMH
+import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MOVE_STEP_DEG
 import org.osmdroid.util.GeoPoint
 
 private const val WALK_ZONE_KMH = 20f
@@ -336,12 +349,17 @@ fun LocationScreen(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
-                            // Live speed badge
-                            Text(
-                                "${"%.1f".format(liveSpeedKmh)} km/h",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                ResetCountdown()
+                                Text(
+                                    "${"%.1f".format(liveSpeedKmh)} km/h",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                         Spacer(Modifier.height(8.dp))
                         Row(
@@ -441,6 +459,26 @@ fun LocationScreen(
                                 )
                             }
                         }
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Move target", style = MaterialTheme.typography.titleSmall)
+                        Spacer(Modifier.height(8.dp))
+                        DirectionPad(
+                            enabled = currentLat != null && currentLng != null,
+                            onMove = { dLat, dLng -> viewModel.nudgeSpiral(dLat, dLng) }
+                        )
                     }
                 }
             }
@@ -1126,5 +1164,88 @@ private fun CustomJumpPanel(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun DirectionPad(
+    enabled: Boolean,
+    onMove: (dLat: Double, dLng: Double) -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        DirectionButton(Icons.Default.KeyboardArrowUp, "North", enabled) { onMove(LocationViewModel.MOVE_STEP_DEG, 0.0) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            DirectionButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "West", enabled) { onMove(0.0, -LocationViewModel.MOVE_STEP_DEG) }
+            Spacer(Modifier.size(64.dp))
+            DirectionButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, "East", enabled) { onMove(0.0, LocationViewModel.MOVE_STEP_DEG) }
+        }
+        DirectionButton(Icons.Default.KeyboardArrowDown, "South", enabled) { onMove(-LocationViewModel.MOVE_STEP_DEG, 0.0) }
+    }
+}
+
+@Composable
+private fun DirectionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val bgColor = if (enabled)
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+    else
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+    val iconColor = if (enabled) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = bgColor,
+        modifier = Modifier
+            .size(64.dp)
+            .pointerInput(enabled) {
+                if (!enabled) return@pointerInput
+                awaitEachGesture {
+                    awaitFirstDown()
+                    onClick()
+                    val repeatJob = scope.launch {
+                        delay(300)
+                        while (true) {
+                            onClick()
+                            delay(120)
+                        }
+                    }
+                    waitForUpOrCancellation()
+                    repeatJob.cancel()
+                }
+            }
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Icon(icon, contentDescription = contentDescription, tint = iconColor, modifier = Modifier.size(32.dp))
+        }
+    }
+}
+
+@Composable
+private fun ResetCountdown() {
+    val deadline by SpoofService.resetDeadlineMs.observeAsState(0L)
+    if (deadline <= 0L) return
+    var remainingSec by remember { mutableStateOf(0L) }
+    LaunchedEffect(deadline) {
+        while (true) {
+            val left = (deadline - System.currentTimeMillis()) / 1000L
+            remainingSec = if (left > 0) left else 0
+            kotlinx.coroutines.delay(1000)
+        }
+    }
+    if (remainingSec > 0) {
+        val mins = remainingSec / 60
+        val secs = remainingSec % 60
+        Text(
+            "%d:%02d".format(mins, secs),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+        )
     }
 }

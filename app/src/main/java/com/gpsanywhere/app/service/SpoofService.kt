@@ -69,6 +69,11 @@ class SpoofService : Service() {
         private val _isPaused = MutableLiveData(false)
         val isPaused: LiveData<Boolean> = _isPaused
 
+        @Volatile var liveResetIntervalMs: Long = 0L
+
+        private val _resetDeadlineMs = MutableLiveData(0L)
+        val resetDeadlineMs: LiveData<Long> = _resetDeadlineMs
+
         private val _stepCount = MutableLiveData(0)
         val stepCount: LiveData<Int> = _stepCount
 
@@ -370,7 +375,9 @@ class SpoofService : Service() {
         do {
             val walkLats = if (forward) lats else lats.reversedArray()
             val walkLngs = if (forward) lngs else lngs.reversedArray()
-            val deadline = if (shouldReset) System.currentTimeMillis() + resetIntervalMs else Long.MAX_VALUE
+            val effectiveResetMs = if (resetIntervalMs > 0) liveResetIntervalMs else 0L
+            val deadline = if (shouldReset) System.currentTimeMillis() + (if (effectiveResetMs > 0) effectiveResetMs else resetIntervalMs) else Long.MAX_VALUE
+            _resetDeadlineMs.postValue(if (shouldReset) deadline else 0L)
 
             // Walk the route until it finishes or the reset deadline arrives.
             walkPath(walkLats, walkLngs, tickMs, gen, countSteps = true, deadlineMs = deadline)
@@ -528,6 +535,7 @@ class SpoofService : Service() {
         _currentLat.postValue(0.0)
         _currentLng.postValue(0.0)
         _currentSpeedKmh.postValue(0f)
+        _resetDeadlineMs.postValue(0L)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
