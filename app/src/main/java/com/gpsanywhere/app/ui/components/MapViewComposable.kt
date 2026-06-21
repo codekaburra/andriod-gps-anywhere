@@ -1,5 +1,10 @@
 package com.gpsanywhere.app.ui.components
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -8,8 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.gpsanywhere.app.R
 import com.gpsanywhere.app.routes.LocationPoint
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -75,15 +82,19 @@ fun MapViewComposable(
             mapView.overlays.add(eventsOverlay)
         }
 
+        val orangeDropPin = ContextCompat.getDrawable(context, R.drawable.ic_pin_orange_drop)
+
         waypoints.forEachIndexed { index, point ->
             val marker = Marker(mapView).apply {
                 position = GeoPoint(point.latitude, point.longitude)
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 if (showNumberedPins) {
+                    icon = createNumberedPin(context, index + 1)
                     title = point.name?.takeIf { it.isNotBlank() }?.let { "${index + 1}. $it" }
                         ?: "${index + 1}"
                     snippet = "${point.latitude}, ${point.longitude}"
                 } else {
+                    icon = orangeDropPin
                     title = point.name
                 }
             }
@@ -94,7 +105,7 @@ fun MapViewComposable(
             val polyline = Polyline(mapView).apply {
                 setPoints(waypoints.map { GeoPoint(it.latitude, it.longitude) })
                 outlinePaint.strokeWidth = 8f
-                outlinePaint.color = android.graphics.Color.parseColor("#AF492D")
+                outlinePaint.color = android.graphics.Color.parseColor("#42A5F5")
             }
             mapView.overlays.add(polyline)
         } else if (waypoints.size == 1) {
@@ -115,4 +126,51 @@ fun MapViewComposable(
             center?.let { view.controller.setCenter(it) }
         }
     )
+}
+
+private fun createNumberedPin(
+    context: android.content.Context,
+    number: Int
+): Drawable {
+    val density = context.resources.displayMetrics.density
+    val w = (36 * density).toInt()
+    val h = (52 * density).toInt()
+    val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+
+    val cx = w / 2f
+    val headRadius = w / 2f - 2 * density
+    val headCy = headRadius + 2 * density
+
+    // Teardrop body
+    val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#42A5F5")
+        style = Paint.Style.FILL
+    }
+    canvas.drawCircle(cx, headCy, headRadius, bodyPaint)
+    val path = android.graphics.Path().apply {
+        moveTo(cx - headRadius * 0.55f, headCy + headRadius * 0.6f)
+        lineTo(cx, h.toFloat() - 2 * density)
+        lineTo(cx + headRadius * 0.55f, headCy + headRadius * 0.6f)
+        close()
+    }
+    canvas.drawPath(path, bodyPaint)
+
+    // White center
+    val innerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.WHITE
+        style = Paint.Style.FILL
+    }
+    canvas.drawCircle(cx, headCy, headRadius * 0.55f, innerPaint)
+
+    // Number
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#42A5F5")
+        textSize = headRadius * 0.7f
+        textAlign = Paint.Align.CENTER
+        typeface = android.graphics.Typeface.DEFAULT_BOLD
+    }
+    canvas.drawText(number.toString(), cx, headCy + textPaint.textSize / 3f, textPaint)
+
+    return BitmapDrawable(context.resources, bitmap)
 }

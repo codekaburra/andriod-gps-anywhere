@@ -60,7 +60,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         // Theme section
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -96,7 +96,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         // Copyright section
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
         ) {
             Column(

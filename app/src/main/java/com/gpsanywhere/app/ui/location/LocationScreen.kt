@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -350,13 +351,18 @@ fun LocationScreen(
                             Text(
                                 "Speed",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                color = com.gpsanywhere.app.ui.theme.CandyBlue
                             )
                             Slider(
                                 value = speedToSlider(spiralSpeed),
                                 onValueChange = { viewModel.setSpiralSpeed(sliderToSpeed(it)) },
                                 valueRange = 0f..1f,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                colors = androidx.compose.material3.SliderDefaults.colors(
+                                    thumbColor = com.gpsanywhere.app.ui.theme.StopRed,
+                                    activeTrackColor = com.gpsanywhere.app.ui.theme.CandyOrange.copy(alpha = 0.7f),
+                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.3f)
+                                )
                             )
                             Text(
                                 if (spiralSpeed < 10f) "${"%.1f".format(spiralSpeed)} km/h"
@@ -366,9 +372,14 @@ fun LocationScreen(
                             )
                         }
                         // Stop button
-                        OutlinedButton(
+                        Button(
                             onClick = { viewModel.stopSpoofing() },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = com.gpsanywhere.app.ui.theme.StopRed,
+                                contentColor = Color.White
+                            )
                         ) {
                             Text("Stop Walk Around")
                         }
@@ -624,11 +635,24 @@ private fun TagFilterRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        allTags.forEach { tag ->
+        allTags.forEachIndexed { index, tag ->
+            val candyColor = com.gpsanywhere.app.ui.theme.CandyTagColors[index % com.gpsanywhere.app.ui.theme.CandyTagColors.size]
             FilterChip(
                 selected = tag in selectedTags,
                 onClick = { onTagToggle(tag) },
-                label = { Text(tag) }
+                label = { Text(tag) },
+                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = candyColor.copy(alpha = 0.2f),
+                    selectedLabelColor = candyColor,
+                    containerColor = candyColor.copy(alpha = 0.08f),
+                    labelColor = candyColor
+                ),
+                border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = tag in selectedTags,
+                    borderColor = candyColor.copy(alpha = 0.4f),
+                    selectedBorderColor = candyColor
+                )
             )
         }
     }
@@ -670,7 +694,7 @@ private fun LocationCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)),
         border = border,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -721,7 +745,7 @@ private fun LocationCard(
                     Text(
                         "${"%.6f".format(latitude)}, ${"%.6f".format(longitude)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        color = com.gpsanywhere.app.ui.theme.CandyYellow
                     )
                 }
                 if (tags.isNotEmpty()) {
@@ -731,14 +755,17 @@ private fun LocationCard(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         tags.take(3).forEach { tag ->
+                            val tagColor = com.gpsanywhere.app.ui.theme.CandyTagColors[
+                                (tag.hashCode().and(0x7fffffff)) % com.gpsanywhere.app.ui.theme.CandyTagColors.size
+                            ]
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.75f)
+                                color = tagColor.copy(alpha = 0.15f)
                             ) {
                                 Text(
                                     tag,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    color = tagColor,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
@@ -782,11 +809,23 @@ private fun LocationCard(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilledIconButton(onClick = onJump) {
+                    FilledIconButton(
+                        onClick = onJump,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = com.gpsanywhere.app.ui.theme.CandyPink.copy(alpha = 0.6f),
+                            contentColor = Color.White
+                        )
+                    ) {
                         Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(4.dp))
-                    FilledIconButton(onClick = onSpiral) {
+                    FilledIconButton(
+                        onClick = onSpiral,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.6f),
+                            contentColor = Color.White
+                        )
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(12.dp))
@@ -807,15 +846,21 @@ private fun FlySpeedButtons(
     onFly: (Float) -> Unit,
     enabled: Boolean = true
 ) {
-    FilledIconButton(onClick = { onFly(FLY_HELI_KMH) }, enabled = enabled) {
+    val flyColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.8f),
+        contentColor = Color.White,
+        disabledContainerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.3f),
+        disabledContentColor = Color.White.copy(alpha = 0.4f)
+    )
+    FilledIconButton(onClick = { onFly(FLY_HELI_KMH) }, enabled = enabled, colors = flyColors) {
         Icon(painterResource(R.drawable.ic_helicopter), contentDescription = "80 km/h", modifier = Modifier.size(20.dp))
     }
     Spacer(Modifier.width(4.dp))
-    FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled) {
+    FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled, colors = flyColors) {
         Icon(Icons.Default.Flight, contentDescription = "500 km/h", modifier = Modifier.size(20.dp))
     }
     Spacer(Modifier.width(4.dp))
-    FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled) {
+    FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled, colors = flyColors) {
         Icon(Icons.Default.RocketLaunch, contentDescription = "2000 km/h", modifier = Modifier.size(20.dp))
     }
 }
@@ -995,16 +1040,22 @@ private fun CustomJumpPanel(
     val hasInput = coordinateText.isNotBlank()
     val isValid = parsed != null
     val canJump = hasInput && isValid
-    val actionButtonColors = IconButtonDefaults.filledIconButtonColors(
-        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.78f),
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        disabledContainerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+    val jumpButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = com.gpsanywhere.app.ui.theme.CandyPink.copy(alpha = 0.6f),
+        contentColor = Color.White,
+        disabledContainerColor = com.gpsanywhere.app.ui.theme.CandyPink.copy(alpha = 0.3f),
+        disabledContentColor = Color.White.copy(alpha = 0.4f)
+    )
+    val walkButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.6f),
+        contentColor = Color.White,
+        disabledContainerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.3f),
+        disabledContentColor = Color.White.copy(alpha = 0.4f)
     )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -1039,8 +1090,8 @@ private fun CustomJumpPanel(
                 FilledIconButton(
                     onClick = onPaste,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
+                        contentColor = Color.White
                     ),
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
@@ -1057,11 +1108,11 @@ private fun CustomJumpPanel(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FilledIconButton(onClick = onJump, enabled = canJump, colors = actionButtonColors) {
+                FilledIconButton(onClick = onJump, enabled = canJump, colors = jumpButtonColors) {
                     Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(18.dp))
                 }
                 Spacer(Modifier.width(4.dp))
-                FilledIconButton(onClick = onSpiral, enabled = canJump, colors = actionButtonColors) {
+                FilledIconButton(onClick = onSpiral, enabled = canJump, colors = walkButtonColors) {
                     Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(18.dp))
                 }
                 Spacer(Modifier.width(12.dp))
