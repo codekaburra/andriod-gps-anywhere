@@ -9,18 +9,18 @@ class AppPreferences(context: Context) {
 
     var themeMode: ThemeMode
         get() {
-            val stored = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            val stored = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_NO)
             return when (stored) {
                 AppCompatDelegate.MODE_NIGHT_NO -> ThemeMode.LIGHT
                 AppCompatDelegate.MODE_NIGHT_YES -> ThemeMode.DARK
-                else -> ThemeMode.SYSTEM
+                else -> ThemeMode.LIGHT
             }
         }
         set(value) {
             val nightMode = when (value) {
                 ThemeMode.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
                 ThemeMode.DARK -> AppCompatDelegate.MODE_NIGHT_YES
-                ThemeMode.SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                ThemeMode.SYSTEM -> AppCompatDelegate.MODE_NIGHT_NO
             }
             prefs.edit().putInt(KEY_THEME_MODE, nightMode).apply()
             AppCompatDelegate.setDefaultNightMode(nightMode)
@@ -42,7 +42,7 @@ class AppPreferences(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_COMPLIANCE_ACK, value).apply()
 
     fun applySavedTheme() {
-        val nightMode = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        val nightMode = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_NO)
         AppCompatDelegate.setDefaultNightMode(nightMode)
     }
 

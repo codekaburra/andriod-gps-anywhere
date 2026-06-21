@@ -45,8 +45,8 @@ fun MainApp(preferences: AppPreferences) {
     val locationViewModel: LocationViewModel = viewModel()
     val walkViewModel: WalkViewModel = viewModel()
 
-    val themeMode by mainViewModel.themeMode.observeAsState(ThemeMode.SYSTEM)
-    val colorTheme by mainViewModel.colorTheme.observeAsState(ColorTheme.COCOA_SAGE)
+    val themeMode by mainViewModel.themeMode.observeAsState(ThemeMode.LIGHT)
+    val colorTheme = if (themeMode == ThemeMode.DARK) ColorTheme.GOLDEN_HOUR else ColorTheme.COCOA_SAGE
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Routes.WALK
@@ -75,14 +75,14 @@ fun MainApp(preferences: AppPreferences) {
                         onClick = { nav(Routes.LOCATION) },
                         icon = { Icon(Icons.Default.LocationOn, contentDescription = "Location") },
                         label = { Text("Location") },
-                        colors = navigationItemColors()
+                        colors = navItemColors(com.gpsanywhere.app.ui.theme.CandyGreen)
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.WALK,
                         onClick = { nav(Routes.WALK) },
                         icon = { Icon(Icons.Default.Route, contentDescription = "Route") },
                         label = { Text("Route") },
-                        colors = navigationItemColors()
+                        colors = navItemColors(com.gpsanywhere.app.ui.theme.CandyBlue)
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.SETTINGS,
@@ -127,6 +127,15 @@ private fun navigationItemColors() = NavigationBarItemDefaults.colors(
     selectedIconColor = MaterialTheme.colorScheme.primary,
     selectedTextColor = MaterialTheme.colorScheme.primary,
     indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+)
+
+@Composable
+private fun navItemColors(activeColor: androidx.compose.ui.graphics.Color) = NavigationBarItemDefaults.colors(
+    selectedIconColor = activeColor,
+    selectedTextColor = activeColor,
+    indicatorColor = activeColor.copy(alpha = 0.12f),
     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
 )
