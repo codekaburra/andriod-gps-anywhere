@@ -29,6 +29,9 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         const val FLY_HELI_KMH = 200f
         const val FLY_FLIGHT_KMH = 1000f
         const val FLY_ROCKET_KMH = 5000f
+
+        /** Speed of the spiral walk that starts automatically once a fly reaches its target. */
+        const val FLY_SPIRAL_KMH = 15f
     }
 
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
@@ -119,7 +122,8 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun flyTo(lat: Double, lng: Double, speedKmh: Float = MAX_SPEED_KMH) {
-        _spiralSpeedKmh.value = speedKmh.coerceIn(0f, MAX_SPEED_KMH)
+        // The slider reflects the sustained speed: the spiral the app settles into after arrival.
+        _spiralSpeedKmh.value = FLY_SPIRAL_KMH
         val spoofLat = SpoofService.currentLat.value ?: 0.0
         val spoofLng = SpoofService.currentLng.value ?: 0.0
         val fromLat: Double
@@ -139,7 +143,9 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             minSpeedKmh = 0f,
             maxSpeedKmh = MAX_SPEED_KMH,
             varyKmh = 0f,
-            loop = false
+            loop = false,
+            resetIntervalMs = SPIRAL_RESET_INTERVAL_MS,
+            spiralAfterKmh = FLY_SPIRAL_KMH
         )
     }
 
