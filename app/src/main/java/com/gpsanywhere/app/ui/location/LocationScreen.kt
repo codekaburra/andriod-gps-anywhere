@@ -310,8 +310,9 @@ fun LocationScreen(
             // ── Walk-mode banner ──────────────────────────────────────────────
             if (isWalkMode) {
                 Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     shape = RoundedCornerShape(0.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
@@ -327,19 +328,19 @@ fun LocationScreen(
                                 Icon(
                                     Icons.AutoMirrored.Filled.DirectionsWalk,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                 )
                                 Text(
-                                    "Walk Around active",
+                                    "",
                                     style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             // Live speed badge
                             Text(
                                 "${"%.1f".format(liveSpeedKmh)} km/h",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                         Spacer(Modifier.height(8.dp))
@@ -351,7 +352,7 @@ fun LocationScreen(
                             Text(
                                 "Speed",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = com.gpsanywhere.app.ui.theme.CandyBlue
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Slider(
                                 value = speedToSlider(spiralSpeed),
@@ -368,7 +369,7 @@ fun LocationScreen(
                                 if (spiralSpeed < 10f) "${"%.1f".format(spiralSpeed)} km/h"
                                 else "${"%.0f".format(spiralSpeed)} km/h",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                         }
                         // Stop button
