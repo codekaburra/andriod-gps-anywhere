@@ -231,21 +231,33 @@ private fun DirectionPad(
     enabled: Boolean,
     onMove: (dLat: Double, dLng: Double) -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        FilledIconButton(onClick = { onMove(MOVE_STEP_DEG, 0.0) }, enabled = enabled) {
-            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "North")
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        DirectionButton(Icons.Default.KeyboardArrowUp, "North", enabled) { onMove(MOVE_STEP_DEG, 0.0) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            DirectionButton(Icons.Default.KeyboardArrowLeft, "West", enabled) { onMove(0.0, -MOVE_STEP_DEG) }
+            Spacer(Modifier.size(64.dp))
+            DirectionButton(Icons.Default.KeyboardArrowRight, "East", enabled) { onMove(0.0, MOVE_STEP_DEG) }
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            FilledIconButton(onClick = { onMove(0.0, -MOVE_STEP_DEG) }, enabled = enabled) {
-                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "West")
-            }
-            Spacer(Modifier.size(56.dp))
-            FilledIconButton(onClick = { onMove(0.0, MOVE_STEP_DEG) }, enabled = enabled) {
-                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "East")
-            }
-        }
-        FilledIconButton(onClick = { onMove(-MOVE_STEP_DEG, 0.0) }, enabled = enabled) {
-            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "South")
-        }
+        DirectionButton(Icons.Default.KeyboardArrowDown, "South", enabled) { onMove(-MOVE_STEP_DEG, 0.0) }
+    }
+}
+
+@Composable
+private fun DirectionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    FilledIconButton(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.size(64.dp)
+    ) {
+        Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(32.dp))
     }
 }

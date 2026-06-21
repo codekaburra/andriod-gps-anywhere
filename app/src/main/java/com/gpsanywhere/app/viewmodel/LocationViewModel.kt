@@ -49,7 +49,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private val _locationPacks = MutableStateFlow<List<DefaultLocationPack>>(emptyList())
     val locationPacks: StateFlow<List<DefaultLocationPack>> = _locationPacks.asStateFlow()
 
-    private val _spiralSpeedKmh = MutableStateFlow(4f)
+    private val _spiralSpeedKmh = MutableStateFlow(16f)
     val spiralSpeedKmh: StateFlow<Float> = _spiralSpeedKmh.asStateFlow()
 
     private val prefs = AppPreferences(application)
