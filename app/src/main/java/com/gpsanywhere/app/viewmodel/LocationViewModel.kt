@@ -32,6 +32,8 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
         /** Speed of the spiral walk that starts automatically once a fly reaches its target. */
         const val FLY_SPIRAL_KMH = 15f
+
+        const val MOVE_STEP_DEG = 0.0005
     }
 
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
@@ -154,6 +156,21 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     fun flyTo(asset: DefaultLocationAsset, speedKmh: Float = MAX_SPEED_KMH) =
         flyTo(asset.latitude, asset.longitude, speedKmh)
+
+    fun nudgeSpiral(dLatDeg: Double, dLngDeg: Double) {
+        val spoofLat = SpoofService.currentLat.value ?: 0.0
+        val spoofLng = SpoofService.currentLng.value ?: 0.0
+        val baseLat: Double
+        val baseLng: Double
+        if (spoofLat != 0.0 || spoofLng != 0.0) {
+            baseLat = spoofLat
+            baseLng = spoofLng
+        } else {
+            baseLat = CurrentLocationProvider.latitude.value ?: return
+            baseLng = CurrentLocationProvider.longitude.value ?: return
+        }
+        startSpiralWalk(baseLat + dLatDeg, baseLng + dLngDeg)
+    }
 
     fun stopSpoofing() {
         SpoofService.stop(getApplication())
