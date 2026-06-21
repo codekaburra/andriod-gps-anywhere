@@ -360,9 +360,9 @@ fun LocationScreen(
                                 valueRange = 0f..1f,
                                 modifier = Modifier.weight(1f),
                                 colors = androidx.compose.material3.SliderDefaults.colors(
-                                    thumbColor = com.gpsanywhere.app.ui.theme.StopRed,
-                                    activeTrackColor = com.gpsanywhere.app.ui.theme.CandyOrange.copy(alpha = 0.7f),
-                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.3f)
+                                    thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb,
+                                    activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.7f),
+                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.3f)
                                 )
                             )
                             Text(

@@ -11,6 +11,14 @@ val CandyYellow = Color(0xFFFFCC00)              // numbers / waypoints / highli
 val DustyRose = Color(0xFFC06C84)                // add-location button
 val SoftPurple = Color(0xFF9B59B5)               // bottom nav selected tab
 
+val SliderThumb = Color(0xFFEF5350)                // slider control point (bright red)
+val SliderActiveTrack = Color(0xFFFF9800)          // slider left track (orange)
+val SliderInactiveTrack = Color(0xFFFFCC00)        // slider right track (yellow)
+
+val NeutralButtonBg = Color(0xFFF0F0F0)           // back/revert button background
+val NeutralButtonContent = Color(0xFF424242)       // back/revert button icon
+val MapPolylineBlue = 0xFF42A5F5.toInt()           // android.graphics.Color int for map
+
 val CandyBackground = Color(0xFFF8F9F6)          // light off-white
 val CandySurface = Color(0xFFFFFFFF)             // pure white cards
 val CandySurfaceVariant = Color(0xFFFFF3E0)      // warm neutral for list cards
