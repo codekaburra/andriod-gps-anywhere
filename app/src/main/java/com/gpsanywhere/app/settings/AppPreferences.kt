@@ -30,6 +30,13 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_ONBOARDING_SHOWN, false)
         set(value) = prefs.edit().putBoolean(KEY_ONBOARDING_SHOWN, value).apply()
 
+    var colorTheme: ColorTheme
+        get() {
+            val name = prefs.getString(KEY_COLOR_THEME, ColorTheme.COCOA_SAGE.name)
+            return try { ColorTheme.valueOf(name!!) } catch (_: Exception) { ColorTheme.COCOA_SAGE }
+        }
+        set(value) = prefs.edit().putString(KEY_COLOR_THEME, value.name).apply()
+
     var complianceAcknowledged: Boolean
         get() = prefs.getBoolean(KEY_COMPLIANCE_ACK, false)
         set(value) = prefs.edit().putBoolean(KEY_COMPLIANCE_ACK, value).apply()
@@ -43,6 +50,7 @@ class AppPreferences(context: Context) {
         private const val PREFS_NAME = "gpsanywhere_prefs"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_ONBOARDING_SHOWN = "onboarding_shown"
+        private const val KEY_COLOR_THEME = "color_theme"
         private const val KEY_COMPLIANCE_ACK = "compliance_ack"
     }
 }

@@ -43,10 +43,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -396,7 +398,7 @@ fun LocationScreen(
 
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f),
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .padding(8.dp)
@@ -405,7 +407,7 @@ fun LocationScreen(
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "Add location",
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         }
@@ -417,13 +419,13 @@ fun LocationScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.secondaryContainer
+                            color = MaterialTheme.colorScheme.primary
                         ) {
                             IconButton(onClick = { showAddSheet = true }) {
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "Add location",
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         }
@@ -661,7 +663,7 @@ private fun LocationCard(
 ) {
     val border = when {
         isSelected || isActive -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        else -> null
+        else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
     }
 
     Card(
@@ -669,9 +671,9 @@ private fun LocationCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)),
         border = border,
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
             Row(
@@ -681,7 +683,11 @@ private fun LocationCard(
                 Icon(
                     Icons.Default.LocationOn,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = if (isSelected || isActive) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.secondary
+                    },
                     modifier = Modifier.size(26.dp)
                 )
                 val nameAnnotated = buildAnnotatedString {
@@ -727,7 +733,7 @@ private fun LocationCard(
                         tags.take(3).forEach { tag ->
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer
+                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.75f)
                             ) {
                                 Text(
                                     tag,
@@ -989,11 +995,19 @@ private fun CustomJumpPanel(
     val hasInput = coordinateText.isNotBlank()
     val isValid = parsed != null
     val canJump = hasInput && isValid
+    val actionButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.78f),
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        disabledContainerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+    )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -1012,10 +1026,22 @@ private fun CustomJumpPanel(
                     isError = hasInput && !isValid,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.45f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.45f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
                     modifier = Modifier.weight(1f)
                 )
                 FilledIconButton(
                     onClick = onPaste,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Icon(
@@ -1031,11 +1057,11 @@ private fun CustomJumpPanel(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FilledIconButton(onClick = onJump, enabled = canJump) {
+                FilledIconButton(onClick = onJump, enabled = canJump, colors = actionButtonColors) {
                     Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(18.dp))
                 }
                 Spacer(Modifier.width(4.dp))
-                FilledIconButton(onClick = onSpiral, enabled = canJump) {
+                FilledIconButton(onClick = onSpiral, enabled = canJump, colors = actionButtonColors) {
                     Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(18.dp))
                 }
                 Spacer(Modifier.width(12.dp))
@@ -1052,4 +1078,3 @@ private fun CustomJumpPanel(
         }
     }
 }
-
