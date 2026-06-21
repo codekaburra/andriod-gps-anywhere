@@ -1,5 +1,6 @@
 package com.gpsanywhere.app.ui.walk
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,7 +39,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -56,8 +56,11 @@ import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.ui.components.MapViewComposable
+import com.gpsanywhere.app.ui.components.SpeedPanel
 import com.gpsanywhere.app.viewmodel.WalkViewModel
 import org.osmdroid.util.GeoPoint
+
+private const val ROUTE_MAX_SPEED_KMH = 200f
 
 @Composable
 fun WalkScreen(
@@ -195,9 +198,10 @@ fun WalkScreen(
 
                 // ── Speed controls (editable while walking) ───────────────────
                 item {
-                    SpeedControlPanel(
+                    SpeedPanel(
                         speed = speed,
-                        onSpeedChange = viewModel::setSpeed
+                        onSpeedChange = viewModel::setSpeed,
+                        maxKmh = ROUTE_MAX_SPEED_KMH
                     )
                 }
 
@@ -323,9 +327,10 @@ fun WalkScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
-                    SpeedControlPanel(
+                    SpeedPanel(
                         speed = speed,
-                        onSpeedChange = viewModel::setSpeed
+                        onSpeedChange = viewModel::setSpeed,
+                        maxKmh = ROUTE_MAX_SPEED_KMH
                     )
                 }
             }
@@ -386,39 +391,6 @@ fun WalkScreen(
 
 }
 
-// ── Shared speed control panel ───────────────────────────────────────────────
-
-@Composable
-private fun SpeedControlPanel(
-    speed: Float,
-    onSpeedChange: (Float) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                "Speed",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-            Slider(
-                value = speed,
-                onValueChange = onSpeedChange,
-                valueRange = 1f..20f,
-                steps = 18,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                "${"%.0f".format(speed)} km/h",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-        }
-    }
-}
 
 // ── Idle: compact route row ──────────────────────────────────────────────────
 
@@ -427,8 +399,9 @@ private fun RouteRow(route: SavedRoute, distanceLabel: String, waypointCount: In
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),

@@ -13,6 +13,7 @@ import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.SpiralWalkGenerator
 import com.gpsanywhere.app.service.SpoofService
+import com.gpsanywhere.app.settings.AppPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,10 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     companion object {
         const val MAX_SPEED_KMH = 5000f
-        const val SPIRAL_RESET_INTERVAL_MS = 30L * 60L * 1000L
+
+        /** Bounds for the user-configurable spiral reset interval. */
+        const val MIN_SPIRAL_RESET_MIN = 1
+        const val MAX_SPIRAL_RESET_MIN = 180
 
         /** Preset cruising speeds for the Fly buttons. */
         const val FLY_HELI_KMH = 200f
@@ -32,6 +36,9 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
         /** Speed of the spiral walk that starts automatically once a fly reaches its target. */
         const val FLY_SPIRAL_KMH = 15f
+
+        /** One D-pad nudge step, in degrees (~55 m at the equator). */
+        const val MOVE_STEP_DEG = 0.0005
     }
 
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
@@ -42,8 +49,26 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private val _locationPacks = MutableStateFlow<List<DefaultLocationPack>>(emptyList())
     val locationPacks: StateFlow<List<DefaultLocationPack>> = _locationPacks.asStateFlow()
 
-    private val _spiralSpeedKmh = MutableStateFlow(4f)
+    private val _spiralSpeedKmh = MutableStateFlow(16f)
     val spiralSpeedKmh: StateFlow<Float> = _spiralSpeedKmh.asStateFlow()
+
+    private val prefs = AppPreferences(application)
+
+    private val _spiralResetMinutes = MutableStateFlow(prefs.spiralResetMinutes.also {
+        SpoofService.liveResetIntervalMs = it * 60L * 1000L
+    })
+    /** How often (minutes) a spiral walk returns to its origin and restarts. User-configurable. */
+    val spiralResetMinutes: StateFlow<Int> = _spiralResetMinutes.asStateFlow()
+
+    private val spiralResetIntervalMs: Long
+        get() = _spiralResetMinutes.value * 60L * 1000L
+
+    fun setSpiralResetMinutes(minutes: Int) {
+        val clamped = minutes.coerceIn(MIN_SPIRAL_RESET_MIN, MAX_SPIRAL_RESET_MIN)
+        _spiralResetMinutes.value = clamped
+        prefs.spiralResetMinutes = clamped
+        SpoofService.liveResetIntervalMs = clamped * 60L * 1000L
+    }
 
     private val _routeHints = MutableStateFlow<Map<String, String>>(emptyMap())
     val routeHints: StateFlow<Map<String, String>> = _routeHints.asStateFlow()
@@ -66,24 +91,42 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun addLocation(name: String, latitude: Double, longitude: Double) {
+    fun addLocation(name: String, latitude: Double, longitude: Double, tags: String = "") {
         viewModelScope.launch {
             dao.insert(
                 SavedLocation(
                     sourceId = null,
                     name = name.trim(),
                     latitude = latitude,
-                    longitude = longitude
+                    longitude = longitude,
+                    tags = normalizeTags(tags)
                 )
             )
         }
     }
 
-    fun updateLocation(location: SavedLocation, name: String, latitude: Double, longitude: Double) {
+    fun updateLocation(
+        location: SavedLocation,
+        name: String,
+        latitude: Double,
+        longitude: Double,
+        tags: String = location.tags
+    ) {
         viewModelScope.launch {
-            dao.update(location.copy(name = name.trim(), latitude = latitude, longitude = longitude))
+            dao.update(
+                location.copy(
+                    name = name.trim(),
+                    latitude = latitude,
+                    longitude = longitude,
+                    tags = normalizeTags(tags)
+                )
+            )
         }
     }
+
+    /** Accepts comma- or pipe-separated tag input and stores it pipe-separated. */
+    private fun normalizeTags(raw: String): String =
+        raw.split(",", "|").map { it.trim() }.filter { it.isNotEmpty() }.joinToString("|")
 
     fun deleteLocation(location: SavedLocation) {
         if (location.isPreinstalled) return
@@ -117,8 +160,27 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             maxSpeedKmh = MAX_SPEED_KMH,
             varyKmh = 1f,
             loop = false,
-            resetIntervalMs = SPIRAL_RESET_INTERVAL_MS
+            resetIntervalMs = spiralResetIntervalMs
         )
+    }
+
+    /**
+     * Nudge the spiral's centre by [dLatDeg]/[dLngDeg] degrees from the current position
+     * (spoofed if active, otherwise the real device location) and restart the spiral there.
+     */
+    fun nudgeSpiral(dLatDeg: Double, dLngDeg: Double) {
+        val spoofLat = SpoofService.currentLat.value ?: 0.0
+        val spoofLng = SpoofService.currentLng.value ?: 0.0
+        val baseLat: Double
+        val baseLng: Double
+        if (spoofLat != 0.0 || spoofLng != 0.0) {
+            baseLat = spoofLat
+            baseLng = spoofLng
+        } else {
+            baseLat = CurrentLocationProvider.latitude.value ?: return
+            baseLng = CurrentLocationProvider.longitude.value ?: return
+        }
+        startSpiralWalk(baseLat + dLatDeg, baseLng + dLngDeg)
     }
 
     fun flyTo(lat: Double, lng: Double, speedKmh: Float = MAX_SPEED_KMH) {
@@ -144,7 +206,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             maxSpeedKmh = MAX_SPEED_KMH,
             varyKmh = 0f,
             loop = false,
-            resetIntervalMs = SPIRAL_RESET_INTERVAL_MS,
+            resetIntervalMs = spiralResetIntervalMs,
             spiralAfterKmh = FLY_SPIRAL_KMH
         )
     }

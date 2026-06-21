@@ -72,6 +72,12 @@ class SpoofService : Service() {
         private val _stepCount = MutableLiveData(0)
         val stepCount: LiveData<Int> = _stepCount
 
+        @Volatile
+        var liveResetIntervalMs: Long = 0L
+
+        private val _resetDeadlineMs = MutableLiveData(0L)
+        val resetDeadlineMs: LiveData<Long> = _resetDeadlineMs
+
         fun incrementSteps(amount: Int) {
             val current = _stepCount.value ?: 0
             _stepCount.postValue(current + amount)
@@ -364,13 +370,15 @@ class SpoofService : Service() {
     ) {
         val originLat = lats[0]
         val originLng = lngs[0]
-        val shouldReset = resetIntervalMs > 0
 
         var forward = true
         do {
             val walkLats = if (forward) lats else lats.reversedArray()
             val walkLngs = if (forward) lngs else lngs.reversedArray()
-            val deadline = if (shouldReset) System.currentTimeMillis() + resetIntervalMs else Long.MAX_VALUE
+            val effectiveResetMs = if (resetIntervalMs > 0) liveResetIntervalMs else 0L
+            val shouldReset = effectiveResetMs > 0
+            val deadline = if (shouldReset) System.currentTimeMillis() + effectiveResetMs else Long.MAX_VALUE
+            _resetDeadlineMs.postValue(if (shouldReset) deadline else 0L)
 
             // Walk the route until it finishes or the reset deadline arrives.
             walkPath(walkLats, walkLngs, tickMs, gen, countSteps = true, deadlineMs = deadline)
@@ -525,6 +533,7 @@ class SpoofService : Service() {
         _isRunning.postValue(false)
         _isWalkMode.postValue(false)
         _isPaused.postValue(false)
+        _resetDeadlineMs.postValue(0L)
         _currentLat.postValue(0.0)
         _currentLng.postValue(0.0)
         _currentSpeedKmh.postValue(0f)

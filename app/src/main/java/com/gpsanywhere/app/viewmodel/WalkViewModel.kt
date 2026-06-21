@@ -31,7 +31,7 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
     val mapCenterLat: LiveData<Double?> = CurrentLocationProvider.latitude
     val mapCenterLng: LiveData<Double?> = CurrentLocationProvider.longitude
 
-    private val _speedKmh = MutableStateFlow(4f)
+    private val _speedKmh = MutableStateFlow(16f)
     val speedKmh: StateFlow<Float> = _speedKmh
 
     private val _minSpeedKmh = MutableStateFlow(0f)
@@ -102,7 +102,7 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setSpeed(speed: Float) {
-        _speedKmh.value = speed
+        _speedKmh.value = speed.coerceIn(0f, 200f)
         if (SpoofService.isRunning.value == true) {
             SpoofService.updateSpeed(getApplication(), speed)
         }

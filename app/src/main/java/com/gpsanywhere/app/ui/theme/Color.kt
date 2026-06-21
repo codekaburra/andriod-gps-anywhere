@@ -2,44 +2,85 @@ package com.gpsanywhere.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Milk tea theme palette
+// Terracotta Olive: warm beige canvas, terracotta actions, olive support.
+val CocoaSageBlueGray = Color(0xFFC0C0AB)
+val CocoaSageSage = Color(0xFF6A6F55)
+val CocoaSageTerracotta = Color(0xFFAF492D)
+val CocoaSageCocoa = Color(0xFFA57754)
+val CocoaSageCharcoal = Color(0xFF343B2F)
 
-val MilkTeaAccent = Color(0xFFDDAA7A)
-val MilkTeaAccentDeep = Color(0xFFC99464)
+val CocoaSagePrimary = CocoaSageTerracotta
+val CocoaSagePrimaryDeep = Color(0xFF8D3420)
 
-val MilkTeaBackground = Color(0xFFFAF7F2)
-val MilkTeaCard = Color(0xFFFFFFFF)
-val MilkTeaText = Color(0xFF4E433B)
-val MilkTeaMuted = Color(0xFF8A786B)
-val MilkTeaBorder = Color(0xFFE8DED5)
-val MilkTeaSecondary = Color(0xFFE6D5C3)
+val CocoaSageBackground = Color(0xFFF5F2ED)
+val CocoaSageSurface = Color(0xFFEDE6DB)
+val CocoaSageSurfaceVariant = Color(0xFFC0C0AB)
+val CocoaSageText = CocoaSageCharcoal
+val CocoaSageMuted = Color(0xFF727566)
+val CocoaSageBorder = Color(0xFFC4AC8A)
 
-val MilkTeaBackgroundDark = Color(0xFF12100E)
-val MilkTeaSurfaceDark = Color(0xFF1C1815)
-val MilkTeaSurfaceVariantDark = Color(0xFF262019)
-val MilkTeaTextOnDark = Color(0xFFF3EFE8)
-val MilkTeaMutedOnDark = Color(0xFFC5B4A5)
-val MilkTeaBorderDark = Color(0xFF3D342E)
+val CocoaSageBackgroundDark = Color(0xFF071013)
+val CocoaSageSurfaceDark = Color(0xFF10191B)
+val CocoaSageSurfaceVariantDark = Color(0xFF182527)
+val CocoaSageElevatedDark = Color(0xFF1D2B2D)
+val CocoaSageTextOnDark = Color(0xFFF4F7F3)
+val CocoaSageMutedOnDark = Color(0xFFB1C0BA)
+val CocoaSageBorderDark = Color(0xFF314144)
 
-val MilkTeaPrimary = MilkTeaAccentDeep
-val MilkTeaPrimaryLight = MilkTeaAccent
+val ErrorRed = Color(0xFFE54848)
 
-val ErrorRed = Color(0xFFEF4444)
+// Golden Hour — moody sequin-night palette from cream to near-black.
+val GoldenCream = Color(0xFFE3D2B4)     // soft cream
+val GoldenOlive = Color(0xFF927956)     // olive-brown
+val GoldenCopper = Color(0xFFB0774C)    // warm copper
+val GoldenSlate = Color(0xFF465248)     // slate green
+val GoldenInk = Color(0xFF101009)       // near-black
+
+val GoldenBackground = Color(0xFFF6F1E7)
+val GoldenSurface = Color(0xFFFFFFFF)
+val GoldenSurfaceVariant = Color(0xFFEAE3D5)
+val GoldenText = Color(0xFF2B2820)
+val GoldenMuted = Color(0xFF6E6757)
+val GoldenBorder = Color(0xFFD6CDBA)
+
+val GoldenBackgroundDark = Color(0xFF101009)
+val GoldenSurfaceDark = Color(0xFF1A1A12)
+val GoldenSurfaceVariantDark = Color(0xFF24241A)
+val GoldenTextOnDark = Color(0xFFEFE7D5)
+val GoldenMutedOnDark = Color(0xFFB3A98F)
+val GoldenBorderDark = Color(0xFF3A3A2C)
 
 // Legacy aliases for existing imports.
-val GalaxyBackgroundDark = MilkTeaBackgroundDark
-val GalaxySurfaceDark = MilkTeaSurfaceDark
-val GalaxyPrimary = MilkTeaPrimary
-val GalaxyPrimaryLight = MilkTeaAccent
-val GalaxyAccent = MilkTeaAccent
-val GalaxyMuted = MilkTeaMutedOnDark
-val GalaxyTextOnDark = MilkTeaTextOnDark
+val MilkTeaAccent = CocoaSagePrimary
+val MilkTeaAccentDeep = CocoaSagePrimaryDeep
+val MilkTeaBackground = CocoaSageBackground
+val MilkTeaCard = CocoaSageSurface
+val MilkTeaText = CocoaSageText
+val MilkTeaMuted = CocoaSageMuted
+val MilkTeaBorder = CocoaSageBorder
+val MilkTeaSecondary = CocoaSageSage
+val MilkTeaBackgroundDark = CocoaSageBackgroundDark
+val MilkTeaSurfaceDark = CocoaSageSurfaceDark
+val MilkTeaSurfaceVariantDark = CocoaSageSurfaceVariantDark
+val MilkTeaTextOnDark = CocoaSageTextOnDark
+val MilkTeaMutedOnDark = CocoaSageMutedOnDark
+val MilkTeaBorderDark = CocoaSageBorderDark
+val MilkTeaPrimary = CocoaSagePrimaryDeep
+val MilkTeaPrimaryLight = CocoaSagePrimary
 
-val BackgroundLight = MilkTeaBackground
-val SurfaceLight = MilkTeaCard
-val PrimaryBlue = MilkTeaPrimary
-val PrimaryBlueLight = MilkTeaAccent
-val AccentGreen = MilkTeaAccent
-val BackgroundDark = MilkTeaBackgroundDark
-val SurfaceDark = MilkTeaSurfaceDark
-val TextMuted = MilkTeaMuted
+val GalaxyBackgroundDark = CocoaSageBackgroundDark
+val GalaxySurfaceDark = CocoaSageSurfaceDark
+val GalaxyPrimary = CocoaSagePrimaryDeep
+val GalaxyPrimaryLight = CocoaSagePrimary
+val GalaxyAccent = CocoaSagePrimary
+val GalaxyMuted = CocoaSageMutedOnDark
+val GalaxyTextOnDark = CocoaSageTextOnDark
+
+val BackgroundLight = CocoaSageBackground
+val SurfaceLight = CocoaSageSurface
+val PrimaryBlue = CocoaSagePrimaryDeep
+val PrimaryBlueLight = CocoaSagePrimary
+val AccentGreen = CocoaSageSage
+val BackgroundDark = CocoaSageBackgroundDark
+val SurfaceDark = CocoaSageSurfaceDark
+val TextMuted = CocoaSageMuted
