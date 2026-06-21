@@ -4,4 +4,5 @@ object Routes {
     const val LOCATION = "location"
     const val WALK = "walk"
     const val SPIRAL = "spiral"
+    const val SETTINGS = "settings"
 }
