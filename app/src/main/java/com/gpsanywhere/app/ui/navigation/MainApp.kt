@@ -33,6 +33,7 @@ import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
+import com.gpsanywhere.app.ui.theme.SoftPurple
 import com.gpsanywhere.app.ui.settings.SettingsScreen
 import com.gpsanywhere.app.ui.walk.WalkScreen
 import com.gpsanywhere.app.viewmodel.MainViewModel
@@ -75,21 +76,21 @@ fun MainApp(preferences: AppPreferences) {
                         onClick = { nav(Routes.LOCATION) },
                         icon = { Icon(Icons.Default.LocationOn, contentDescription = "Location") },
                         label = { Text("Location") },
-                        colors = navItemColors(com.gpsanywhere.app.ui.theme.CandyGreen)
+                        colors = navItemColors(SoftPurple)
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.WALK,
                         onClick = { nav(Routes.WALK) },
                         icon = { Icon(Icons.Default.Route, contentDescription = "Route") },
                         label = { Text("Route") },
-                        colors = navItemColors(com.gpsanywhere.app.ui.theme.CandyBlue)
+                        colors = navItemColors(SoftPurple)
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.SETTINGS,
                         onClick = { nav(Routes.SETTINGS) },
                         icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
                         label = { Text("Settings") },
-                        colors = navigationItemColors()
+                        colors = navItemColors(SoftPurple)
                     )
                 }
             }
@@ -121,15 +122,6 @@ fun MainApp(preferences: AppPreferences) {
         }
     }
 }
-
-@Composable
-private fun navigationItemColors() = NavigationBarItemDefaults.colors(
-    selectedIconColor = MaterialTheme.colorScheme.primary,
-    selectedTextColor = MaterialTheme.colorScheme.primary,
-    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-)
 
 @Composable
 private fun navItemColors(activeColor: androidx.compose.ui.graphics.Color) = NavigationBarItemDefaults.colors(

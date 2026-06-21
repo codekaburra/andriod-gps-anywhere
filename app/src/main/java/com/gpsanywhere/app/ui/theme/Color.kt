@@ -8,6 +8,8 @@ val CandyGreen = Color(0xFF4CAF50)               // location pins / nature eleme
 val CandyBlue = Color(0xFF42A5F5)                // route / transport icons
 val CandyPink = Color(0xFFFF6D9E)                // card accents / playful details
 val CandyYellow = Color(0xFFFFCC00)              // numbers / waypoints / highlights
+val DustyRose = Color(0xFFC06C84)                // add-location button
+val SoftPurple = Color(0xFF9B59B5)               // bottom nav selected tab
 
 val CandyBackground = Color(0xFFF8F9F6)          // light off-white
 val CandySurface = Color(0xFFFFFFFF)             // pure white cards

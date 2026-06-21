@@ -409,7 +409,7 @@ fun LocationScreen(
 
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = com.gpsanywhere.app.ui.theme.DustyRose,
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .padding(8.dp)
@@ -418,7 +418,7 @@ fun LocationScreen(
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "Add location",
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    tint = Color.White
                                 )
                             }
                         }
@@ -430,13 +430,13 @@ fun LocationScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary
+                            color = com.gpsanywhere.app.ui.theme.DustyRose
                         ) {
                             IconButton(onClick = { showAddSheet = true }) {
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "Add location",
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    tint = Color.White
                                 )
                             }
                         }
@@ -710,7 +710,7 @@ private fun LocationCard(
                     tint = if (isSelected || isActive) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.secondary
+                        com.gpsanywhere.app.ui.theme.DustyRose
                     },
                     modifier = Modifier.size(26.dp)
                 )
