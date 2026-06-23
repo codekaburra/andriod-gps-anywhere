@@ -23,7 +23,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     companion object {
         const val MAX_SPEED_KMH = 5000f
-        const val SPIRAL_RESET_INTERVAL_MS = 30L * 60L * 1000L
+        const val SPIRAL_RESET_INTERVAL_MS = 10L * 60L * 1000L
 
         /** Preset cruising speeds for the Fly buttons. */
         const val FLY_HELI_KMH = 200f
@@ -31,7 +31,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         const val FLY_ROCKET_KMH = 5000f
 
         /** Speed of the spiral walk that starts automatically once a fly reaches its target. */
-        const val FLY_SPIRAL_KMH = 15f
+        const val FLY_SPIRAL_KMH = 16f
 
         const val MOVE_STEP_DEG = 0.0005
     }
@@ -44,7 +44,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private val _locationPacks = MutableStateFlow<List<DefaultLocationPack>>(emptyList())
     val locationPacks: StateFlow<List<DefaultLocationPack>> = _locationPacks.asStateFlow()
 
-    private val _spiralSpeedKmh = MutableStateFlow(4f)
+    private val _spiralSpeedKmh = MutableStateFlow(16f)
     val spiralSpeedKmh: StateFlow<Float> = _spiralSpeedKmh.asStateFlow()
 
     private val _routeHints = MutableStateFlow<Map<String, String>>(emptyMap())

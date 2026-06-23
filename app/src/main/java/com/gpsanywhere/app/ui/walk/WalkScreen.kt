@@ -44,6 +44,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -81,6 +82,10 @@ fun WalkScreen(
 
     // Route selected by the user — persists after stop so user stays in walk view
     var selectedRoute by remember { mutableStateOf<SavedRoute?>(null) }
+
+    LaunchedEffect(selectedRoute) {
+        if (selectedRoute != null) viewModel.setSpeed(16f)
+    }
 
     val isWalking = isSpoofing && activeRoute != null
     // Show walk view when a route is selected OR a walk is active
@@ -396,36 +401,28 @@ fun WalkScreen(
 
 // ── Route speed slider: 0───20 | 100 | 200 | 500 ─────────────────────────────
 
-private const val ROUTE_WALK_ZONE_KMH = 20f
-private const val ROUTE_WALK_ZONE_FRAC = 0.8f
 private const val ROUTE_MAX_SPEED_KMH = 500f
+private val SPEED_STOPS = floatArrayOf(0f, 20f, 100f, 300f, 500f)
 
 private fun routeSpeedToSlider(kmh: Float): Float {
-    val tailFrac = (1f - ROUTE_WALK_ZONE_FRAC) / 3f
-    return when {
-        kmh <= ROUTE_WALK_ZONE_KMH ->
-            (kmh / ROUTE_WALK_ZONE_KMH) * ROUTE_WALK_ZONE_FRAC
-        kmh <= 100f ->
-            ROUTE_WALK_ZONE_FRAC + ((kmh - ROUTE_WALK_ZONE_KMH) / 80f) * tailFrac
-        kmh <= 200f ->
-            ROUTE_WALK_ZONE_FRAC + tailFrac + ((kmh - 100f) / 100f) * tailFrac
-        else ->
-            ROUTE_WALK_ZONE_FRAC + 2f * tailFrac + ((kmh - 200f) / 300f) * tailFrac
-    }.coerceIn(0f, 1f)
+    val seg = 1f / (SPEED_STOPS.size - 1)
+    for (i in 1 until SPEED_STOPS.size) {
+        if (kmh <= SPEED_STOPS[i]) {
+            val lo = SPEED_STOPS[i - 1]
+            val hi = SPEED_STOPS[i]
+            return (i - 1) * seg + ((kmh - lo) / (hi - lo)) * seg
+        }
+    }
+    return 1f
 }
 
 private fun routeSliderToSpeed(frac: Float): Float {
-    val tailFrac = (1f - ROUTE_WALK_ZONE_FRAC) / 3f
-    return when {
-        frac <= ROUTE_WALK_ZONE_FRAC ->
-            (frac / ROUTE_WALK_ZONE_FRAC) * ROUTE_WALK_ZONE_KMH
-        frac <= ROUTE_WALK_ZONE_FRAC + tailFrac ->
-            ROUTE_WALK_ZONE_KMH + ((frac - ROUTE_WALK_ZONE_FRAC) / tailFrac) * 80f
-        frac <= ROUTE_WALK_ZONE_FRAC + 2f * tailFrac ->
-            100f + ((frac - ROUTE_WALK_ZONE_FRAC - tailFrac) / tailFrac) * 100f
-        else ->
-            200f + ((frac - ROUTE_WALK_ZONE_FRAC - 2f * tailFrac) / tailFrac) * 300f
-    }.coerceIn(0f, ROUTE_MAX_SPEED_KMH)
+    val seg = 1f / (SPEED_STOPS.size - 1)
+    val i = (frac / seg).toInt().coerceIn(0, SPEED_STOPS.size - 2)
+    val lo = SPEED_STOPS[i]
+    val hi = SPEED_STOPS[i + 1]
+    val local = (frac - i * seg) / seg
+    return (lo + local * (hi - lo)).coerceIn(0f, ROUTE_MAX_SPEED_KMH)
 }
 
 private fun formatRouteSpeed(kmh: Float): String =
