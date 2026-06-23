@@ -479,6 +479,8 @@ fun LocationScreen(
                             enabled = currentLat != null && currentLng != null,
                             onMove = { dLat, dLng -> viewModel.nudgeSpiral(dLat, dLng) }
                         )
+                        Spacer(Modifier.height(12.dp))
+                        ResetIntervalInput()
                     }
                 }
             }
@@ -1247,5 +1249,31 @@ private fun ResetCountdown() {
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
+    }
+}
+
+@Composable
+private fun ResetIntervalInput() {
+    val defaultMin = LocationViewModel.SPIRAL_RESET_INTERVAL_MS / 60_000L
+    var text by remember { mutableStateOf(defaultMin.toString()) }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text("Reset every", style = MaterialTheme.typography.bodyMedium)
+        OutlinedTextField(
+            value = text,
+            onValueChange = { input ->
+                text = input.filter { it.isDigit() }
+                val mins = text.toLongOrNull()
+                if (mins != null && mins > 0) {
+                    SpoofService.liveResetIntervalMs = mins * 60_000L
+                }
+            },
+            modifier = Modifier.width(72.dp),
+            textStyle = MaterialTheme.typography.bodyMedium,
+            singleLine = true
+        )
+        Text("min", style = MaterialTheme.typography.bodyMedium)
     }
 }
