@@ -330,8 +330,11 @@ fun LocationScreen(
         ) {
             // ── Walk-mode banner ──────────────────────────────────────────────
             if (isWalkMode) {
+                val panelDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+                val panelBg = if (panelDark) Color(0xFF1E2937).copy(alpha = 0.8f)
+                              else Color.White.copy(alpha = 0.8f)
                 Surface(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                    color = panelBg,
                     shape = RoundedCornerShape(0.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
                     modifier = Modifier.fillMaxWidth()
