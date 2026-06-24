@@ -243,7 +243,7 @@ fun WalkScreen(
                     FilledIconButton(
                         onClick = { selectedRoute = null },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg,
+                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
                             contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                         )
                     ) {
@@ -252,7 +252,7 @@ fun WalkScreen(
                     FilledIconButton(
                         onClick = { viewModel.startWalk(route, reversed = true) },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg,
+                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
                             contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                         )
                     ) {
@@ -279,7 +279,7 @@ fun WalkScreen(
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.StopRed,
+                            containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
                             contentColor = androidx.compose.ui.graphics.Color.White
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
@@ -468,9 +468,9 @@ private fun SpeedControlPanel(
                     valueRange = 0f..1f,
                     modifier = Modifier.weight(1f),
                     colors = androidx.compose.material3.SliderDefaults.colors(
-                        thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb,
-                        activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack,
-                        inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack
+                        thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb.copy(alpha = 0.9f),
+                        activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.9f),
+                        inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.9f)
                     )
                 )
                 Text(

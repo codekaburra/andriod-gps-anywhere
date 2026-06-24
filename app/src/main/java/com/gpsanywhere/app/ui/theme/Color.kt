@@ -22,7 +22,7 @@ val GlassSurfaceVariantLight = Color.White.copy(alpha = 0.75f)
 val GlassTextLight = Color(0xFF1E2937)
 val GlassMutedLight = Color(0xFF94A3B8)
 val GlassBorderLight = Color(0xFFCBD5E1).copy(alpha = 0.6f)
-val GlassNavLight = Color.White.copy(alpha = 0.95f)
+val GlassNavLight = Color.White.copy(alpha = 0.9f)
 
 val GlassBackgroundDark = Color(0xFF0F172A)
 val GlassSurfaceDark = Color(0xFF1E2937).copy(alpha = 0.85f)
@@ -65,8 +65,7 @@ val NeutralButtonBg = Color(0xFFF5EDE6)
 val NeutralButtonContent = Color(0xFF6B5544)
 
 // ── Map ─────────────────────────────────────────────────────────────────────
-val MapPolylineBlue = 0xFFF59E0B.toInt()
-val MapPinOrange = 0xFFF59E0B.toInt()
+val MapPolyline = 0xFFF1F5F9.toInt()
 
 // ── Tag colors ──────────────────────────────────────────────────────────────
 val CandyTagColors = listOf(

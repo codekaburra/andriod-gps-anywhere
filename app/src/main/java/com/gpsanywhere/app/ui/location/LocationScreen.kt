@@ -331,7 +331,7 @@ fun LocationScreen(
             // ── Walk-mode banner ──────────────────────────────────────────────
             if (isWalkMode) {
                 Surface(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
                     shape = RoundedCornerShape(0.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
                     modifier = Modifier.fillMaxWidth()
@@ -387,9 +387,9 @@ fun LocationScreen(
                                 valueRange = 0f..1f,
                                 modifier = Modifier.weight(1f),
                                 colors = androidx.compose.material3.SliderDefaults.colors(
-                                    thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb,
-                                    activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack,
-                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack
+                                    thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb.copy(alpha = 0.9f),
+                                    activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.9f),
+                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.9f)
                                 )
                             )
                             Text(
@@ -405,7 +405,7 @@ fun LocationScreen(
                             modifier = Modifier.fillMaxWidth().height(40.dp),
                             shape = RoundedCornerShape(20.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = com.gpsanywhere.app.ui.theme.StopRed,
+                                containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
                                 contentColor = Color.White
                             ),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)

@@ -41,7 +41,7 @@ fun MapViewComposable(
     val mapView = remember {
         Configuration.getInstance().userAgentValue = context.packageName
         MapView(context).apply {
-            setTileSource(TileSourceFactory.USGS_TOPO)
+            setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             controller.setZoom(zoom)
             center?.let { controller.setCenter(it) }
@@ -85,13 +85,13 @@ fun MapViewComposable(
                 position = GeoPoint(point.latitude, point.longitude)
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 if (showNumberedPins) {
-                    icon = createTeardropPin(context, com.gpsanywhere.app.ui.theme.MapPolylineBlue, index + 1)
+                    icon = createTeardropPin(context, com.gpsanywhere.app.ui.theme.MapPolyline, index + 1)
                     title = point.name?.takeIf { it.isNotBlank() }?.let { "${index + 1}. $it" }
                         ?: "${index + 1}"
                     snippet = "${point.latitude}, ${point.longitude}"
                 } else {
                     icon = androidx.core.content.ContextCompat
-                        .getDrawable(context, com.gpsanywhere.app.R.drawable.ic_pin_orange_drop)
+                        .getDrawable(context, com.gpsanywhere.app.R.drawable.ic_pin_drop)
                         ?.mutate()
                     title = point.name
                 }
@@ -103,7 +103,7 @@ fun MapViewComposable(
             val polyline = Polyline(mapView).apply {
                 setPoints(waypoints.map { GeoPoint(it.latitude, it.longitude) })
                 outlinePaint.strokeWidth = 8f
-                outlinePaint.color = com.gpsanywhere.app.ui.theme.MapPolylineBlue
+                outlinePaint.color = com.gpsanywhere.app.ui.theme.MapPolyline
             }
             mapView.overlays.add(polyline)
         } else if (waypoints.size == 1) {
