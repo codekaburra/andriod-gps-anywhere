@@ -403,30 +403,38 @@ fun WalkScreen(
 
 }
 
-// ── Route speed slider: 0───20 | 100 | 200 | 500 ─────────────────────────────
-
-private const val ROUTE_MAX_SPEED_KMH = 500f
-private val SPEED_STOPS = floatArrayOf(0f, 20f, 100f, 300f, 500f)
+// ── Route speed slider: 0────────20 | 100 | 300 ─────────────────────────────
+// The 0–20 km/h walking range takes up the first 80% of the track; the faster
+// presets (20→100→300) share the remaining 20%.
+private const val ROUTE_MAX_SPEED_KMH = 300f
+private val SPEED_STOPS = floatArrayOf(0f, 20f, 100f, 300f)
+private val SPEED_FRACS = floatArrayOf(0f, 0.80f, 0.90f, 1f)
 
 private fun routeSpeedToSlider(kmh: Float): Float {
-    val seg = 1f / (SPEED_STOPS.size - 1)
     for (i in 1 until SPEED_STOPS.size) {
         if (kmh <= SPEED_STOPS[i]) {
             val lo = SPEED_STOPS[i - 1]
             val hi = SPEED_STOPS[i]
-            return (i - 1) * seg + ((kmh - lo) / (hi - lo)) * seg
+            val fLo = SPEED_FRACS[i - 1]
+            val fHi = SPEED_FRACS[i]
+            return fLo + ((kmh - lo) / (hi - lo)) * (fHi - fLo)
         }
     }
     return 1f
 }
 
 private fun routeSliderToSpeed(frac: Float): Float {
-    val seg = 1f / (SPEED_STOPS.size - 1)
-    val i = (frac / seg).toInt().coerceIn(0, SPEED_STOPS.size - 2)
-    val lo = SPEED_STOPS[i]
-    val hi = SPEED_STOPS[i + 1]
-    val local = (frac - i * seg) / seg
-    return (lo + local * (hi - lo)).coerceIn(0f, ROUTE_MAX_SPEED_KMH)
+    for (i in 1 until SPEED_FRACS.size) {
+        if (frac <= SPEED_FRACS[i]) {
+            val fLo = SPEED_FRACS[i - 1]
+            val fHi = SPEED_FRACS[i]
+            val lo = SPEED_STOPS[i - 1]
+            val hi = SPEED_STOPS[i]
+            val local = if (fHi > fLo) (frac - fLo) / (fHi - fLo) else 0f
+            return (lo + local * (hi - lo)).coerceIn(0f, ROUTE_MAX_SPEED_KMH)
+        }
+    }
+    return ROUTE_MAX_SPEED_KMH
 }
 
 private fun formatRouteSpeed(kmh: Float): String =

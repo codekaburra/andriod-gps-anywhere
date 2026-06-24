@@ -410,7 +410,7 @@ fun LocationScreen(
                             ),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                         ) {
-                            Text("Stop Walk Around")
+                            Text("Stop")
                         }
                     }
                 }

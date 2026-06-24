@@ -62,7 +62,7 @@ fun MainApp(preferences: AppPreferences) {
     val colorTheme = if (themeMode == ThemeMode.DARK) ColorTheme.GOLDEN_HOUR else ColorTheme.COCOA_SAGE
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: Routes.WALK
+    val currentRoute = navBackStackEntry?.destination?.route ?: Routes.LOCATION
 
     var showOnboarding by remember { mutableStateOf(!preferences.onboardingShown) }
 
@@ -118,7 +118,7 @@ fun MainApp(preferences: AppPreferences) {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = Routes.WALK,
+                startDestination = Routes.LOCATION,
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Routes.LOCATION) {
