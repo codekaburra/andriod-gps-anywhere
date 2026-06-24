@@ -344,7 +344,7 @@ fun LocationScreen(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.DirectionsWalk,
@@ -356,20 +356,21 @@ fun LocationScreen(
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                ResetCountdown()
                                 Text(
                                     "${"%.1f".format(liveSpeedKmh)} km/h",
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                ResetIntervalInput()
+                                ResetCountdown()
+                            }
                         }
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(2.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -401,7 +402,7 @@ fun LocationScreen(
                         // Stop button
                         Button(
                             onClick = { viewModel.stopSpoofing() },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            modifier = Modifier.fillMaxWidth().height(40.dp),
                             shape = RoundedCornerShape(20.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = com.gpsanywhere.app.ui.theme.StopRed,
@@ -1159,13 +1160,8 @@ private fun GlassDirectionPadCard(
             modifier = Modifier.fillMaxWidth().padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-//            Spacer(Modifier.height(20.dp))
-
             // Sectored circular glass direction pad
             SectoredDpad(enabled = enabled, onMove = onMove)
-
-            Spacer(Modifier.height(20.dp))
-            ResetIntervalInput()
         }
     }
 }
