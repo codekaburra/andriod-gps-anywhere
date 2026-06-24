@@ -1,6 +1,5 @@
 package com.gpsanywhere.app.ui.walk
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +17,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -31,8 +35,6 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButtonDefaults
@@ -59,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.routes.LocationPoint
+import com.gpsanywhere.app.ui.components.GlassCard
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.viewmodel.WalkViewModel
 import org.osmdroid.util.GeoPoint
@@ -257,13 +260,13 @@ fun WalkScreen(
                     }
                     Button(
                         onClick = { viewModel.startWalk(route) },
-                        modifier = Modifier.weight(1.5f),
-                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.weight(1.5f).height(56.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = com.gpsanywhere.app.ui.theme.CandyGreen,
                             contentColor = androidx.compose.ui.graphics.Color.White
                         ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)
                         Spacer(Modifier.width(6.dp))
@@ -273,12 +276,13 @@ fun WalkScreen(
                     // Walking: only Stop (pause removed)
                     Button(
                         onClick = { viewModel.stop() },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = com.gpsanywhere.app.ui.theme.StopRed,
                             contentColor = androidx.compose.ui.graphics.Color.White
-                        )
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                     ) {
                         Icon(Icons.Default.Stop, contentDescription = null)
                         Spacer(Modifier.width(6.dp))
@@ -353,7 +357,7 @@ fun WalkScreen(
                     Text(
                         "Saved Routes",
                         style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -435,14 +439,7 @@ private fun SpeedControlPanel(
     speed: Float,
     onSpeedChange: (Float) -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+    GlassCard {
         Column(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -455,7 +452,7 @@ private fun SpeedControlPanel(
                 Text(
                     "Speed",
                     style = MaterialTheme.typography.labelMedium,
-                    color = com.gpsanywhere.app.ui.theme.CandyBlue
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Slider(
                     value = routeSpeedToSlider(speed),
@@ -464,14 +461,14 @@ private fun SpeedControlPanel(
                     modifier = Modifier.weight(1f),
                     colors = androidx.compose.material3.SliderDefaults.colors(
                         thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb,
-                        activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.7f),
-                        inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.3f)
+                        activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack,
+                        inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack
                     )
                 )
                 Text(
                     formatRouteSpeed(speed),
                     style = MaterialTheme.typography.labelMedium,
-                    color = com.gpsanywhere.app.ui.theme.CandyBlue
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -482,11 +479,14 @@ private fun SpeedControlPanel(
 
 @Composable
 private fun RouteRow(route: SavedRoute, distanceLabel: String, waypointCount: Int, onClick: () -> Unit) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val nameColor = if (isDark) com.gpsanywhere.app.ui.theme.CardNameTextDark else com.gpsanywhere.app.ui.theme.CardNameText
+    val subColor = if (isDark) com.gpsanywhere.app.ui.theme.CardCoordTextDark else com.gpsanywhere.app.ui.theme.CardCoordText
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
+        colors = CardDefaults.cardColors(containerColor = com.gpsanywhere.app.ui.theme.CardFill),
+        border = BorderStroke(1.5.dp, com.gpsanywhere.app.ui.theme.CardBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -494,12 +494,12 @@ private fun RouteRow(route: SavedRoute, distanceLabel: String, waypointCount: In
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(route.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(route.name, style = MaterialTheme.typography.titleSmall, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text("$distanceLabel · $waypointCount stops", style = MaterialTheme.typography.bodySmall,
-                    color = com.gpsanywhere.app.ui.theme.CandyBlue)
+                    color = subColor)
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                tint = subColor)
         }
     }
 }
@@ -539,7 +539,7 @@ private fun WaypointProgressRow(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
         }
         Text(distanceKm, style = MaterialTheme.typography.bodySmall,
-            color = if (isNearest) com.gpsanywhere.app.ui.theme.CandyYellow
+            color = if (isNearest) MaterialTheme.colorScheme.onSurface
                     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
     }
 }

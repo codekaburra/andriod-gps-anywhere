@@ -41,7 +41,7 @@ fun MapViewComposable(
     val mapView = remember {
         Configuration.getInstance().userAgentValue = context.packageName
         MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
+            setTileSource(TileSourceFactory.USGS_TOPO)
             setMultiTouchControls(true)
             controller.setZoom(zoom)
             center?.let { controller.setCenter(it) }
@@ -90,7 +90,7 @@ fun MapViewComposable(
                         ?: "${index + 1}"
                     snippet = "${point.latitude}, ${point.longitude}"
                 } else {
-                    icon = createTeardropPin(context, android.graphics.Color.parseColor("#FF9800"), null)
+                    icon = createTeardropPin(context, com.gpsanywhere.app.ui.theme.MapPinOrange, null)
                     title = point.name
                 }
             }
