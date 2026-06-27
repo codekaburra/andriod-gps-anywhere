@@ -1,6 +1,7 @@
 package com.gpsanywhere.app.ui.navigation
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -76,6 +77,14 @@ fun MainApp(preferences: AppPreferences) {
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
+        )
+        // Soften the background so foreground glass UI stays legible
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    (if (isDark) Color.Black.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.7f))
+                )
         )
         Scaffold(
             containerColor = Color.Transparent,
