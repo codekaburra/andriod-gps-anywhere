@@ -215,6 +215,7 @@ fun LocationScreen(
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var editLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var selectedTag by remember { mutableStateOf<String?>(null) }
+    var customOnly by remember { mutableStateOf(false) }
 
     val allTags = remember(locationPacks, customLocations) {
         buildSet {
@@ -226,8 +227,9 @@ fun LocationScreen(
         }.sorted()
     }
 
-    val filteredPacks = remember(locationPacks, selectedTag) {
-        if (selectedTag == null) locationPacks
+    val filteredPacks = remember(locationPacks, selectedTag, customOnly) {
+        if (customOnly) emptyList()
+        else if (selectedTag == null) locationPacks
         else locationPacks.mapNotNull { pack ->
             val locs = pack.locations.filter { asset ->
                 val t = if (asset.tags.isBlank()) emptyList()
@@ -339,7 +341,7 @@ fun LocationScreen(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 1.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -423,7 +425,7 @@ fun LocationScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+//                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
             item {
                 if (mapCenter != null) {
@@ -521,16 +523,16 @@ fun LocationScreen(
                 SectionHeader(title = "Saved Locations")
             }
 
-            if (allTags.isNotEmpty()) {
-                item(key = "tag_filter") {
-                    TagFilterRow(
-                        allTags = allTags,
-                        selectedTags = if (selectedTag != null) setOf(selectedTag!!) else emptySet(),
-                        onTagToggle = { tag ->
-                            selectedTag = if (selectedTag == tag) null else tag
-                        }
-                    )
-                }
+            item(key = "tag_filter") {
+                TagFilterRow(
+                    allTags = allTags,
+                    selectedTags = if (selectedTag != null) setOf(selectedTag!!) else emptySet(),
+                    onTagToggle = { tag ->
+                        selectedTag = if (selectedTag == tag) null else tag
+                    },
+                    customOnly = customOnly,
+                    onCustomToggle = { customOnly = !customOnly }
+                )
             }
 
             filteredPacks.filter { it.locations.isNotEmpty() }.forEach { pack ->
@@ -668,12 +670,33 @@ fun LocationScreen(
 private fun TagFilterRow(
     allTags: List<String>,
     selectedTags: Set<String>,
-    onTagToggle: (String) -> Unit
+    onTagToggle: (String) -> Unit,
+    customOnly: Boolean = false,
+    onCustomToggle: () -> Unit = {}
 ) {
+    val chipColors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+        selectedContainerColor = Color.White.copy(alpha = 0.45f),
+        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+        FilterChip(
+            selected = customOnly,
+            onClick = onCustomToggle,
+            label = { Text("Custom") },
+            leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp)) },
+            colors = chipColors,
+            border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = customOnly,
+                borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                selectedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+        )
         allTags.forEach { tag ->
             val isSelected = tag in selectedTags
             FilterChip(
@@ -1188,9 +1211,9 @@ private fun SectoredDpad(
     } else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
     val scope = rememberCoroutineScope()
 
-    val size = 280.dp
-    val centerButton = 104.dp
-    val arrowOffset = 92.dp   // distance of each chevron from the centre
+    val size = 196.dp
+    val centerButton = 73.dp
+    val arrowOffset = 64.dp   // distance of each chevron from the centre
 
     Box(
         modifier = Modifier.size(size),
@@ -1254,22 +1277,22 @@ private fun SectoredDpad(
         Icon(
             Icons.Default.KeyboardArrowUp, "North",
             tint = arrowColor,
-            modifier = Modifier.size(34.dp).align(Alignment.Center).offset(y = -arrowOffset)
+            modifier = Modifier.size(24.dp).align(Alignment.Center).offset(y = -arrowOffset)
         )
         Icon(
             Icons.Default.KeyboardArrowDown, "South",
             tint = arrowColor,
-            modifier = Modifier.size(34.dp).align(Alignment.Center).offset(y = arrowOffset)
+            modifier = Modifier.size(24.dp).align(Alignment.Center).offset(y = arrowOffset)
         )
         Icon(
             Icons.AutoMirrored.Filled.KeyboardArrowLeft, "West",
             tint = arrowColor,
-            modifier = Modifier.size(34.dp).align(Alignment.Center).offset(x = -arrowOffset)
+            modifier = Modifier.size(24.dp).align(Alignment.Center).offset(x = -arrowOffset)
         )
         Icon(
             Icons.AutoMirrored.Filled.KeyboardArrowRight, "East",
             tint = arrowColor,
-            modifier = Modifier.size(34.dp).align(Alignment.Center).offset(x = arrowOffset)
+            modifier = Modifier.size(24.dp).align(Alignment.Center).offset(x = arrowOffset)
         )
 
         // Centre tap target (recenter spiral) — invisible, no fill or label
