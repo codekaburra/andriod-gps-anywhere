@@ -2,46 +2,108 @@ package com.gpsanywhere.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ── Candy Colors (Light Mode) ────────────────────────────────────────────────
-val CandyOrange = Color(0xFFFF9800)              // primary / CTA / Start / FAB
-val CandyGreen = Color(0xFF4CAF50)               // location pins / nature elements
-val CandyBlue = Color(0xFF42A5F5)                // route / transport icons
-val CandyPink = Color(0xFFFF6D9E)                // card accents / playful details
-val CandyYellow = Color(0xFFFFCC00)              // numbers / waypoints / highlights
-val DustyRose = Color(0xFFC06C84)                // add-location button
-val SoftPurple = Color(0xFF9B59B5)               // bottom nav selected tab
+// ── Liquid Glass (warm) ──────────────────────────────────────────────────────
+val LiquidOrange = Color(0xFFFF8A5C)               // primary accent
+val LiquidOrangeBright = Color(0xFFFF9F6B)         // gradient start / dark-mode primary
+val LiquidOrangeDeep = Color(0xFFFF7A4D)           // gradient end
+val LiquidBorder = Color(0xFFFFB38A)               // warm glass border
+val LiquidGlow = Color(0xFFFFF0E6)                 // soft inner radial glow
 
-val SliderThumb = Color(0xFFEF5350)                // slider control point (bright red)
-val SliderActiveTrack = Color(0xFFFF9800)          // slider left track (orange)
-val SliderInactiveTrack = Color(0xFFFFCC00)        // slider right track (yellow)
+// ── Classic Glassmorphism ────────────────────────────────────────────────────
+val GlassIndigo = LiquidOrange                     // primary (light)
+val GlassIndigoLight = LiquidOrangeBright          // primary (dark)
+val GlassGreen = Color(0xFF4CAF50)                 // start button
+val StopRed = Color(0xFFEF5350)                    // stop / error
 
-val NeutralButtonBg = Color(0xFFF0F0F0)           // back/revert button background
-val NeutralButtonContent = Color(0xFF424242)       // back/revert button icon
-val MapPolylineBlue = 0xFF42A5F5.toInt()           // android.graphics.Color int for map
+// ── Glass surfaces ──────────────────────────────────────────────────────────
+val GlassBackgroundLight = Color(0xFFFFF6EF)
+val GlassSurfaceLight = Color.White.copy(alpha = 0.85f)
+val GlassSurfaceVariantLight = Color.White.copy(alpha = 0.75f)
+val GlassTextLight = Color(0xFF1E2937)
+val GlassMutedLight = Color(0xFF94A3B8)
+val GlassBorderLight = Color(0xFFCBD5E1).copy(alpha = 0.6f)
+val GlassNavLight = Color.White.copy(alpha = 0.9f)
 
-val CandyBackground = Color(0xFFF8F9F6)          // light off-white
-val CandySurface = Color(0xFFFFFFFF)             // pure white cards
-val CandySurfaceVariant = Color(0xFFFFF3E0)      // warm neutral for list cards
-val CandyText = Color(0xFF212121)                // near-black text
-val CandyMuted = Color(0xFF90A4AE)              // muted icons / secondary text
-val CandyBorder = Color(0xFFE0E0E0)             // soft border
+val GlassBackgroundDark = Color(0xFF0F172A)
+val GlassSurfaceDark = Color(0xFF1E2937).copy(alpha = 0.85f)
+val GlassSurfaceVariantDark = Color(0xFF1E2937).copy(alpha = 0.75f)
+val GlassTextDark = Color(0xFFF1F5F9)
+val GlassMutedDark = Color(0xFF94A3B8)
+val GlassBorderDark = Color(0xFF475569).copy(alpha = 0.5f)
+val GlassNavDark = Color(0xFF1E2937).copy(alpha = 0.95f)
 
-val StopRed = Color(0xFFEF5350)                  // warning red for stop buttons
+// ── Glass card / button helpers ─────────────────────────────────────────────
+// Neutral translucent-white edge — pure glassmorphism, no colour tint.
+val GlassCardBorder = Color.White.copy(alpha = 0.35f)
 
-val CandyTagColors = listOf(CandyBlue, CandyPink, CandyYellow, CandyGreen, CandyOrange)
+// ── Location card / icon button palette (cool, watercolour-friendly) ─────────
+val CardFill = Color.White.copy(alpha = 0.20f)
+val CardFillSelected = Color.White.copy(alpha = 0.65f)
+val CardBorder = Color.White.copy(alpha = 0.30f)
+val CardBorderSelected = Color(0xFFF59E0B).copy(alpha = 0.95f)
+val CardNameText = Color(0xFF1F2937)          // light mode, non-selected name
+val CardCoordText = Color(0xFF64748B)         // light mode, non-selected coords
+val CardNameTextDark = Color(0xFFF1F5F9)      // dark mode, non-selected name
+val CardCoordTextDark = Color(0xFFCBD5E1)     // dark mode, non-selected coords
+val CardNameTextSelected = Color(0xFF111827)  // selected name (white-ish card, both modes)
+val CardCoordTextSelected = Color(0xFF334155) // selected coords
 
-// ── Golden Hour (Dark Mode) ───────────────────────────────────────────────────
+val NavSelected = Color(0xFFF59E0B)
+val NavUnselected = Color(0xFF94A3B8)
+
+val IconInactive = Color(0xFF64748B).copy(alpha = 0.85f)
+val IconActive = Color(0xFFF59E0B)
+val IconActiveBg = Color(0xFFFEF3C7).copy(alpha = 0.60f)
+
+// ── Slider (yellow functional accent) ───────────────────────────────────────
+val SliderThumb = Color(0xFFF59E0B)
+val SliderActiveTrack = Color(0xFFF59E0B)
+val SliderInactiveTrack = Color(0xFFE8D5C8).copy(alpha = 0.6f)
+
+// ── Neutral buttons (back/revert) ───────────────────────────────────────────
+val NeutralButtonBg = Color(0xFFF5EDE6)
+val NeutralButtonContent = Color(0xFF6B5544)
+
+// ── Map ─────────────────────────────────────────────────────────────────────
+val MapPolyline = 0xFFF1F5F9.toInt()
+
+// ── Tag colors ──────────────────────────────────────────────────────────────
+val CandyTagColors = listOf(
+    Color(0xFFFF8A5C),  // warm orange
+    Color(0xFFFFB38A),  // peach
+    Color(0xFFE9967A),  // dark salmon
+    Color(0xFFF4A460),  // sandy
+    Color(0xFFFFC04D)   // amber gold
+)
+
+// ── Legacy aliases (keep existing code compiling during migration) ──────────
+val CandyOrange = GlassIndigo
+val CandyGreen = GlassGreen
+val CandyBlue = GlassIndigo
+val CandyPink = Color(0xFF8B5CF6)
+val CandyYellow = Color(0xFFF59E0B)
+val DustyRose = GlassIndigo
+val SoftPurple = GlassIndigo
+
+val CandyBackground = GlassBackgroundLight
+val CandySurface = GlassSurfaceLight
+val CandySurfaceVariant = GlassSurfaceVariantLight
+val CandyText = GlassTextLight
+val CandyMuted = GlassMutedLight
+val CandyBorder = GlassBorderLight
+
+// ── Golden Hour (Dark Mode) — replaced by Glass Dark ────────────────────────
 val GoldenCream = Color(0xFFE3D2B4)
 val GoldenOlive = Color(0xFF927956)
-val GoldenCopper = Color(0xFFB0774C)
+val GoldenCopper = GlassIndigoLight
 val GoldenSlate = Color(0xFF465248)
-val GoldenInk = Color(0xFF101009)
+val GoldenInk = GlassBackgroundDark
 
-val GoldenBackgroundDark = Color(0xFF101009)
-val GoldenSurfaceDark = Color(0xFF1A1A12)
-val GoldenSurfaceVariantDark = Color(0xFF24241A)
-val GoldenTextOnDark = Color(0xFFEFE7D5)
-val GoldenMutedOnDark = Color(0xFFB3A98F)
-val GoldenBorderDark = Color(0xFF3A3A2C)
+val GoldenBackgroundDark = GlassBackgroundDark
+val GoldenSurfaceDark = GlassSurfaceDark
+val GoldenSurfaceVariantDark = GlassSurfaceVariantDark
+val GoldenTextOnDark = GlassTextDark
+val GoldenMutedOnDark = GlassMutedDark
+val GoldenBorderDark = GlassBorderDark
 
-val ErrorRed = Color(0xFFE54848)
+val ErrorRed = StopRed

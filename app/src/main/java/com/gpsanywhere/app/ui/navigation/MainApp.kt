@@ -1,5 +1,9 @@
 package com.gpsanywhere.app.ui.navigation
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -20,7 +24,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.gpsanywhere.app.R
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -33,6 +41,11 @@ import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
+import androidx.compose.ui.graphics.luminance
+import com.gpsanywhere.app.ui.theme.GlassNavDark
+import com.gpsanywhere.app.ui.theme.GlassNavLight
+import com.gpsanywhere.app.ui.theme.NavSelected
+import com.gpsanywhere.app.ui.theme.NavUnselected
 import com.gpsanywhere.app.ui.theme.SoftPurple
 import com.gpsanywhere.app.ui.settings.SettingsScreen
 import com.gpsanywhere.app.ui.walk.WalkScreen
@@ -50,18 +63,35 @@ fun MainApp(preferences: AppPreferences) {
     val colorTheme = if (themeMode == ThemeMode.DARK) ColorTheme.GOLDEN_HOUR else ColorTheme.COCOA_SAGE
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: Routes.WALK
+    val currentRoute = navBackStackEntry?.destination?.route ?: Routes.LOCATION
 
     var showOnboarding by remember { mutableStateOf(!preferences.onboardingShown) }
 
     LaunchedEffect(Unit) { mainViewModel.loadTheme() }
 
     GPSAnywhereTheme(themeMode = themeMode, colorTheme = colorTheme) {
+      val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+      Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(if (isDark) R.drawable.bg_dark else R.drawable.bg_light),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        // Soften the background so foreground glass UI stays legible
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    (if (isDark) Color.Black.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.7f))
+                )
+        )
         Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
+            containerColor = Color.Transparent,
             bottomBar = {
+                val navIsDark = isDark
                 NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = if (navIsDark) GlassNavDark else GlassNavLight,
                     tonalElevation = 0.dp
                 ) {
                     fun nav(route: String) {
@@ -97,7 +127,7 @@ fun MainApp(preferences: AppPreferences) {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = Routes.WALK,
+                startDestination = Routes.LOCATION,
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Routes.LOCATION) {
@@ -120,14 +150,15 @@ fun MainApp(preferences: AppPreferences) {
                 }
             )
         }
+      }
     }
 }
 
 @Composable
 private fun navItemColors(activeColor: androidx.compose.ui.graphics.Color) = NavigationBarItemDefaults.colors(
-    selectedIconColor = activeColor,
-    selectedTextColor = activeColor,
-    indicatorColor = activeColor.copy(alpha = 0.12f),
-    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+    selectedIconColor = NavSelected,
+    selectedTextColor = NavSelected,
+    indicatorColor = NavSelected.copy(alpha = 0.15f),
+    unselectedIconColor = NavUnselected,
+    unselectedTextColor = NavUnselected
 )

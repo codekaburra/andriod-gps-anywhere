@@ -85,12 +85,14 @@ fun MapViewComposable(
                 position = GeoPoint(point.latitude, point.longitude)
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 if (showNumberedPins) {
-                    icon = createTeardropPin(context, com.gpsanywhere.app.ui.theme.MapPolylineBlue, index + 1)
+                    icon = createTeardropPin(context, com.gpsanywhere.app.ui.theme.MapPolyline, index + 1)
                     title = point.name?.takeIf { it.isNotBlank() }?.let { "${index + 1}. $it" }
                         ?: "${index + 1}"
                     snippet = "${point.latitude}, ${point.longitude}"
                 } else {
-                    icon = createTeardropPin(context, android.graphics.Color.parseColor("#FF9800"), null)
+                    icon = androidx.core.content.ContextCompat
+                        .getDrawable(context, com.gpsanywhere.app.R.drawable.ic_pin_drop)
+                        ?.mutate()
                     title = point.name
                 }
             }
@@ -101,7 +103,7 @@ fun MapViewComposable(
             val polyline = Polyline(mapView).apply {
                 setPoints(waypoints.map { GeoPoint(it.latitude, it.longitude) })
                 outlinePaint.strokeWidth = 8f
-                outlinePaint.color = com.gpsanywhere.app.ui.theme.MapPolylineBlue
+                outlinePaint.color = com.gpsanywhere.app.ui.theme.MapPolyline
             }
             mapView.overlays.add(polyline)
         } else if (waypoints.size == 1) {
@@ -138,17 +140,32 @@ private fun createTeardropPin(
     val cx = w / 2f
     val headRadius = w / 2f - 2 * density
     val headCy = headRadius + 2 * density
+    val tipY = h - 2 * density
+
+    // Smooth teardrop: circular head that tapers into a sharp bottom tip
+    val path = android.graphics.Path().apply {
+        val dx = headRadius * 0.78f
+        moveTo(cx, tipY)
+        cubicTo(
+            cx - dx, headCy + headRadius * 0.62f,
+            cx - headRadius, headCy + headRadius * 0.28f,
+            cx - headRadius, headCy
+        )
+        arcTo(
+            android.graphics.RectF(cx - headRadius, headCy - headRadius, cx + headRadius, headCy + headRadius),
+            180f, -180f, false
+        )
+        cubicTo(
+            cx + headRadius, headCy + headRadius * 0.28f,
+            cx + dx, headCy + headRadius * 0.62f,
+            cx, tipY
+        )
+        close()
+    }
 
     val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = pinColor
         style = Paint.Style.FILL
-    }
-    canvas.drawCircle(cx, headCy, headRadius, bodyPaint)
-    val path = android.graphics.Path().apply {
-        moveTo(cx - headRadius * 0.55f, headCy + headRadius * 0.6f)
-        lineTo(cx, h.toFloat() - 2 * density)
-        lineTo(cx + headRadius * 0.55f, headCy + headRadius * 0.6f)
-        close()
     }
     canvas.drawPath(path, bodyPaint)
 
@@ -156,7 +173,7 @@ private fun createTeardropPin(
         color = android.graphics.Color.WHITE
         style = Paint.Style.FILL
     }
-    canvas.drawCircle(cx, headCy, headRadius * 0.55f, innerPaint)
+    canvas.drawCircle(cx, headCy, headRadius * 0.5f, innerPaint)
 
     if (number != null) {
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

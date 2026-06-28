@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -20,7 +21,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -35,6 +40,7 @@ import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -77,6 +83,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.layout.width
@@ -92,6 +99,7 @@ import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
+import com.gpsanywhere.app.ui.components.GlassCard
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
@@ -207,6 +215,7 @@ fun LocationScreen(
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var editLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var selectedTag by remember { mutableStateOf<String?>(null) }
+    var customOnly by remember { mutableStateOf(false) }
 
     val allTags = remember(locationPacks, customLocations) {
         buildSet {
@@ -218,8 +227,9 @@ fun LocationScreen(
         }.sorted()
     }
 
-    val filteredPacks = remember(locationPacks, selectedTag) {
-        if (selectedTag == null) locationPacks
+    val filteredPacks = remember(locationPacks, selectedTag, customOnly) {
+        if (customOnly) emptyList()
+        else if (selectedTag == null) locationPacks
         else locationPacks.mapNotNull { pack ->
             val locs = pack.locations.filter { asset ->
                 val t = if (asset.tags.isBlank()) emptyList()
@@ -314,7 +324,7 @@ fun LocationScreen(
         else -> null
     }
 
-    Scaffold(modifier = modifier) { padding ->
+    Scaffold(modifier = modifier, containerColor = Color.Transparent) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -322,13 +332,16 @@ fun LocationScreen(
         ) {
             // ── Walk-mode banner ──────────────────────────────────────────────
             if (isWalkMode) {
+                val panelDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+                val panelBg = if (panelDark) Color(0xFF1E2937).copy(alpha = 0.8f)
+                              else Color.White.copy(alpha = 0.8f)
                 Surface(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    color = panelBg,
                     shape = RoundedCornerShape(0.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 1.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -336,7 +349,7 @@ fun LocationScreen(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.DirectionsWalk,
@@ -348,20 +361,21 @@ fun LocationScreen(
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                ResetCountdown()
                                 Text(
                                     "${"%.1f".format(liveSpeedKmh)} km/h",
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                ResetIntervalInput()
+                                ResetCountdown()
+                            }
                         }
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(2.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -378,9 +392,9 @@ fun LocationScreen(
                                 valueRange = 0f..1f,
                                 modifier = Modifier.weight(1f),
                                 colors = androidx.compose.material3.SliderDefaults.colors(
-                                    thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb,
-                                    activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.7f),
-                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.3f)
+                                    thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb.copy(alpha = 0.9f),
+                                    activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.9f),
+                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.9f)
                                 )
                             )
                             Text(
@@ -393,14 +407,15 @@ fun LocationScreen(
                         // Stop button
                         Button(
                             onClick = { viewModel.stopSpoofing() },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth().height(40.dp),
+                            shape = RoundedCornerShape(20.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = com.gpsanywhere.app.ui.theme.StopRed,
+                                containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
                                 contentColor = Color.White
-                            )
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                         ) {
-                            Text("Stop Walk Around")
+                            Text("Stop")
                         }
                     }
                 }
@@ -410,7 +425,7 @@ fun LocationScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+//                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
             item {
                 if (mapCenter != null) {
@@ -428,7 +443,7 @@ fun LocationScreen(
 
                         Surface(
                             shape = CircleShape,
-                            color = com.gpsanywhere.app.ui.theme.DustyRose,
+                            color = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .padding(8.dp)
@@ -449,7 +464,7 @@ fun LocationScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = com.gpsanywhere.app.ui.theme.DustyRose
+                            color = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f)
                         ) {
                             IconButton(onClick = { showAddSheet = true }) {
                                 Icon(
@@ -464,25 +479,10 @@ fun LocationScreen(
             }
 
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Move target", style = MaterialTheme.typography.titleSmall)
-                        Spacer(Modifier.height(8.dp))
-                        DirectionPad(
-                            enabled = currentLat != null && currentLng != null,
-                            onMove = { dLat, dLng -> viewModel.nudgeSpiral(dLat, dLng) }
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        ResetIntervalInput()
-                    }
-                }
+                GlassDirectionPadCard(
+                    enabled = currentLat != null && currentLng != null,
+                    onMove = { dLat, dLng -> viewModel.nudgeSpiral(dLat, dLng) }
+                )
             }
 
             item {
@@ -523,16 +523,16 @@ fun LocationScreen(
                 SectionHeader(title = "Saved Locations")
             }
 
-            if (allTags.isNotEmpty()) {
-                item(key = "tag_filter") {
-                    TagFilterRow(
-                        allTags = allTags,
-                        selectedTags = if (selectedTag != null) setOf(selectedTag!!) else emptySet(),
-                        onTagToggle = { tag ->
-                            selectedTag = if (selectedTag == tag) null else tag
-                        }
-                    )
-                }
+            item(key = "tag_filter") {
+                TagFilterRow(
+                    allTags = allTags,
+                    selectedTags = if (selectedTag != null) setOf(selectedTag!!) else emptySet(),
+                    onTagToggle = { tag ->
+                        selectedTag = if (selectedTag == tag) null else tag
+                    },
+                    customOnly = customOnly,
+                    onCustomToggle = { customOnly = !customOnly }
+                )
             }
 
             filteredPacks.filter { it.locations.isNotEmpty() }.forEach { pack ->
@@ -670,22 +670,42 @@ fun LocationScreen(
 private fun TagFilterRow(
     allTags: List<String>,
     selectedTags: Set<String>,
-    onTagToggle: (String) -> Unit
+    onTagToggle: (String) -> Unit,
+    customOnly: Boolean = false,
+    onCustomToggle: () -> Unit = {}
 ) {
+    val chipColors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+        selectedContainerColor = Color.White.copy(alpha = 0.45f),
+        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+        FilterChip(
+            selected = customOnly,
+            onClick = onCustomToggle,
+            label = { Text("Custom") },
+            leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp)) },
+            colors = chipColors,
+            border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = customOnly,
+                borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                selectedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+        )
         allTags.forEach { tag ->
             val isSelected = tag in selectedTags
-            val green = com.gpsanywhere.app.ui.theme.CandyGreen
             FilterChip(
                 selected = isSelected,
                 onClick = { onTagToggle(tag) },
                 label = { Text(tag) },
                 colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = green.copy(alpha = 0.2f),
-                    selectedLabelColor = green,
+                    selectedContainerColor = Color.White.copy(alpha = 0.45f),
+                    selectedLabelColor = MaterialTheme.colorScheme.onSurface,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
@@ -693,7 +713,7 @@ private fun TagFilterRow(
                     enabled = true,
                     selected = isSelected,
                     borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-                    selectedBorderColor = green
+                    selectedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
             )
         }
@@ -705,7 +725,7 @@ private fun SectionHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary
+        color = MaterialTheme.colorScheme.onSurface
     )
 }
 
@@ -727,19 +747,33 @@ private fun LocationCard(
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)?
 ) {
-    val border = when {
-        isSelected || isActive -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+    val selected = isSelected || isActive
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val nameColor = when {
+        selected -> com.gpsanywhere.app.ui.theme.CardNameTextSelected
+        isDark -> com.gpsanywhere.app.ui.theme.CardNameTextDark
+        else -> com.gpsanywhere.app.ui.theme.CardNameText
     }
-
+    val coordColor = when {
+        selected -> com.gpsanywhere.app.ui.theme.CardCoordTextSelected
+        isDark -> com.gpsanywhere.app.ui.theme.CardCoordTextDark
+        else -> com.gpsanywhere.app.ui.theme.CardCoordText
+    }
+    val border = if (selected)
+        BorderStroke(2.5.dp, com.gpsanywhere.app.ui.theme.CardBorderSelected)
+    else
+        BorderStroke(1.5.dp, com.gpsanywhere.app.ui.theme.CardBorder)
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) com.gpsanywhere.app.ui.theme.CardFillSelected
+                             else com.gpsanywhere.app.ui.theme.CardFill
+        ),
         border = border,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 4.dp else 0.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
             Row(
@@ -749,11 +783,8 @@ private fun LocationCard(
                 Icon(
                     Icons.Default.LocationOn,
                     contentDescription = null,
-                    tint = if (isSelected || isActive) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        com.gpsanywhere.app.ui.theme.DustyRose
-                    },
+                    tint = if (selected) com.gpsanywhere.app.ui.theme.IconActive
+                           else com.gpsanywhere.app.ui.theme.CardCoordText,
                     modifier = Modifier.size(26.dp)
                 )
                 val nameAnnotated = buildAnnotatedString {
@@ -764,7 +795,7 @@ private fun LocationCard(
                     if (nameEng.isNotBlank()) {
                         withStyle(SpanStyle(
                             fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                            color = coordColor
                         )) { append("  $nameEng") }
                     }
                 }
@@ -772,6 +803,7 @@ private fun LocationCard(
                     Text(
                         nameAnnotated,
                         style = MaterialTheme.typography.titleSmall,
+                        color = nameColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -779,7 +811,7 @@ private fun LocationCard(
                         Text(
                             it,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                            color = coordColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -787,7 +819,7 @@ private fun LocationCard(
                     Text(
                         "${"%.6f".format(latitude)}, ${"%.6f".format(longitude)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = com.gpsanywhere.app.ui.theme.CandyYellow
+                        color = coordColor
                     )
                 }
                 if (tags.isNotEmpty()) {
@@ -848,27 +880,12 @@ private fun LocationCard(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilledIconButton(
-                        onClick = onJump,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.CandyPink.copy(alpha = 0.6f),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(20.dp))
-                    }
-                    Spacer(Modifier.width(4.dp))
-                    FilledIconButton(
-                        onClick = onSpiral,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.6f),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(20.dp))
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    FlySpeedButtons(onFly = onFly)
+                    TransportButtons(
+                        enabled = true,
+                        onJump = onJump,
+                        onSpiral = onSpiral,
+                        onFly = onFly
+                    )
                 }
             }
         }
@@ -876,31 +893,42 @@ private fun LocationCard(
 }
 
 /**
- * Three Fly buttons that move the GPS toward the target at a preset cruising speed:
- * bird (80 km/h), car (200 km/h) and airplane (500 km/h). Speed can still be adjusted
- * afterwards via the speed control panel.
+ * The five transport action buttons — Jump, Walk Around, Heli, Flight, Rocket —
+ * rendered with a single shared style so all stay in sync. Emits the buttons into
+ * the caller's Row.
  */
 @Composable
-private fun FlySpeedButtons(
+private fun TransportButtons(
+    enabled: Boolean,
+    onJump: () -> Unit,
+    onSpiral: () -> Unit,
     onFly: (Float) -> Unit,
-    enabled: Boolean = true
+    iconSize: androidx.compose.ui.unit.Dp = 20.dp
 ) {
-    val flyColors = IconButtonDefaults.filledIconButtonColors(
-        containerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.8f),
+    val colors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
         contentColor = Color.White,
-        disabledContainerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.3f),
-        disabledContentColor = Color.White.copy(alpha = 0.4f)
+        disabledContainerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.35f),
+        disabledContentColor = Color.White.copy(alpha = 0.5f)
     )
-    FilledIconButton(onClick = { onFly(FLY_HELI_KMH) }, enabled = enabled, colors = flyColors) {
-        Icon(painterResource(R.drawable.ic_helicopter), contentDescription = "80 km/h", modifier = Modifier.size(20.dp))
+    FilledIconButton(onClick = onJump, enabled = enabled, colors = colors) {
+        Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(iconSize))
     }
     Spacer(Modifier.width(4.dp))
-    FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled, colors = flyColors) {
-        Icon(Icons.Default.Flight, contentDescription = "500 km/h", modifier = Modifier.size(20.dp))
+    FilledIconButton(onClick = onSpiral, enabled = enabled, colors = colors) {
+        Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(iconSize))
     }
     Spacer(Modifier.width(4.dp))
-    FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled, colors = flyColors) {
-        Icon(Icons.Default.RocketLaunch, contentDescription = "2000 km/h", modifier = Modifier.size(20.dp))
+    FilledIconButton(onClick = { onFly(FLY_HELI_KMH) }, enabled = enabled, colors = colors) {
+        Icon(painterResource(R.drawable.ic_helicopter), contentDescription = "80 km/h", modifier = Modifier.size(iconSize))
+    }
+    Spacer(Modifier.width(4.dp))
+    FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled, colors = colors) {
+        Icon(Icons.Default.Flight, contentDescription = "500 km/h", modifier = Modifier.size(iconSize))
+    }
+    Spacer(Modifier.width(4.dp))
+    FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled, colors = colors) {
+        Icon(Icons.Default.RocketLaunch, contentDescription = "2000 km/h", modifier = Modifier.size(iconSize))
     }
 }
 
@@ -1079,26 +1107,7 @@ private fun CustomJumpPanel(
     val hasInput = coordinateText.isNotBlank()
     val isValid = parsed != null
     val canJump = hasInput && isValid
-    val jumpButtonColors = IconButtonDefaults.filledIconButtonColors(
-        containerColor = com.gpsanywhere.app.ui.theme.CandyPink.copy(alpha = 0.6f),
-        contentColor = Color.White,
-        disabledContainerColor = com.gpsanywhere.app.ui.theme.CandyPink.copy(alpha = 0.3f),
-        disabledContentColor = Color.White.copy(alpha = 0.4f)
-    )
-    val walkButtonColors = IconButtonDefaults.filledIconButtonColors(
-        containerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.6f),
-        contentColor = Color.White,
-        disabledContainerColor = com.gpsanywhere.app.ui.theme.CandyBlue.copy(alpha = 0.3f),
-        disabledContentColor = Color.White.copy(alpha = 0.4f)
-    )
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -1117,11 +1126,11 @@ private fun CustomJumpPanel(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.45f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.45f),
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
-                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     modifier = Modifier.weight(1f)
@@ -1147,15 +1156,13 @@ private fun CustomJumpPanel(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FilledIconButton(onClick = onJump, enabled = canJump, colors = jumpButtonColors) {
-                    Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(18.dp))
-                }
-                Spacer(Modifier.width(4.dp))
-                FilledIconButton(onClick = onSpiral, enabled = canJump, colors = walkButtonColors) {
-                    Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(18.dp))
-                }
-                Spacer(Modifier.width(12.dp))
-                FlySpeedButtons(onFly = onFly, enabled = canJump)
+                TransportButtons(
+                    enabled = canJump,
+                    onJump = onJump,
+                    onSpiral = onSpiral,
+                    onFly = onFly,
+                    iconSize = 18.dp
+                )
             }
 
             if (hasInput && !isValid) {
@@ -1170,62 +1177,132 @@ private fun CustomJumpPanel(
 }
 
 @Composable
-private fun DirectionPad(
+private fun GlassDirectionPadCard(
     enabled: Boolean,
     onMove: (dLat: Double, dLng: Double) -> Unit
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        DirectionButton(Icons.Default.KeyboardArrowUp, "North", enabled) { onMove(LocationViewModel.MOVE_STEP_DEG, 0.0) }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            DirectionButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "West", enabled) { onMove(0.0, -LocationViewModel.MOVE_STEP_DEG) }
-            Spacer(Modifier.size(64.dp))
-            DirectionButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, "East", enabled) { onMove(0.0, LocationViewModel.MOVE_STEP_DEG) }
+    GlassCard(modifier = Modifier.fillMaxWidth(), filled = false) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Sectored circular glass direction pad
+            SectoredDpad(enabled = enabled, onMove = onMove)
         }
-        DirectionButton(Icons.Default.KeyboardArrowDown, "South", enabled) { onMove(-LocationViewModel.MOVE_STEP_DEG, 0.0) }
     }
 }
 
+/**
+ * A circular D-pad split into four wedges (up / down / left / right) by diagonal
+ * dividers, with chevron arrows in each wedge and a solid centre button. Tapping a
+ * wedge nudges the target in that direction; press-and-hold repeats. The centre
+ * recentres the spiral on the current position.
+ */
 @Composable
-private fun DirectionButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    contentDescription: String,
+private fun SectoredDpad(
     enabled: Boolean,
-    onClick: () -> Unit
+    onMove: (dLat: Double, dLng: Double) -> Unit
 ) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val discColor = if (isDark) Color(0xFF1E2937).copy(alpha = 0.42f) else Color.White.copy(alpha = 0.40f)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.5f)
+    val arrowColor = if (enabled) {
+        if (isDark) Color.White else Color(0xFF334155)
+    } else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
     val scope = rememberCoroutineScope()
-    val bgColor = if (enabled)
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-    else
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-    val iconColor = if (enabled) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = bgColor,
-        modifier = Modifier
-            .size(64.dp)
-            .pointerInput(enabled) {
-                if (!enabled) return@pointerInput
-                awaitEachGesture {
-                    awaitFirstDown()
-                    onClick()
-                    val repeatJob = scope.launch {
-                        delay(300)
-                        while (true) {
-                            onClick()
-                            delay(120)
-                        }
-                    }
-                    waitForUpOrCancellation()
-                    repeatJob.cancel()
-                }
-            }
+
+    val size = 196.dp
+    val centerButton = 73.dp
+    val arrowOffset = 64.dp   // distance of each chevron from the centre
+
+    Box(
+        modifier = Modifier.size(size),
+        contentAlignment = Alignment.Center
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            Icon(icon, contentDescription = contentDescription, tint = iconColor, modifier = Modifier.size(32.dp))
+        // Disc + diagonal dividers, with wedge tap handling (hold to repeat)
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(enabled) {
+                    if (!enabled) return@pointerInput
+                    awaitEachGesture {
+                        val down = awaitFirstDown()
+                        val c = Offset(this.size.width / 2f, this.size.height / 2f)
+                        val centerRadiusPx = centerButton.toPx() / 2f
+                        val dx = down.position.x - c.x
+                        val dy = down.position.y - c.y
+                        // Ignore taps inside the centre button area
+                        if (dx * dx + dy * dy < centerRadiusPx * centerRadiusPx) return@awaitEachGesture
+                        val move: () -> Unit = if (kotlin.math.abs(dx) > kotlin.math.abs(dy)) {
+                            if (dx < 0) { { onMove(0.0, -LocationViewModel.MOVE_STEP_DEG) } }
+                            else { { onMove(0.0, LocationViewModel.MOVE_STEP_DEG) } }
+                        } else {
+                            if (dy < 0) { { onMove(LocationViewModel.MOVE_STEP_DEG, 0.0) } }
+                            else { { onMove(-LocationViewModel.MOVE_STEP_DEG, 0.0) } }
+                        }
+                        move()
+                        val repeatJob = scope.launch {
+                            delay(300)
+                            while (true) {
+                                move()
+                                delay(120)
+                            }
+                        }
+                        waitForUpOrCancellation()
+                        repeatJob.cancel()
+                    }
+                }
+        ) {
+            val c = Offset(this.size.width / 2f, this.size.height / 2f)
+            val outerR = this.size.minDimension / 2f
+            // disc fill + border
+            drawCircle(color = discColor, radius = outerR, center = c)
+            drawCircle(
+                color = borderColor,
+                radius = outerR - 0.5.dp.toPx(),
+                center = c,
+                style = Stroke(width = 1.dp.toPx())
+            )
+            // four diagonal dividers (the X that splits the wedges)
+            val innerR = centerButton.toPx() / 2f + 6.dp.toPx()
+            listOf(45.0, 135.0, 225.0, 315.0).forEach { deg ->
+                val a = Math.toRadians(deg)
+                val start = Offset(c.x + (kotlin.math.cos(a) * innerR).toFloat(), c.y + (kotlin.math.sin(a) * innerR).toFloat())
+                val end = Offset(c.x + (kotlin.math.cos(a) * outerR).toFloat(), c.y + (kotlin.math.sin(a) * outerR).toFloat())
+                drawLine(borderColor, start, end, strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+            }
         }
+
+        // Chevron arrows (visual only — taps handled by the Canvas below)
+        Icon(
+            Icons.Default.KeyboardArrowUp, "North",
+            tint = arrowColor,
+            modifier = Modifier.size(24.dp).align(Alignment.Center).offset(y = -arrowOffset)
+        )
+        Icon(
+            Icons.Default.KeyboardArrowDown, "South",
+            tint = arrowColor,
+            modifier = Modifier.size(24.dp).align(Alignment.Center).offset(y = arrowOffset)
+        )
+        Icon(
+            Icons.AutoMirrored.Filled.KeyboardArrowLeft, "West",
+            tint = arrowColor,
+            modifier = Modifier.size(24.dp).align(Alignment.Center).offset(x = -arrowOffset)
+        )
+        Icon(
+            Icons.AutoMirrored.Filled.KeyboardArrowRight, "East",
+            tint = arrowColor,
+            modifier = Modifier.size(24.dp).align(Alignment.Center).offset(x = arrowOffset)
+        )
+
+        // Centre tap target (recenter spiral) — invisible, no fill or label
+        Surface(
+            shape = CircleShape,
+            color = Color.Transparent,
+            onClick = { onMove(0.0, 0.0) },
+            enabled = enabled,
+            modifier = Modifier.size(centerButton)
+        ) {}
     }
 }
 
@@ -1256,11 +1333,12 @@ private fun ResetCountdown() {
 private fun ResetIntervalInput() {
     val defaultMin = LocationViewModel.SPIRAL_RESET_INTERVAL_MS / 60_000L
     var text by remember { mutableStateOf(defaultMin.toString()) }
+    val labelColor = MaterialTheme.colorScheme.onSurface
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Reset every", style = MaterialTheme.typography.bodyMedium)
+        Text("Reset every", style = MaterialTheme.typography.bodyMedium, color = labelColor)
         OutlinedTextField(
             value = text,
             onValueChange = { input ->
@@ -1274,6 +1352,6 @@ private fun ResetIntervalInput() {
             textStyle = MaterialTheme.typography.bodyMedium,
             singleLine = true
         )
-        Text("min", style = MaterialTheme.typography.bodyMedium)
+        Text("min", style = MaterialTheme.typography.bodyMedium, color = labelColor)
     }
 }
