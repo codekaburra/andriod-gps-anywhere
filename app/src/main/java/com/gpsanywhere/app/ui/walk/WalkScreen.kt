@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Button
@@ -73,6 +74,7 @@ fun WalkScreen(
 ) {
     val routes by viewModel.routes.observeAsState(emptyList())
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
+    val isPaused by viewModel.isPaused.observeAsState(false)
     val speed by viewModel.speedKmh.collectAsState()
     val minSpeed by viewModel.minSpeedKmh.collectAsState()
     val maxSpeed by viewModel.maxSpeedKmh.collectAsState()
@@ -273,10 +275,43 @@ fun WalkScreen(
                         Text("Start", style = MaterialTheme.typography.titleMedium)
                     }
                 } else {
-                    // Walking: only Stop (pause removed)
+                    // Walking: Back, Revert, Pause/Resume (yellow), Stop
+                    FilledIconButton(
+                        onClick = { viewModel.stop(); selectedRoute = null },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
+                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
+                        )
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                    FilledIconButton(
+                        onClick = { viewModel.revertWalk(route) },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
+                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
+                        )
+                    ) {
+                        Icon(Icons.Default.SwapVert, contentDescription = "Revert")
+                    }
+                    Button(
+                        onClick = { if (isPaused) viewModel.resume() else viewModel.pause() },
+                        modifier = Modifier.height(56.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.9f),
+                            contentColor = androidx.compose.ui.graphics.Color.White
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                    ) {
+                        Icon(
+                            if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                            contentDescription = if (isPaused) "Resume" else "Pause"
+                        )
+                    }
                     Button(
                         onClick = { viewModel.stop() },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        modifier = Modifier.weight(1f).height(56.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
