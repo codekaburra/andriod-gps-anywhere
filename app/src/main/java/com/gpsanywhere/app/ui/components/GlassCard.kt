@@ -40,7 +40,7 @@ fun GlassCard(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
         border = BorderStroke(1.dp, borderColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (filled) 12.dp else 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         content()
     }
