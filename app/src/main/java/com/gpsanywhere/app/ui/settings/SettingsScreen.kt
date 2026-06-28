@@ -169,7 +169,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 HorizontalDivider()
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "© 2025 codekaburra. All rights reserved.",
+                    "© 2026 eye7290. All rights reserved.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     textAlign = TextAlign.Center

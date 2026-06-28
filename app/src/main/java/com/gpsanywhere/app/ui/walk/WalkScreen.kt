@@ -275,7 +275,25 @@ fun WalkScreen(
                         Text("Start", style = MaterialTheme.typography.titleMedium)
                     }
                 } else {
-                    // Walking: Pause/Resume (yellow) + Stop
+                    // Walking: Back, Revert, Pause/Resume (yellow), Stop
+                    FilledIconButton(
+                        onClick = { viewModel.stop(); selectedRoute = null },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
+                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
+                        )
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                    FilledIconButton(
+                        onClick = { viewModel.revertWalk(route) },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
+                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
+                        )
+                    ) {
+                        Icon(Icons.Default.SwapVert, contentDescription = "Revert")
+                    }
                     Button(
                         onClick = { if (isPaused) viewModel.resume() else viewModel.pause() },
                         modifier = Modifier.height(56.dp),
@@ -290,8 +308,6 @@ fun WalkScreen(
                             if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
                             contentDescription = if (isPaused) "Resume" else "Pause"
                         )
-                        Spacer(Modifier.width(6.dp))
-                        Text(if (isPaused) "Resume" else "Pause")
                     }
                     Button(
                         onClick = { viewModel.stop() },

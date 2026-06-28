@@ -147,6 +147,32 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
     fun pause() = SpoofService.pause(getApplication())
     fun resume() = SpoofService.resume(getApplication())
 
+    /** Reverse the walking direction, continuing from the current position. */
+    fun revertWalk(route: SavedRoute) {
+        val points = WaypointJson.fromJson(route.waypointsJson)
+        if (points.size < 2) return
+        val reversed = points.reversed()
+        val curLat = SpoofService.currentLat.value ?: reversed.first().latitude
+        val curLng = SpoofService.currentLng.value ?: reversed.first().longitude
+        val startIdx = reversed.indices.minByOrNull { i ->
+            val r = FloatArray(1)
+            android.location.Location.distanceBetween(curLat, curLng, reversed[i].latitude, reversed[i].longitude, r)
+            r[0]
+        } ?: 0
+        val rotated = reversed.subList(startIdx, reversed.size) + reversed.subList(0, startIdx)
+        SpoofService.startWalk(
+            getApplication(),
+            rotated.map { it.latitude }.toDoubleArray(),
+            rotated.map { it.longitude }.toDoubleArray(),
+            speedKmh = _speedKmh.value,
+            minSpeedKmh = _minSpeedKmh.value,
+            maxSpeedKmh = _maxSpeedKmh.value,
+            varyKmh = _varyKmh.value,
+            loop = true
+        )
+        _activeRoute.value = route
+    }
+
     /** Jump to the chosen waypoint and keep walking from there at the current speed. */
     fun jumpToWaypoint(index: Int, route: SavedRoute) {
         val points = WaypointJson.fromJson(route.waypointsJson)
