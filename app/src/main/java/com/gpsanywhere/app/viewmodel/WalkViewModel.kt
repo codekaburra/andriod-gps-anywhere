@@ -144,9 +144,27 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
         _activeRoute.value = null
     }
 
+    fun pause() = SpoofService.pause(getApplication())
+    fun resume() = SpoofService.resume(getApplication())
+
+    /** Jump to the chosen waypoint and keep walking from there at the current speed. */
     fun jumpToWaypoint(index: Int, route: SavedRoute) {
         val points = WaypointJson.fromJson(route.waypointsJson)
-        if (index in points.indices) {
+        if (index !in points.indices) return
+        if (points.size >= 2) {
+            val rotated = points.subList(index, points.size) + points.subList(0, index)
+            val lats = rotated.map { it.latitude }.toDoubleArray()
+            val lngs = rotated.map { it.longitude }.toDoubleArray()
+            SpoofService.startWalk(
+                getApplication(), lats, lngs,
+                speedKmh = _speedKmh.value,
+                minSpeedKmh = _minSpeedKmh.value,
+                maxSpeedKmh = _maxSpeedKmh.value,
+                varyKmh = _varyKmh.value,
+                loop = true
+            )
+            _activeRoute.value = route
+        } else {
             val p = points[index]
             SpoofService.jumpTo(getApplication(), p.latitude, p.longitude)
         }
