@@ -65,6 +65,40 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Create or update a user route. Editing a preinstalled route saves a new
+     * custom copy instead of mutating the bundled one.
+     */
+    fun saveCustomRoute(name: String, points: List<LocationPoint>, existing: SavedRoute? = null) {
+        if (name.isBlank() || points.size < 2) return
+        viewModelScope.launch {
+            val json = WaypointJson.toJson(points)
+            val dist = estimateDistance(points)
+            if (existing != null && !existing.isPreinstalled) {
+                routeDao.update(
+                    existing.copy(
+                        name = name.trim(),
+                        waypointsJson = json,
+                        routeMethod = "MANUAL_MAP",
+                        distanceMeters = dist,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                )
+            } else {
+                routeDao.insert(
+                    SavedRoute(
+                        name = name.trim(),
+                        waypointsJson = json,
+                        routeMethod = "MANUAL_MAP",
+                        distanceMeters = dist
+                    )
+                )
+            }
+        }
+    }
+
+    fun waypointsOf(route: SavedRoute): List<LocationPoint> = WaypointJson.fromJson(route.waypointsJson)
+
     fun startDefaultRoute(asset: DefaultRouteAsset) {
         val points = asset.toLocationPoints()
         if (points.size >= 2) {

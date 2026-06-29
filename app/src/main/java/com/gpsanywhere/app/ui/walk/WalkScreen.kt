@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
@@ -87,6 +88,26 @@ fun WalkScreen(
 
     // Route selected by the user — persists after stop so user stays in walk view
     var selectedRoute by remember { mutableStateOf<SavedRoute?>(null) }
+
+    // Route editor state: when active, the editor screen replaces the list/walk view.
+    var editorOpen by remember { mutableStateOf(false) }
+    var editorTarget by remember { mutableStateOf<SavedRoute?>(null) }
+
+    if (editorOpen) {
+        RouteEditorScreen(
+            initial = editorTarget,
+            initialPoints = editorTarget?.let { viewModel.waypointsOf(it) } ?: emptyList(),
+            mapCenter = mapCenterLat?.let { lat -> mapCenterLng?.let { lng -> GeoPoint(lat, lng) } },
+            onCancel = { editorOpen = false; editorTarget = null },
+            onSave = { name, points ->
+                viewModel.saveCustomRoute(name, points, editorTarget)
+                editorOpen = false
+                editorTarget = null
+            },
+            modifier = modifier
+        )
+        return
+    }
 
     LaunchedEffect(selectedRoute) {
         if (selectedRoute != null) viewModel.setSpeed(16f)
@@ -394,6 +415,16 @@ fun WalkScreen(
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    FilledIconButton(
+                        onClick = { editorTarget = null; editorOpen = true },
+                        modifier = Modifier.size(36.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = com.gpsanywhere.app.ui.theme.GlassGreen,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add route", modifier = Modifier.size(20.dp))
+                    }
                 }
             }
 
@@ -427,7 +458,8 @@ fun WalkScreen(
                         route = route,
                         distanceLabel = viewModel.distanceKm(route),
                         waypointCount = viewModel.waypointCount(route),
-                        onClick = { selectedRoute = route }
+                        onClick = { selectedRoute = route },
+                        onEdit = { editorTarget = route; editorOpen = true }
                     )
                 }
             }
@@ -521,7 +553,13 @@ private fun SpeedControlPanel(
 // ── Idle: compact route row ──────────────────────────────────────────────────
 
 @Composable
-private fun RouteRow(route: SavedRoute, distanceLabel: String, waypointCount: Int, onClick: () -> Unit) {
+private fun RouteRow(
+    route: SavedRoute,
+    distanceLabel: String,
+    waypointCount: Int,
+    onClick: () -> Unit,
+    onEdit: () -> Unit
+) {
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val nameColor = if (isDark) com.gpsanywhere.app.ui.theme.CardNameTextDark else com.gpsanywhere.app.ui.theme.CardNameText
     val subColor = if (isDark) com.gpsanywhere.app.ui.theme.CardCoordTextDark else com.gpsanywhere.app.ui.theme.CardCoordText
@@ -533,13 +571,16 @@ private fun RouteRow(route: SavedRoute, distanceLabel: String, waypointCount: In
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(route.name, style = MaterialTheme.typography.titleSmall, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text("$distanceLabel · $waypointCount stops", style = MaterialTheme.typography.bodySmall,
                     color = subColor)
+            }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = "Edit route", tint = subColor, modifier = Modifier.size(20.dp))
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null,
                 tint = subColor)
