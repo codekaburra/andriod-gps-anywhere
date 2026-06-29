@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable
 import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -114,6 +115,9 @@ fun MapViewComposable(
         onDispose { }
     }
 
+    // Track the last centre we programmatically applied, so user panning isn't
+    // snapped back on every recomposition — only recenter when it truly changes.
+    val lastCenter = remember { mutableStateOf<GeoPoint?>(null) }
     AndroidView(
         factory = {
             onMapReady?.invoke(mapView)
@@ -121,7 +125,13 @@ fun MapViewComposable(
         },
         modifier = modifier,
         update = { view ->
-            center?.let { view.controller.setCenter(it) }
+            val c = center
+            val prev = lastCenter.value
+            if (c != null && (prev == null ||
+                    prev.latitude != c.latitude || prev.longitude != c.longitude)) {
+                view.controller.setCenter(c)
+                lastCenter.value = c
+            }
         }
     )
 }

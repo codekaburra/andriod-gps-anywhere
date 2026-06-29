@@ -988,13 +988,22 @@ private fun AddLocationSheet(
                 .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
+            Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
+
+            val fieldColors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                cursorColor = MaterialTheme.colorScheme.onSurface
+            )
 
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it; error = null },
                 label = { Text("Name") },
                 singleLine = true,
+                colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -1009,6 +1018,7 @@ private fun AddLocationSheet(
                     placeholder = { Text("Latitude") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
+                    colors = fieldColors,
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
@@ -1018,6 +1028,7 @@ private fun AddLocationSheet(
                     placeholder = { Text("Longitude") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
+                    colors = fieldColors,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1034,7 +1045,11 @@ private fun AddLocationSheet(
                         error = null
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = com.gpsanywhere.app.ui.theme.CandyYellow
+                ),
+                border = BorderStroke(1.dp, com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.6f))
             ) {
                 Icon(Icons.Default.ContentPaste, contentDescription = null)
                 Text("Paste Coordinates", modifier = Modifier.padding(start = 8.dp))
@@ -1075,18 +1090,29 @@ private fun AddLocationSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) { Text("Cancel") }
-                Button(onClick = {
-                    val n = name.trim()
-                    val lat = latText.trim().toDoubleOrNull()
-                    val lng = lngText.trim().toDoubleOrNull()
-                    when {
-                        n.isEmpty() -> error = "Name is required"
-                        lng == null || lng !in -180.0..180.0 -> error = "Longitude must be between -180 and 180"
-                        lat == null || lat !in -90.0..90.0 -> error = "Latitude must be between -90 and 90"
-                        else -> onSave(n, lat, lng)
-                    }
-                }) { Text("Save") }
+                TextButton(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) { Text("Cancel") }
+                Button(
+                    onClick = {
+                        val n = name.trim()
+                        val lat = latText.trim().toDoubleOrNull()
+                        val lng = lngText.trim().toDoubleOrNull()
+                        when {
+                            n.isEmpty() -> error = "Name is required"
+                            lng == null || lng !in -180.0..180.0 -> error = "Longitude must be between -180 and 180"
+                            lat == null || lat !in -90.0..90.0 -> error = "Latitude must be between -90 and 90"
+                            else -> onSave(n, lat, lng)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = com.gpsanywhere.app.ui.theme.GlassGreen,
+                        contentColor = Color.White
+                    )
+                ) { Text("Save") }
             }
 
             Spacer(Modifier.height(16.dp))
