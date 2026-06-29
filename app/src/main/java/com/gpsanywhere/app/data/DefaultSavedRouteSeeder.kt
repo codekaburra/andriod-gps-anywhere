@@ -108,6 +108,35 @@ object DefaultSavedRouteSeeder {
             } ?: emptyList()
     }
 
+    /** Import every bundled route into the DB on demand (no auto-seed gate). */
+    suspend fun importAll(context: Context, routeDao: RouteDao) = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val appContext = context.applicationContext
+            loadAllAssets(appContext).forEach { route ->
+                val points = route.toLocationPoints()
+                if (points.isEmpty()) return@forEach
+                val alreadyExists = if (route.routeId != null) {
+                    routeDao.countByRouteId(route.routeId) > 0 || routeDao.countByName(route.routeName) > 0
+                } else {
+                    routeDao.countByName(route.routeName) > 0
+                }
+                if (!alreadyExists) {
+                    routeDao.insert(
+                        SavedRoute(
+                            name = route.routeName,
+                            waypointsJson = WaypointJson.toJson(points),
+                            routeMethod = DEFAULT_ROUTE_METHOD,
+                            distanceMeters = estimateDistance(points),
+                            routeId = route.routeId
+                        )
+                    )
+                }
+            }
+            appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putBoolean(KEY_SEEDED, true).apply()
+        }
+    }
+
     suspend fun seedIfNeeded(context: Context, routeDao: RouteDao) = withContext(Dispatchers.IO) {
         mutex.withLock {
             val appContext = context.applicationContext

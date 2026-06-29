@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import android.widget.Toast
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -20,10 +21,13 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +45,10 @@ fun SettingsScreen(viewModel: MainViewModel) {
     val packageInfo = remember {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
+    val isImporting by viewModel.isImporting.observeAsState(false)
+    var showImportConfirm by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showDeleteCustomConfirm by remember { mutableStateOf(false) }
     val versionName = packageInfo.versionName ?: "unknown"
     val lastUpdated = remember {
         val timestamp = packageInfo.lastUpdateTime
@@ -93,6 +101,60 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             }
                         )
                     }
+                }
+            }
+        }
+
+        // Prebuilt data import section
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "Prebuilt Data",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Import all bundled sample locations and routes. Existing items are kept; you can delete any of them afterwards.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = { showImportConfirm = true },
+                    enabled = !isImporting,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFA1B5AB),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(if (isImporting) "Working…" else "Import Prebuilt Locations & Routes")
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { showDeleteConfirm = true },
+                    enabled = !isImporting,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Delete All Prebuilt Data")
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { showDeleteCustomConfirm = true },
+                    enabled = !isImporting,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Delete All Custom Data")
                 }
             }
         }
@@ -189,5 +251,43 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 )
             }
         }
+    }
+
+    if (showImportConfirm) {
+        AlertDialog(
+            onDismissRequest = { showImportConfirm = false },
+            title = { Text("Import prebuilt data?") },
+            text = { Text("This adds all bundled sample locations and routes to your list. Your existing items are kept. Continue?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showImportConfirm = false
+                    viewModel.importPrebuilt {
+                        Toast.makeText(context, "Prebuilt locations & routes imported", Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text("Import") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportConfirm = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete all prebuilt data?") },
+            text = { Text("This removes all bundled sample locations and routes. Your own created items are kept. Continue?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    viewModel.deletePrebuilt {
+                        Toast.makeText(context, "Prebuilt data deleted", Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
+            }
+        )
     }
 }

@@ -51,9 +51,7 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         CurrentLocationProvider.ensureStarted(getApplication())
-        viewModelScope.launch {
-            DefaultSavedRouteSeeder.seedIfNeeded(getApplication(), routeDao)
-        }
+        // Prebuilt routes are no longer auto-imported; the user imports from Settings.
         viewModelScope.launch(Dispatchers.IO) {
             _defaultRoutes.value = DefaultSavedRouteSeeder.loadAllAssets(getApplication())
         }

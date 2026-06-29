@@ -110,6 +110,38 @@ object DefaultLocationSeeder {
             } ?: emptyList()
     }
 
+    /**
+     * Import every bundled location into the DB on demand (no auto-seed gate).
+     * Existing rows are kept; previously deleted prebuilt ones are re-added.
+     */
+    suspend fun importAll(context: Context, dao: SavedLocationDao) =
+        withContext(Dispatchers.IO) {
+            val appContext = context.applicationContext
+            val existing = dao.getAll()
+            fun isDuplicate(loc: DefaultLocationAsset): Boolean =
+                existing.any { e ->
+                    e.sourceId == loc.sourceId ||
+                        (e.name.trim().equals(loc.name.trim(), ignoreCase = true) &&
+                            kotlin.math.abs(e.latitude - loc.latitude) < 1e-5 &&
+                            kotlin.math.abs(e.longitude - loc.longitude) < 1e-5)
+                }
+            loadAllPacks(appContext).flatMap { it.locations }.forEach { loc ->
+                if (!isDuplicate(loc)) {
+                    dao.insert(
+                        SavedLocation(
+                            sourceId = loc.sourceId,
+                            name = loc.name,
+                            latitude = loc.latitude,
+                            longitude = loc.longitude,
+                            tags = loc.tags
+                        )
+                    )
+                }
+            }
+            appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putBoolean(KEY_SEEDED, true).apply()
+        }
+
     suspend fun seedIfNeeded(context: Context, dao: SavedLocationDao) =
         withContext(Dispatchers.IO) {
             val appContext = context.applicationContext

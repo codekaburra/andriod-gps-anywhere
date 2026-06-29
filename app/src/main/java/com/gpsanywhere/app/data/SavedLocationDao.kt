@@ -24,6 +24,9 @@ interface SavedLocationDao {
     @Query("SELECT COUNT(*) FROM saved_locations WHERE sourceId = :sourceId")
     suspend fun countBySourceId(sourceId: String): Int
 
+    @Query("SELECT * FROM saved_locations")
+    suspend fun getAll(): List<SavedLocation>
+
     @Query("DELETE FROM saved_locations WHERE sourceId IS NULL")
     suspend fun deleteAllCustom()
 
