@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.gpsanywhere.app.data.AppDatabase
 import com.gpsanywhere.app.data.DefaultLocationSeeder
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
+import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
@@ -47,10 +48,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 db.savedLocationDao().deleteAllCustom()
 
                 val routeDao = db.routeDao()
-                val prebuiltNames = DefaultSavedRouteSeeder.loadAllAssets(getApplication())
-                    .map { it.routeName.trim() }.toSet()
+                val assets = DefaultSavedRouteSeeder.loadAllAssets(getApplication())
+                val prebuiltNames = assets.flatMap {
+                    listOf(it.routeName.trim(), it.routeId?.trim().orEmpty())
+                }.filter { it.isNotEmpty() }.toSet()
+                fun sig(lat: Double, lng: Double, count: Int) = "%.5f,%.5f|%d".format(lat, lng, count)
+                val prebuiltSigs = assets.mapNotNull { a ->
+                    a.coordinates.firstOrNull()?.let { sig(it.latitude, it.longitude, a.coordinates.size) }
+                }.toSet()
                 routeDao.getAll().forEach { r ->
-                    if (r.routeId == null && r.name.trim() !in prebuiltNames) routeDao.delete(r)
+                    val pts = WaypointJson.fromJson(r.waypointsJson)
+                    val rSig = pts.firstOrNull()?.let { sig(it.latitude, it.longitude, pts.size) }
+                    val isPrebuilt = r.routeId != null || r.name.trim() in prebuiltNames || rSig in prebuiltSigs
+                    if (!isPrebuilt) routeDao.delete(r)
                 }
             }
             _isImporting.value = false
@@ -58,21 +68,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Remove all bundled prebuilt locations and routes (keeps user-created items). */
-    fun deletePrebuilt(onDone: () -> Unit = {}) {
+    /** Remove all bundled prebuilt locations (keeps user-created items and routes). */
+    fun deletePrebuiltLocations(onDone: () -> Unit = {}) {
         if (_isImporting.value == true) return
         _isImporting.value = true
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val db = AppDatabase.getInstance(getApplication())
-                db.savedLocationDao().deleteAllPreinstalled()
-
-                val routeDao = db.routeDao()
-                val prebuiltNames = DefaultSavedRouteSeeder.loadAllAssets(getApplication())
-                    .map { it.routeName.trim() }.toSet()
-                routeDao.getAll().forEach { r ->
-                    if (r.routeId != null || r.name.trim() in prebuiltNames) routeDao.delete(r)
-                }
+                AppDatabase.getInstance(getApplication()).savedLocationDao().deleteAllPreinstalled()
             }
             _isImporting.value = false
             onDone()

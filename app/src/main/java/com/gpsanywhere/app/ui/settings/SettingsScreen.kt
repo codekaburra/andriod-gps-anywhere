@@ -143,7 +143,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Delete All Prebuilt Data")
+                    Text("Delete All Prebuilt Locations")
                 }
                 Spacer(Modifier.height(8.dp))
                 Button(
@@ -275,13 +275,13 @@ fun SettingsScreen(viewModel: MainViewModel) {
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete all prebuilt data?") },
-            text = { Text("This removes all bundled sample locations and routes. Your own created items are kept. Continue?") },
+            title = { Text("Delete all prebuilt locations?") },
+            text = { Text("This removes all bundled sample locations. Your own created locations are kept. Continue?") },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteConfirm = false
-                    viewModel.deletePrebuilt {
-                        Toast.makeText(context, "Prebuilt data deleted", Toast.LENGTH_SHORT).show()
+                    viewModel.deletePrebuiltLocations {
+                        Toast.makeText(context, "Prebuilt locations deleted", Toast.LENGTH_SHORT).show()
                     }
                 }) { Text("Delete") }
             },

@@ -34,6 +34,8 @@ object DefaultSavedRouteSeeder {
     /** Parse a single CSV route file. Returns null if the file is malformed. */
     private fun parseCsv(content: String): DefaultRouteAsset? {
         var routeName: String? = null
+        var routeNameTc: String? = null
+        var routeId: String? = null
         var version = 1
         val coordinates = mutableListOf<DefaultLocationAsset>()
         var headerSkipped = false
@@ -41,11 +43,20 @@ object DefaultSavedRouteSeeder {
         for (rawLine in content.lineSequence()) {
             val line = rawLine.trim()
             when {
+                line.startsWith("# route_name_eng:") ->
+                    routeName = line.removePrefix("# route_name_eng:").trim()
+                line.startsWith("# route_name_tc:") ->
+                    routeNameTc = line.removePrefix("# route_name_tc:").trim()
                 line.startsWith("# route_name:") ->
                     routeName = line.removePrefix("# route_name:").trim()
                 line.startsWith("# version:") ->
                     version = line.removePrefix("# version:").trim().toIntOrNull() ?: 1
-                line.startsWith("#") || line.isEmpty() -> Unit // skip other comments / blank
+                line.startsWith("#") -> {
+                    // First bare "# <id>" comment (no colon) acts as the route id.
+                    val body = line.removePrefix("#").trim()
+                    if (routeId == null && body.isNotEmpty() && !body.contains(':')) routeId = body
+                }
+                line.isEmpty() -> Unit
                 !headerSkipped -> headerSkipped = true // skip "name,latitude,longitude" header
                 else -> {
                     val parts = parseCsvLine(line)
@@ -63,8 +74,14 @@ object DefaultSavedRouteSeeder {
             }
         }
 
-        if (routeName == null || coordinates.isEmpty()) return null
-        return DefaultRouteAsset(routeName = routeName, version = version, coordinates = coordinates)
+        val finalName = routeName ?: routeNameTc
+        if (finalName == null || coordinates.isEmpty()) return null
+        return DefaultRouteAsset(
+            routeId = routeId,
+            routeName = finalName,
+            version = version,
+            coordinates = coordinates
+        )
     }
 
     /**
