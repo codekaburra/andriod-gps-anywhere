@@ -156,17 +156,6 @@ fun WalkScreen(
                         Text("Walk", style = MaterialTheme.typography.headlineMedium)
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                when {
-                                    isWalking -> "Active Route"
-                                    else -> "Ready to Start"
-                                },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (isWalking)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                            )
-                            Text(
                                 route.name,
                                 style = MaterialTheme.typography.titleMedium,
                                 maxLines = 1,
@@ -211,7 +200,7 @@ fun WalkScreen(
                                 style = MaterialTheme.typography.displayLarge.copy(
                                     fontSize = 80.sp,
                                     color = if (isWalking)
-                                        MaterialTheme.colorScheme.primary
+                                        Color(0xFFAB482D)
                                     else
                                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                                 )
@@ -286,7 +275,7 @@ fun WalkScreen(
                         modifier = Modifier.weight(1.5f).height(56.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.CandyGreen,
+                            containerColor = com.gpsanywhere.app.ui.theme.CandyGreen.copy(alpha = 0.9f),
                             contentColor = androidx.compose.ui.graphics.Color.White
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
@@ -419,7 +408,7 @@ fun WalkScreen(
                         onClick = { editorTarget = null; editorOpen = true },
                         modifier = Modifier.size(36.dp),
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.GlassGreen,
+                            containerColor = Color(0xFFA1B5AB),
                             contentColor = Color.White
                         )
                     ) {
