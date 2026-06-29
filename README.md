@@ -19,8 +19,11 @@ Set your Android GPS location anywhere you want:
 
 - Jump directly to a saved or custom location.
 - Simulate walking in a spiral pattern from that point.
+- Fly toward a location at a preset cruising speed, then settle into a walk.
+- Nudge the spoofed position with the on-screen direction pad.
 
-You can add a custom location by clicking the "+" button in the top-right corner.
+Add a custom location with the "+" button (name, coordinates, paste-from-clipboard,
+and tags). Every location — including imported prebuilt ones — can be edited or deleted.
 <p align="center">
   <img src="docs/screenshots/Screenshot_202606071852_location_list.png" width="24%" alt="Location — saved list">
   <img src="docs/screenshots/Screenshot_202606071852_location_add.png" width="24%" alt="Location — add new">
@@ -29,14 +32,51 @@ You can add a custom location by clicking the "+" button in the top-right corner
 </p>
 
 ### Route
-Follow a pre-built route. Custom route editing is not available yet.
+Follow a route along a series of waypoints.
+
+- **Create & edit routes** — tap the **+** on the Route tab to open the route editor:
+  add waypoints by tapping the map or pasting coordinates, reorder or delete them,
+  then save. Edit or delete any route (including prebuilt ones) from the list.
+- **While walking** — Back, Revert (reverse direction from the current point),
+  Pause/Resume, and Stop. Tap a waypoint name to jump there and keep walking.
 <p align="center">
   <img src="docs/screenshots/Screenshot_202606071852_route_list.png" width="30%" alt="Route — list">
   &nbsp;&nbsp;
   <img src="docs/screenshots/Screenshot_202606071852_route_walking.png" width="30%" alt="Route — walking">
 </p>
 
-**Walk Mode** — Base speed slider from 1-20 km/h with tick marks. Speed vary by ±1 km/hr randomly
+**Speed** — non-linear slider: the 0–20 km/h walking range fills most of the track,
+with 100 / 300 km/h presets beyond it.
+
+### Settings
+
+- **Theme** — Light / Dark.
+- **Prebuilt Data** — the app ships with sample locations & routes but does **not**
+  import them automatically. Use **Import Prebuilt Locations & Routes** to add them,
+  or the delete buttons to clear prebuilt locations / all custom data.
+- **Open Developer Options** — shortcut to pick this app as the mock-location app.
+
+---
+
+## 🧭 Getting Started (Using the App)
+
+1. **Install the app** (build it yourself — see Quick Start below — or install a debug APK).
+2. **Enable mock locations** (one-time, required):
+   - **Settings → About Phone → tap Build Number 7×** to unlock Developer Options.
+   - **Settings → Developer Options → Select mock location app → GPS Anywhere.**
+   - Or, in-app, go to **Settings → Open Developer Options** for a shortcut.
+3. **Grant location permission** when the app asks.
+4. **Import sample data (optional)** — fresh installs start empty. Go to
+   **Settings → Prebuilt Data → Import Prebuilt Locations & Routes** to load the
+   bundled places and routes. You can delete them anytime.
+5. **Spoof a location** — on the **Location** tab, tap a place (or add your own with **+**),
+   then choose **Jump**, **Walk Around** (spiral), or **Fly**. Use the direction pad to nudge.
+6. **Walk a route** — on the **Route** tab, pick a route and press **Start**, or tap **+**
+   to create your own by tapping the map / pasting coordinates. While walking you can
+   Pause, Revert direction, or tap a stop to jump ahead.
+7. **Stop** anytime with the Stop button; your GPS stays at the last spoofed point.
+
+> Tip: confirm it works by opening Google Maps — the blue dot should be where you set it.
 
 ---
 
