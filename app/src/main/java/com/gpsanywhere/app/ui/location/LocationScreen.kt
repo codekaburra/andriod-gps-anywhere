@@ -171,16 +171,11 @@ private fun activeLocationKey(
     lng: Double?,
     isSpoofing: Boolean,
     isWalkMode: Boolean,
-    locationPacks: List<DefaultLocationPack>,
-    customLocations: List<SavedLocation>
+    allLocations: List<SavedLocation>
 ): String? {
     if (isWalkMode || !isSpoofing || lat == null || lng == null) return null
 
-    locationPacks.flatMap { it.locations }.firstOrNull { asset ->
-        coordinatesMatch(asset.latitude, asset.longitude, lat, lng)
-    }?.let { return "prebuilt_${it.sourceId}" }
-
-    customLocations.firstOrNull { loc ->
+    allLocations.firstOrNull { loc ->
         coordinatesMatch(loc.latitude, loc.longitude, lat, lng)
     }?.let { return "custom_${it.id}" }
 
@@ -193,13 +188,8 @@ fun LocationScreen(
     viewModel: LocationViewModel,
     modifier: Modifier = Modifier
 ) {
-    val locationPacks by viewModel.locationPacks.collectAsState()
-    val customLocations by viewModel.customLocations.observeAsState(emptyList())
+    val allLocations by viewModel.allLocations.observeAsState(emptyList())
     val routeHints by viewModel.routeHints.collectAsState()
-
-    val prebuiltLocations = remember(locationPacks) {
-        locationPacks.flatMap { pack -> pack.locations.map { pack.packName to it } }
-    }
 
     val isSpoofing by viewModel.isSpoofing.observeAsState(false)
     val isWalkMode by SpoofService.isWalkMode.observeAsState(false)
@@ -217,32 +207,15 @@ fun LocationScreen(
     var selectedTag by remember { mutableStateOf<String?>(null) }
     var customOnly by remember { mutableStateOf(false) }
 
-    val allTags = remember(locationPacks, customLocations) {
-        buildSet {
-            locationPacks.flatMap { it.locations }.forEach { asset ->
-                if (asset.tags.isNotBlank())
-                    asset.tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }.forEach { add(it) }
-            }
-            customLocations.forEach { addAll(it.tagList) }
-        }.sorted()
+    val allTags = remember(allLocations) {
+        buildSet { allLocations.forEach { addAll(it.tagList) } }.sorted()
     }
 
-    val filteredPacks = remember(locationPacks, selectedTag, customOnly) {
-        if (customOnly) emptyList()
-        else if (selectedTag == null) locationPacks
-        else locationPacks.mapNotNull { pack ->
-            val locs = pack.locations.filter { asset ->
-                val t = if (asset.tags.isBlank()) emptyList()
-                    else asset.tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }
-                selectedTag in t
-            }
-            if (locs.isEmpty()) null else pack.copy(locations = locs)
+    val filteredLocations = remember(allLocations, selectedTag, customOnly) {
+        allLocations.filter { loc ->
+            (!customOnly || !loc.isPreinstalled) &&
+                (selectedTag == null || selectedTag in loc.tagList)
         }
-    }
-
-    val filteredCustom = remember(customLocations, selectedTag) {
-        if (selectedTag == null) customLocations
-        else customLocations.filter { loc -> selectedTag in loc.tagList }
     }
 
     // Custom location jump panel
@@ -254,10 +227,9 @@ fun LocationScreen(
         currentLng,
         isSpoofing,
         isWalkMode,
-        locationPacks,
-        customLocations
+        allLocations
     ) {
-        activeLocationKey(currentLat, currentLng, isSpoofing, isWalkMode, locationPacks, customLocations)
+        activeLocationKey(currentLat, currentLng, isSpoofing, isWalkMode, allLocations)
     }
 
     fun onLocationSelected(pending: PendingLocation) {
@@ -535,57 +507,25 @@ fun LocationScreen(
                 )
             }
 
-            filteredPacks.filter { it.locations.isNotEmpty() }.forEach { pack ->
-                item(key = "pack_header_${pack.packName}") {
-                    SectionHeader(title = pack.packName)
-                }
-                items(pack.locations, key = { "prebuilt_${it.sourceId}" }) { asset ->
-                    val pending = PendingLocation.Prebuilt(asset)
-                    LocationCard(
-                        name = asset.name,
-                        nameEng = asset.nameEng,
-                        latitude = asset.latitude,
-                        longitude = asset.longitude,
-                        tags = pending.tags,
-                        routeHint = viewModel.routeHintFor(asset.name, asset.latitude, asset.longitude, routeHints),
-                        isSelected = selectedLocation.matches(pending),
-                        isActive = !selectedLocation.matches(pending) &&
-                            activeLocationKey == pending.selectionKey,
-                        showJumpButton = selectedLocation.matches(pending),
-                        onClick = { onLocationSelected(pending) },
-                        onJump = { onJump(pending) },
-                        onSpiral = { onSpiral(pending) },
-                        onFly = { speed -> onFly(pending, speed) },
-                        onDelete = null
-                    )
-                }
-            }
-
-            if (filteredPacks.isNotEmpty() && filteredCustom.isNotEmpty()) {
-                item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
-            }
-
-            item {
-                SectionHeader(title = "My Locations")
-            }
-
-            if (customLocations.isEmpty()) {
+            if (filteredLocations.isEmpty()) {
                 item {
                     EmptyState(
                         icon = Icons.Default.LocationOn,
-                        title = "No custom locations",
-                        body = "Tap + to add your own location"
+                        title = if (allLocations.isEmpty()) "No locations yet" else "No matching locations",
+                        body = if (allLocations.isEmpty())
+                            "Tap + to add one, or import the prebuilt set from Settings"
+                        else "Try a different filter"
                     )
                 }
             } else {
-                items(filteredCustom, key = { it.id }) { loc ->
+                items(filteredLocations, key = { it.id }) { loc ->
                     val pending = PendingLocation.Custom(loc)
                     LocationCard(
                         name = loc.name,
                         latitude = loc.latitude,
                         longitude = loc.longitude,
                         tags = loc.tagList,
-                        routeHint = null,
+                        routeHint = viewModel.routeHintFor(loc.name, loc.latitude, loc.longitude, routeHints),
                         isSelected = selectedLocation.matches(pending),
                         isActive = !selectedLocation.matches(pending) &&
                             activeLocationKey == pending.selectionKey,
@@ -646,9 +586,10 @@ fun LocationScreen(
             initialName = loc.name,
             initialLat = "%.6f".format(loc.latitude),
             initialLng = "%.6f".format(loc.longitude),
+            initialTags = loc.tagList.joinToString(" | "),
             onDismiss = { editLocation = null },
-            onSave = { name, lat, lng ->
-                viewModel.updateLocation(loc, name, lat, lng)
+            onSave = { name, lat, lng, tags ->
+                viewModel.updateLocation(loc, name, lat, lng, tags)
                 editLocation = null
             }
         )
@@ -657,8 +598,8 @@ fun LocationScreen(
     if (showAddSheet) {
         AddLocationSheet(
             onDismiss = { showAddSheet = false },
-            onSave = { name, lat, lng ->
-                viewModel.addLocation(name, lat, lng)
+            onSave = { name, lat, lng, tags ->
+                viewModel.addLocation(name, lat, lng, tags)
                 showAddSheet = false
             }
         )
@@ -964,11 +905,12 @@ private fun EmptyState(
 @Composable
 private fun AddLocationSheet(
     onDismiss: () -> Unit,
-    onSave: (name: String, lat: Double, lng: Double) -> Unit,
+    onSave: (name: String, lat: Double, lng: Double, tags: String) -> Unit,
     title: String = "Add Location",
     initialName: String = "",
     initialLat: String = "",
-    initialLng: String = ""
+    initialLng: String = "",
+    initialTags: String = ""
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val clipboard = LocalClipboardManager.current
@@ -976,6 +918,7 @@ private fun AddLocationSheet(
     var name by remember { mutableStateOf(initialName) }
     var latText by remember { mutableStateOf(initialLat) }
     var lngText by remember { mutableStateOf(initialLng) }
+    var tagsText by remember { mutableStateOf(initialTags) }
     var error by remember { mutableStateOf<String?>(null) }
 
     val previewLat = latText.toDoubleOrNull()
@@ -1005,6 +948,11 @@ private fun AddLocationSheet(
                 singleLine = true,
                 colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                "Format: latitude, longitude  (e.g. 25.0330, 121.5654)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
             )
 
             Row(
@@ -1052,12 +1000,19 @@ private fun AddLocationSheet(
                 border = BorderStroke(1.dp, com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.6f))
             ) {
                 Icon(Icons.Default.ContentPaste, contentDescription = null)
-                Text("Paste Coordinates", modifier = Modifier.padding(start = 8.dp))
+                Text("", modifier = Modifier.padding(start = 8.dp))
             }
-            Text(
-                "Format: latitude, longitude  (e.g. 25.0330, 121.5654)",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+            Text("Tags (optional) can be anything", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+            Text("[] or [cafe] or [cafe | park | work]", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+
+            OutlinedTextField(
+                value = tagsText,
+                onValueChange = { tagsText = it },
+                label = { Text("Tags") },
+                placeholder = { Text("cafe | park | work") },
+                singleLine = true,
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth()
             )
 
             if (
@@ -1105,7 +1060,12 @@ private fun AddLocationSheet(
                             n.isEmpty() -> error = "Name is required"
                             lng == null || lng !in -180.0..180.0 -> error = "Longitude must be between -180 and 180"
                             lat == null || lat !in -90.0..90.0 -> error = "Latitude must be between -90 and 90"
-                            else -> onSave(n, lat, lng)
+                            else -> {
+                                val normTags = tagsText.split("|", ",")
+                                    .map { it.trim() }.filter { it.isNotEmpty() }
+                                    .joinToString("|")
+                                onSave(n, lat, lng, normTags)
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(

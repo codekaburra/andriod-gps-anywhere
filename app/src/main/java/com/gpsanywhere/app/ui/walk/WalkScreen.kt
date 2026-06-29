@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
@@ -47,6 +49,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -92,6 +95,24 @@ fun WalkScreen(
     // Route editor state: when active, the editor screen replaces the list/walk view.
     var editorOpen by remember { mutableStateOf(false) }
     var editorTarget by remember { mutableStateOf<SavedRoute?>(null) }
+    var deleteRouteTarget by remember { mutableStateOf<SavedRoute?>(null) }
+
+    deleteRouteTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { deleteRouteTarget = null },
+            title = { Text("Delete route?") },
+            text = { Text("Delete \"${target.name}\"? This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteRoute(target)
+                    deleteRouteTarget = null
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteRouteTarget = null }) { Text("Cancel") }
+            }
+        )
+    }
 
     if (editorOpen) {
         RouteEditorScreen(
@@ -448,7 +469,8 @@ fun WalkScreen(
                         distanceLabel = viewModel.distanceKm(route),
                         waypointCount = viewModel.waypointCount(route),
                         onClick = { selectedRoute = route },
-                        onEdit = { editorTarget = route; editorOpen = true }
+                        onEdit = { editorTarget = route; editorOpen = true },
+                        onDelete = { deleteRouteTarget = route }
                     )
                 }
             }
@@ -547,7 +569,8 @@ private fun RouteRow(
     distanceLabel: String,
     waypointCount: Int,
     onClick: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val nameColor = if (isDark) com.gpsanywhere.app.ui.theme.CardNameTextDark else com.gpsanywhere.app.ui.theme.CardNameText
@@ -570,6 +593,9 @@ private fun RouteRow(
             }
             IconButton(onClick = onEdit) {
                 Icon(Icons.Default.Edit, contentDescription = "Edit route", tint = subColor, modifier = Modifier.size(20.dp))
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete route", tint = com.gpsanywhere.app.ui.theme.StopRed, modifier = Modifier.size(20.dp))
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null,
                 tint = subColor)

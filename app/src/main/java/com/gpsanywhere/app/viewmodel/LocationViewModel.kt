@@ -39,10 +39,9 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
 
     val customLocations: LiveData<List<SavedLocation>> = dao.observeCustom()
+    /** All saved locations (prebuilt + custom), all editable/deletable. */
+    val allLocations: LiveData<List<SavedLocation>> = dao.observeAll()
     val isSpoofing: LiveData<Boolean> = SpoofService.isRunning
-
-    private val _locationPacks = MutableStateFlow<List<DefaultLocationPack>>(emptyList())
-    val locationPacks: StateFlow<List<DefaultLocationPack>> = _locationPacks.asStateFlow()
 
     private val _spiralSpeedKmh = MutableStateFlow(16f)
     val spiralSpeedKmh: StateFlow<Float> = _spiralSpeedKmh.asStateFlow()
@@ -52,12 +51,9 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     init {
         CurrentLocationProvider.ensureStarted(getApplication())
-        viewModelScope.launch {
-            DefaultLocationSeeder.seedIfNeeded(getApplication(), dao)
-            _routeHints.value = buildRouteHints()
-        }
+        // Prebuilt data is no longer auto-imported; the user imports it from Settings.
         viewModelScope.launch(Dispatchers.IO) {
-            _locationPacks.value = DefaultLocationSeeder.loadAllPacks(getApplication())
+            _routeHints.value = buildRouteHints()
         }
     }
 
@@ -68,27 +64,27 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun addLocation(name: String, latitude: Double, longitude: Double) {
+    fun addLocation(name: String, latitude: Double, longitude: Double, tags: String = "") {
         viewModelScope.launch {
             dao.insert(
                 SavedLocation(
                     sourceId = null,
                     name = name.trim(),
                     latitude = latitude,
-                    longitude = longitude
+                    longitude = longitude,
+                    tags = tags
                 )
             )
         }
     }
 
-    fun updateLocation(location: SavedLocation, name: String, latitude: Double, longitude: Double) {
+    fun updateLocation(location: SavedLocation, name: String, latitude: Double, longitude: Double, tags: String = location.tags) {
         viewModelScope.launch {
-            dao.update(location.copy(name = name.trim(), latitude = latitude, longitude = longitude))
+            dao.update(location.copy(name = name.trim(), latitude = latitude, longitude = longitude, tags = tags))
         }
     }
 
     fun deleteLocation(location: SavedLocation) {
-        if (location.isPreinstalled) return
         viewModelScope.launch {
             dao.delete(location)
         }
