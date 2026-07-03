@@ -2,6 +2,9 @@ package com.gpsanywhere.app.ui.location
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -928,93 +931,11 @@ private fun AddLocationSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .imePadding()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
-
-            val fieldColors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                cursorColor = MaterialTheme.colorScheme.onSurface
-            )
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it; error = null },
-                label = { Text("Name") },
-                singleLine = true,
-                colors = fieldColors,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                "Format: latitude, longitude  (e.g. 25.0330, 121.5654)",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = latText,
-                    onValueChange = { latText = it; error = null },
-                    label = { Text("Latitude") },
-                    placeholder = { Text("Latitude") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true,
-                    colors = fieldColors,
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = lngText,
-                    onValueChange = { lngText = it; error = null },
-                    label = { Text("Longitude") },
-                    placeholder = { Text("Longitude") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true,
-                    colors = fieldColors,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            OutlinedButton(
-                onClick = {
-                    val raw = clipboard.getText()?.text?.trim().orEmpty()
-                    val parsed = parseClipboardCoordinates(raw)
-                    if (parsed == null) {
-                        error = "Invalid Format [$raw]. Clipboard must be latitude, longitude"
-                    } else {
-                        lngText = parsed.first.toBigDecimal().stripTrailingZeros().toPlainString()
-                        latText = parsed.second.toBigDecimal().stripTrailingZeros().toPlainString()
-                        error = null
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = com.gpsanywhere.app.ui.theme.CandyYellow
-                ),
-                border = BorderStroke(1.dp, com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.6f))
-            ) {
-                Icon(Icons.Default.ContentPaste, contentDescription = null)
-                Text("", modifier = Modifier.padding(start = 8.dp))
-            }
-            Text("Tags (optional) can be anything", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
-            Text("[] or [cafe] or [cafe | park | work]", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
-
-            OutlinedTextField(
-                value = tagsText,
-                onValueChange = { tagsText = it },
-                label = { Text("Tags") },
-                placeholder = { Text("cafe | park | work") },
-                singleLine = true,
-                colors = fieldColors,
-                modifier = Modifier.fillMaxWidth()
-            )
-
             if (
                 previewLat != null &&
                 previewLng != null &&
@@ -1037,18 +958,100 @@ private fun AddLocationSheet(
                 )
             }
 
+            Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
+
+            val fieldColors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                cursorColor = MaterialTheme.colorScheme.onSurface
+            )
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it; error = null },
+                label = { Text("Name") },
+                singleLine = true,
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Text(
+                "Format: latitude, longitude  (e.g. 25.0330, 121.5654)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = latText,
+                    onValueChange = { latText = it; error = null },
+                    label = { Text("Latitude") },
+                    placeholder = { Text("Latitude") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    colors = fieldColors,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = lngText,
+                    onValueChange = { lngText = it; error = null },
+                    label = { Text("Longitude") },
+                    placeholder = { Text("Longitude") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    colors = fieldColors,
+                    modifier = Modifier.weight(1f)
+                )
+                FilledIconButton(
+                    onClick = {
+                        val raw = clipboard.getText()?.text?.trim().orEmpty()
+                        val parsed = parseClipboardCoordinates(raw)
+                        if (parsed == null) {
+                            error = "Invalid Format [$raw]. Clipboard must be latitude, longitude"
+                        } else {
+                            lngText = parsed.first.toBigDecimal().stripTrailingZeros().toPlainString()
+                            latText = parsed.second.toBigDecimal().stripTrailingZeros().toPlainString()
+                            error = null
+                        }
+                    },
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Icon(Icons.Default.ContentPaste, contentDescription = "Paste coordinates", modifier = Modifier.size(18.dp))
+                }
+            }
+
+            OutlinedTextField(
+                value = tagsText,
+                onValueChange = { tagsText = it },
+                label = { Text("Tags (optional)") },
+                placeholder = { Text("cafe | park | work") },
+                singleLine = true,
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth()
+            )
+
             error?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
             ) {
-                TextButton(
+                Button(
                     onClick = onDismiss,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg,
+                        contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                     )
                 ) { Text("Cancel") }
                 Button(
