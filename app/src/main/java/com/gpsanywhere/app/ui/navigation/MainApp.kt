@@ -154,7 +154,7 @@ fun MainApp(preferences: AppPreferences) {
                     LocationScreen(viewModel = locationViewModel)
                 }
                 composable(Routes.WALK) {
-                    WalkScreen(viewModel = walkViewModel)
+                    WalkScreen(viewModel = walkViewModel, appLanguage = appLanguage)
                 }
                 composable(Routes.SETTINGS) {
                     SettingsScreen(viewModel = mainViewModel)

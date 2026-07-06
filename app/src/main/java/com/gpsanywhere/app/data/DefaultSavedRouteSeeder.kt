@@ -171,6 +171,7 @@ object DefaultSavedRouteSeeder {
                 if (matches.isEmpty()) {
                     val inserted = SavedRoute(
                         name = route.routeName,
+                        nameTc = route.routeNameTc.orEmpty(),
                         waypointsJson = WaypointJson.toJson(points),
                         routeMethod = DEFAULT_ROUTE_METHOD,
                         distanceMeters = estimateDistance(points),
@@ -185,8 +186,13 @@ object DefaultSavedRouteSeeder {
                 val keep = matches.sortedWith(
                     compareByDescending<SavedRoute> { it.routeId != null }.thenBy { it.createdAt }
                 ).first()
-                if (route.routeId != null && keep.routeId == null) {
-                    val updated = keep.copy(routeId = route.routeId)
+                val needsUpdate = (route.routeId != null && keep.routeId == null) ||
+                    (route.routeNameTc != null && keep.nameTc.isBlank())
+                if (needsUpdate) {
+                    val updated = keep.copy(
+                        routeId = route.routeId ?: keep.routeId,
+                        nameTc = route.routeNameTc.orEmpty().ifBlank { keep.nameTc }
+                    )
                     routeDao.update(updated)
                     existing[existing.indexOf(keep)] = updated
                 }

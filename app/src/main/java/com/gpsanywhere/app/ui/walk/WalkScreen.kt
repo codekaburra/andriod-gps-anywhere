@@ -68,6 +68,7 @@ import com.gpsanywhere.app.R
 import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.routes.LocationPoint
+import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.ui.components.GlassCard
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.viewmodel.WalkViewModel
@@ -76,6 +77,7 @@ import org.osmdroid.util.GeoPoint
 @Composable
 fun WalkScreen(
     viewModel: WalkViewModel,
+    appLanguage: AppLanguage = AppLanguage.SYSTEM,
     modifier: Modifier = Modifier
 ) {
     val routes by viewModel.routes.observeAsState(emptyList())
@@ -179,7 +181,7 @@ fun WalkScreen(
                         Text(stringResource(R.string.walk_title), style = MaterialTheme.typography.headlineMedium)
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                route.name,
+                                route.displayName(appLanguage),
                                 style = MaterialTheme.typography.titleMedium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -470,6 +472,7 @@ fun WalkScreen(
                         route = route,
                         distanceLabel = viewModel.distanceKm(route),
                         waypointCount = viewModel.waypointCount(route),
+                        appLanguage = appLanguage,
                         onClick = { selectedRoute = route },
                         onEdit = { editorTarget = route; editorOpen = true },
                         onDelete = { deleteRouteTarget = route }
@@ -570,6 +573,7 @@ private fun RouteRow(
     route: SavedRoute,
     distanceLabel: String,
     waypointCount: Int,
+    appLanguage: AppLanguage = AppLanguage.SYSTEM,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -589,7 +593,7 @@ private fun RouteRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(route.name, style = MaterialTheme.typography.titleSmall, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(route.displayName(appLanguage), style = MaterialTheme.typography.titleSmall, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(stringResource(R.string.route_meta, distanceLabel, waypointCount), style = MaterialTheme.typography.bodySmall,
                     color = subColor)
             }
