@@ -9,6 +9,7 @@ import com.gpsanywhere.app.data.AppDatabase
 import com.gpsanywhere.app.data.DefaultLocationSeeder
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
 import com.gpsanywhere.app.data.WaypointJson
+import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
@@ -23,14 +24,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isImporting = MutableLiveData(false)
     val isImporting: LiveData<Boolean> = _isImporting
 
-    /** Import all bundled prebuilt locations and routes into the database. */
-    fun importPrebuilt(onDone: () -> Unit = {}) {
+    /** Import all bundled prebuilt locations into the database. */
+    fun importPrebuiltLocations(onDone: () -> Unit = {}) {
         if (_isImporting.value == true) return
         _isImporting.value = true
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val db = AppDatabase.getInstance(getApplication())
                 DefaultLocationSeeder.importAll(getApplication(), db.savedLocationDao())
+            }
+            _isImporting.value = false
+            onDone()
+        }
+    }
+
+    /** Import all bundled prebuilt routes into the database. */
+    fun importPrebuiltRoutes(onDone: () -> Unit = {}) {
+        if (_isImporting.value == true) return
+        _isImporting.value = true
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val db = AppDatabase.getInstance(getApplication())
                 DefaultSavedRouteSeeder.importAll(getApplication(), db.routeDao())
             }
             _isImporting.value = false
@@ -105,5 +119,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun loadTheme() {
         _themeMode.value = prefs.themeMode
+    }
+
+    private val _appLanguage = MutableLiveData(prefs.appLanguage)
+    val appLanguage: LiveData<AppLanguage> = _appLanguage
+
+    fun setLanguage(language: AppLanguage) {
+        prefs.appLanguage = language
+        _appLanguage.value = language
     }
 }

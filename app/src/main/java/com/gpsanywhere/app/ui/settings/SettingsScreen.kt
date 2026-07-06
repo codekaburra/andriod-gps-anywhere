@@ -31,9 +31,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import com.gpsanywhere.app.R
+import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.viewmodel.MainViewModel
 
@@ -41,12 +44,14 @@ import com.gpsanywhere.app.viewmodel.MainViewModel
 @Composable
 fun SettingsScreen(viewModel: MainViewModel) {
     val themeMode by viewModel.themeMode.observeAsState(ThemeMode.LIGHT)
+    val appLanguage by viewModel.appLanguage.observeAsState(AppLanguage.SYSTEM)
     val context = LocalContext.current
     val packageInfo = remember {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     val isImporting by viewModel.isImporting.observeAsState(false)
-    var showImportConfirm by remember { mutableStateOf(false) }
+    var showImportLocationsConfirm by remember { mutableStateOf(false) }
+    var showImportRoutesConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showDeleteCustomConfirm by remember { mutableStateOf(false) }
     val versionName = packageInfo.versionName ?: "unknown"
@@ -64,10 +69,46 @@ fun SettingsScreen(viewModel: MainViewModel) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            "Settings",
+            stringResource(R.string.settings_title),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground
         )
+
+        // Language section
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.settings_language),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AppLanguage.entries.forEach { language ->
+                        FilterChip(
+                            selected = appLanguage == language,
+                            onClick = { viewModel.setLanguage(language) },
+                            label = {
+                                Text(
+                                    when (language) {
+                                        AppLanguage.SYSTEM -> stringResource(R.string.language_system)
+                                        AppLanguage.ENGLISH -> stringResource(R.string.language_english)
+                                        AppLanguage.TRADITIONAL_CHINESE -> stringResource(R.string.language_traditional_chinese)
+                                    }
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+        }
 
         // Theme section
         Card(
@@ -77,7 +118,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    "Colour Theme",
+                    stringResource(R.string.settings_theme),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -93,8 +134,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             label = {
                                 Text(
                                     when (mode) {
-                                        ThemeMode.LIGHT -> "Light"
-                                        ThemeMode.DARK -> "Dark"
+                                        ThemeMode.LIGHT -> stringResource(R.string.theme_light)
+                                        ThemeMode.DARK -> stringResource(R.string.theme_dark)
                                         else -> ""
                                     }
                                 )
@@ -113,26 +154,37 @@ fun SettingsScreen(viewModel: MainViewModel) {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    "Prebuilt Data",
+                    stringResource(R.string.settings_prebuilt),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Import all bundled sample locations and routes. Existing items are kept; you can delete any of them afterwards.",
+                    stringResource(R.string.settings_prebuilt_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
                 Spacer(Modifier.height(12.dp))
                 Button(
-                    onClick = { showImportConfirm = true },
+                    onClick = { showImportLocationsConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFA1B5AB),
                         contentColor = Color.White
                     )
                 ) {
-                    Text(if (isImporting) "Working…" else "Import Prebuilt Locations & Routes")
+                    Text(stringResource(if (isImporting) R.string.working else R.string.import_prebuilt_locations))
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { showImportRoutesConfirm = true },
+                    enabled = !isImporting,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFA1B5AB),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(stringResource(if (isImporting) R.string.working else R.string.import_prebuilt_routes))
                 }
                 Spacer(Modifier.height(8.dp))
                 Button(
@@ -143,7 +195,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Delete All Prebuilt Locations")
+                    Text(stringResource(R.string.delete_prebuilt_locations))
                 }
                 Spacer(Modifier.height(8.dp))
                 Button(
@@ -154,7 +206,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Delete All Custom Data")
+                    Text(stringResource(R.string.delete_custom_data))
                 }
             }
         }
@@ -167,17 +219,18 @@ fun SettingsScreen(viewModel: MainViewModel) {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    "Developer Options",
+                    stringResource(R.string.settings_dev_options),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Open Android Developer Options to select this app as the mock location app.",
+                    stringResource(R.string.settings_dev_options_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
                 Spacer(Modifier.height(12.dp))
+                val devOptionsHint = stringResource(R.string.dev_options_manual_hint)
                 Button(
                     onClick = {
                         try {
@@ -192,7 +245,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                         .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                                 )
                             } catch (_: Exception) {
-                                Toast.makeText(context, "請手動前往 設定 > 開發者選項", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, devOptionsHint, Toast.LENGTH_LONG).show()
                             }
                         }
                     },
@@ -201,7 +254,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Open Developer Options")
+                    Text(stringResource(R.string.open_dev_options))
                 }
             }
         }
@@ -217,19 +270,19 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "GPS Anywhere",
+                    stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Version $versionName",
+                    stringResource(R.string.settings_version, versionName),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    "Last updated: $lastUpdated",
+                    stringResource(R.string.settings_last_updated, lastUpdated),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
@@ -237,14 +290,14 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 HorizontalDivider()
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "© 2026 eye7290. All rights reserved.",
+                    stringResource(R.string.settings_copyright),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "This app is intended for development and testing purposes only.",
+                    stringResource(R.string.settings_disclaimer),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     textAlign = TextAlign.Center
@@ -253,21 +306,59 @@ fun SettingsScreen(viewModel: MainViewModel) {
         }
     }
 
-    if (showImportConfirm) {
+    if (showImportLocationsConfirm) {
         AlertDialog(
-            onDismissRequest = { showImportConfirm = false },
-            title = { Text("Import prebuilt data?") },
-            text = { Text("This adds all bundled sample locations and routes to your list. Your existing items are kept. Continue?") },
+            onDismissRequest = { showImportLocationsConfirm = false },
+            title = { Text(stringResource(R.string.dialog_import_locations_title)) },
+            text = { Text(stringResource(R.string.dialog_import_locations_text)) },
             confirmButton = {
                 TextButton(onClick = {
-                    showImportConfirm = false
-                    viewModel.importPrebuilt {
-                        Toast.makeText(context, "Prebuilt locations & routes imported", Toast.LENGTH_SHORT).show()
+                    showImportLocationsConfirm = false
+                    viewModel.importPrebuiltLocations {
+                        Toast.makeText(context, context.getString(R.string.toast_locations_imported), Toast.LENGTH_SHORT).show()
                     }
-                }) { Text("Import") }
+                }) { Text(stringResource(R.string.action_import)) }
             },
             dismissButton = {
-                TextButton(onClick = { showImportConfirm = false }) { Text("Cancel") }
+                TextButton(onClick = { showImportLocationsConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        )
+    }
+
+    if (showImportRoutesConfirm) {
+        AlertDialog(
+            onDismissRequest = { showImportRoutesConfirm = false },
+            title = { Text(stringResource(R.string.dialog_import_routes_title)) },
+            text = { Text(stringResource(R.string.dialog_import_routes_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showImportRoutesConfirm = false
+                    viewModel.importPrebuiltRoutes {
+                        Toast.makeText(context, context.getString(R.string.toast_routes_imported), Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text(stringResource(R.string.action_import)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportRoutesConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        )
+    }
+
+    if (showDeleteCustomConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteCustomConfirm = false },
+            title = { Text(stringResource(R.string.dialog_delete_custom_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_custom_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteCustomConfirm = false
+                    viewModel.deleteCustom {
+                        Toast.makeText(context, context.getString(R.string.toast_custom_deleted), Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text(stringResource(R.string.action_delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteCustomConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -275,18 +366,18 @@ fun SettingsScreen(viewModel: MainViewModel) {
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete all prebuilt locations?") },
-            text = { Text("This removes all bundled sample locations. Your own created locations are kept. Continue?") },
+            title = { Text(stringResource(R.string.dialog_delete_prebuilt_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_prebuilt_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteConfirm = false
                     viewModel.deletePrebuiltLocations {
-                        Toast.makeText(context, "Prebuilt locations deleted", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.toast_prebuilt_deleted), Toast.LENGTH_SHORT).show()
                     }
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }

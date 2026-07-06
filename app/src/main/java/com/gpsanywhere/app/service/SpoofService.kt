@@ -3,6 +3,7 @@ package com.gpsanywhere.app.service
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.location.Location
 import android.location.LocationManager
 import android.location.provider.ProviderProperties
@@ -15,6 +16,9 @@ import androidx.lifecycle.MutableLiveData
 import com.gpsanywhere.app.MainActivity
 import com.gpsanywhere.app.R
 import com.gpsanywhere.app.routes.SpiralWalkGenerator
+import com.gpsanywhere.app.settings.AppLanguage
+import com.gpsanywhere.app.settings.AppPreferences
+import java.util.Locale
 import kotlinx.coroutines.*
 import kotlin.random.Random
 import androidx.health.connect.client.HealthConnectClient
@@ -189,6 +193,17 @@ class SpoofService : Service() {
         createNotificationChannel()
     }
 
+    /** Context whose resources follow the in-app language preference (for notification text). */
+    private fun localizedContext(): Context {
+        val language = AppPreferences(this).appLanguage
+        if (language == AppLanguage.SYSTEM) return this
+        return createConfigurationContext(
+            Configuration(resources.configuration).apply {
+                setLocale(Locale.forLanguageTag(language.tag))
+            }
+        )
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START_FIXED -> {
@@ -199,7 +214,10 @@ class SpoofService : Service() {
                 lastLng = lng
                 currentBearing = 0f
                 currentSpeedMps = 0f
-                startForeground(NOTIFICATION_ID, buildNotification("Custom Location: $lat, $lng"))
+                startForeground(
+                    NOTIFICATION_ID,
+                    buildNotification(localizedContext().getString(R.string.notif_fixed, "$lat, $lng"))
+                )
                 setupTestProvider()
                 startPushLoop()
                 _isRunning.postValue(true)
@@ -226,7 +244,10 @@ class SpoofService : Service() {
                 varyMps = varyKmh * 1000f / 3600f
                 currentSpeedMps = baseSpeedMps
                 _currentSpeedKmh.postValue(speedKmh)
-                startForeground(NOTIFICATION_ID, buildNotification("Walking @ ${"%.1f".format(speedKmh)} km/h"))
+                startForeground(
+                    NOTIFICATION_ID,
+                    buildNotification(localizedContext().getString(R.string.notif_walking, "%.1f".format(speedKmh)))
+                )
                 setupTestProvider()
                 startPushLoop()
                 startWalkJob(lats, lngs, loop, resetIntervalMs, spiralAfterKmh)
@@ -256,7 +277,10 @@ class SpoofService : Service() {
                 currentSpeedMps = baseSpeedMps
                 _currentSpeedKmh.postValue(speedKmh)
                 val nm = getSystemService(NotificationManager::class.java)
-                nm.notify(NOTIFICATION_ID, buildNotification("Walking @ ${"%.1f".format(speedKmh)} km/h"))
+                nm.notify(
+                    NOTIFICATION_ID,
+                    buildNotification(localizedContext().getString(R.string.notif_walking, "%.1f".format(speedKmh)))
+                )
             }
         }
         return START_STICKY
@@ -542,12 +566,13 @@ class SpoofService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val localized = localizedContext()
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Custom Location",
+                localized.getString(R.string.notif_channel_name),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Shows when using a custom location"
+                description = localized.getString(R.string.notif_channel_desc)
             }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
@@ -571,12 +596,13 @@ class SpoofService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val localized = localizedContext()
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("GPS Anywhere — Active")
+            .setContentTitle(localized.getString(R.string.notif_title))
             .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
-            .addAction(0, "Stop", stopPendingIntent)
+            .addAction(0, localized.getString(R.string.action_stop), stopPendingIntent)
             .setOngoing(true)
             .build()
     }

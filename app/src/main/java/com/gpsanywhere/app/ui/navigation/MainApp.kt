@@ -16,7 +16,9 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -26,7 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.R
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,9 +39,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
+import java.util.Locale
 import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
@@ -69,6 +75,20 @@ fun MainApp(preferences: AppPreferences) {
 
     LaunchedEffect(Unit) { mainViewModel.loadTheme() }
 
+    // In-app language override: provide a locale-adjusted context so every
+    // stringResource() call below resolves against the chosen language.
+    val appLanguage by mainViewModel.appLanguage.observeAsState(AppLanguage.SYSTEM)
+    val baseContext = LocalContext.current
+    val localizedContext = remember(appLanguage, baseContext) {
+        if (appLanguage == AppLanguage.SYSTEM) baseContext
+        else baseContext.createConfigurationContext(
+            Configuration(baseContext.resources.configuration).apply {
+                setLocale(Locale.forLanguageTag(appLanguage.tag))
+            }
+        )
+    }
+
+    CompositionLocalProvider(LocalContext provides localizedContext) {
     GPSAnywhereTheme(themeMode = themeMode, colorTheme = colorTheme) {
       val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
       Box(modifier = Modifier.fillMaxSize()) {
@@ -104,22 +124,22 @@ fun MainApp(preferences: AppPreferences) {
                     NavigationBarItem(
                         selected = currentRoute == Routes.LOCATION,
                         onClick = { nav(Routes.LOCATION) },
-                        icon = { Icon(Icons.Default.LocationOn, contentDescription = "Location") },
-                        label = { Text("Location") },
+                        icon = { Icon(Icons.Default.LocationOn, contentDescription = stringResource(R.string.nav_location)) },
+                        label = { Text(stringResource(R.string.nav_location)) },
                         colors = navItemColors(SoftPurple)
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.WALK,
                         onClick = { nav(Routes.WALK) },
-                        icon = { Icon(Icons.Default.Route, contentDescription = "Route") },
-                        label = { Text("Route") },
+                        icon = { Icon(Icons.Default.Route, contentDescription = stringResource(R.string.nav_route)) },
+                        label = { Text(stringResource(R.string.nav_route)) },
                         colors = navItemColors(SoftPurple)
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.SETTINGS,
                         onClick = { nav(Routes.SETTINGS) },
-                        icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                        label = { Text("Settings") },
+                        icon = { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.nav_settings)) },
+                        label = { Text(stringResource(R.string.nav_settings)) },
                         colors = navItemColors(SoftPurple)
                     )
                 }
@@ -151,6 +171,7 @@ fun MainApp(preferences: AppPreferences) {
             )
         }
       }
+    }
     }
 }
 
