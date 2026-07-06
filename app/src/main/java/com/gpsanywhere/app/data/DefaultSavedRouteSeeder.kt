@@ -32,7 +32,7 @@ object DefaultSavedRouteSeeder {
     )
 
     /** Parse a single CSV route file. Returns null if the file is malformed. */
-    private fun parseCsv(content: String): DefaultRouteAsset? {
+    internal fun parseCsv(content: String): DefaultRouteAsset? {
         var routeName: String? = null
         var routeNameTc: String? = null
         var routeId: String? = null

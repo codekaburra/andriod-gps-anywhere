@@ -25,7 +25,7 @@ object DefaultLocationSeeder {
     )
 
     /** Parse a single CSV location pack file. Returns null if malformed. */
-    private fun parseCsv(content: String): DefaultLocationPack? {
+    internal fun parseCsv(content: String): DefaultLocationPack? {
         var packName: String? = null
         var version = 1
         val locations = mutableListOf<DefaultLocationAsset>()
