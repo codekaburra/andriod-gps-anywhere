@@ -15,6 +15,10 @@
 .cxx
 local.properties
 
+# Build outputs — never commit binaries
+*.apk
+*.aab
+
 # Go route formatter generated output
 go-route-formater/output/
 go-route-formater/cmd/json2iframe/output/
