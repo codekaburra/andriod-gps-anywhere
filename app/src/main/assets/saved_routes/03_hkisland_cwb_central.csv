@@ -1,5 +1,6 @@
-# version: 1
-# route_name: 港島 - 銅鑼灣中環 - 軒尼詩道
+# route_id: 20260613T150003
+# route_name_tc: 香港 - 銅鑼灣中環 - 軒尼詩道
+# route_name_eng: Hong Kong - Causeway Bay to Central (Hennessy Road)
 latitude,longitude,name_tc,name_en
 22.2799747,114.1893765,香港中央圖書館,HK Central Library
 22.2784388,114.1847145,利園商場一期,Lee Gardens One

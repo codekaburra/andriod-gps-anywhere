@@ -60,12 +60,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gpsanywhere.app.R
 import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.routes.LocationPoint
+import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.ui.components.GlassCard
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.viewmodel.WalkViewModel
@@ -74,6 +77,7 @@ import org.osmdroid.util.GeoPoint
 @Composable
 fun WalkScreen(
     viewModel: WalkViewModel,
+    appLanguage: AppLanguage = AppLanguage.SYSTEM,
     modifier: Modifier = Modifier
 ) {
     val routes by viewModel.routes.observeAsState(emptyList())
@@ -100,16 +104,16 @@ fun WalkScreen(
     deleteRouteTarget?.let { target ->
         AlertDialog(
             onDismissRequest = { deleteRouteTarget = null },
-            title = { Text("Delete route?") },
-            text = { Text("Delete \"${target.name}\"? This cannot be undone.") },
+            title = { Text(stringResource(R.string.dialog_delete_route_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_route_text, target.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteRoute(target)
                     deleteRouteTarget = null
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { deleteRouteTarget = null }) { Text("Cancel") }
+                TextButton(onClick = { deleteRouteTarget = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -143,7 +147,7 @@ fun WalkScreen(
     val positionLat = mapCenterLat
     val positionLng = mapCenterLng
     val currentPin = if (positionLat != null && positionLng != null) {
-        listOf(LocationPoint(positionLat, positionLng, "Current position"))
+        listOf(LocationPoint(positionLat, positionLng, stringResource(R.string.current_position)))
     } else {
         emptyList()
     }
@@ -174,10 +178,10 @@ fun WalkScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Top
                     ) {
-                        Text("Walk", style = MaterialTheme.typography.headlineMedium)
+                        Text(stringResource(R.string.walk_title), style = MaterialTheme.typography.headlineMedium)
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                route.name,
+                                route.displayName(appLanguage),
                                 style = MaterialTheme.typography.titleMedium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -207,7 +211,7 @@ fun WalkScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            if (!isWalking) "Not started" else "Current Speed",
+                            stringResource(if (!isWalking) R.string.not_started else R.string.current_speed),
                             style = MaterialTheme.typography.labelMedium,
                             color = if (!isWalking)
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
@@ -280,7 +284,7 @@ fun WalkScreen(
                             contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                         )
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                     FilledIconButton(
                         onClick = { viewModel.startWalk(route, reversed = true) },
@@ -289,7 +293,7 @@ fun WalkScreen(
                             contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                         )
                     ) {
-                        Icon(Icons.Default.SwapVert, contentDescription = "Revert")
+                        Icon(Icons.Default.SwapVert, contentDescription = stringResource(R.string.reverse_direction))
                     }
                     Button(
                         onClick = { viewModel.startWalk(route) },
@@ -303,7 +307,7 @@ fun WalkScreen(
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)
                         Spacer(Modifier.width(6.dp))
-                        Text("Start", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.action_start), style = MaterialTheme.typography.titleMedium)
                     }
                 } else {
                     // Walking: Back, Revert, Pause/Resume (yellow), Stop
@@ -314,7 +318,7 @@ fun WalkScreen(
                             contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                         )
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                     FilledIconButton(
                         onClick = { viewModel.revertWalk(route) },
@@ -323,7 +327,7 @@ fun WalkScreen(
                             contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                         )
                     ) {
-                        Icon(Icons.Default.SwapVert, contentDescription = "Revert")
+                        Icon(Icons.Default.SwapVert, contentDescription = stringResource(R.string.reverse_direction))
                     }
                     Button(
                         onClick = { if (isPaused) viewModel.resume() else viewModel.pause() },
@@ -337,7 +341,7 @@ fun WalkScreen(
                     ) {
                         Icon(
                             if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                            contentDescription = if (isPaused) "Resume" else "Pause"
+                            contentDescription = stringResource(if (isPaused) R.string.action_resume else R.string.action_pause)
                         )
                     }
                     Button(
@@ -352,7 +356,7 @@ fun WalkScreen(
                     ) {
                         Icon(Icons.Default.Stop, contentDescription = null)
                         Spacer(Modifier.width(6.dp))
-                        Text("Stop")
+                        Text(stringResource(R.string.action_stop))
                     }
                 }
             }
@@ -386,7 +390,7 @@ fun WalkScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "Base Speed",
+                        stringResource(R.string.base_speed),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -421,7 +425,7 @@ fun WalkScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Saved Routes",
+                        stringResource(R.string.saved_routes),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -433,7 +437,7 @@ fun WalkScreen(
                             contentColor = Color.White
                         )
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add route", modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_route), modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -454,9 +458,9 @@ fun WalkScreen(
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
                         )
                         Spacer(Modifier.height(8.dp))
-                        Text("No routes yet", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.no_routes_yet), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Create a route on the Add Route tab",
+                            stringResource(R.string.no_routes_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
@@ -468,6 +472,7 @@ fun WalkScreen(
                         route = route,
                         distanceLabel = viewModel.distanceKm(route),
                         waypointCount = viewModel.waypointCount(route),
+                        appLanguage = appLanguage,
                         onClick = { selectedRoute = route },
                         onEdit = { editorTarget = route; editorOpen = true },
                         onDelete = { deleteRouteTarget = route }
@@ -536,7 +541,7 @@ private fun SpeedControlPanel(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    "Speed",
+                    stringResource(R.string.speed),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -568,6 +573,7 @@ private fun RouteRow(
     route: SavedRoute,
     distanceLabel: String,
     waypointCount: Int,
+    appLanguage: AppLanguage = AppLanguage.SYSTEM,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -587,15 +593,15 @@ private fun RouteRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(route.name, style = MaterialTheme.typography.titleSmall, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("$distanceLabel · $waypointCount stops", style = MaterialTheme.typography.bodySmall,
+                Text(route.displayName(appLanguage), style = MaterialTheme.typography.titleSmall, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(R.string.route_meta, distanceLabel, waypointCount), style = MaterialTheme.typography.bodySmall,
                     color = subColor)
             }
             IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit route", tint = subColor, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_route), tint = subColor, modifier = Modifier.size(20.dp))
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete route", tint = com.gpsanywhere.app.ui.theme.StopRed, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_route), tint = com.gpsanywhere.app.ui.theme.StopRed, modifier = Modifier.size(20.dp))
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null,
                 tint = subColor)
@@ -626,7 +632,7 @@ private fun WaypointProgressRow(
         Spacer(Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                point.name?.takeIf { it.isNotBlank() } ?: "Waypoint ${index + 1}",
+                point.name?.takeIf { it.isNotBlank() } ?: stringResource(R.string.waypoint_n, index + 1),
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isNearest) MaterialTheme.colorScheme.onSurface
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),

@@ -17,6 +17,8 @@ object DefaultSavedRouteSeeder {
     data class DefaultRouteAsset(
         val routeId: String? = null,
         val routeName: String,
+        /** Traditional-Chinese name, kept so import can recognise rows seeded under the old TC display name. */
+        val routeNameTc: String? = null,
         val version: Int = 1,
         val coordinates: List<DefaultLocationAsset>
     ) {
@@ -31,7 +33,11 @@ object DefaultSavedRouteSeeder {
         val longitude: Double
     )
 
-    /** Parse a single CSV route file. Returns null if the file is malformed. */
+    /**
+     * Parse CSV route content. Returns null if no coordinates could be parsed.
+     * The route name may be blank when the content has no `# route_name*` header
+     * (callers that require a name should check `routeName.isNotBlank()`).
+     */
     internal fun parseCsv(content: String): DefaultRouteAsset? {
         var routeName: String? = null
         var routeNameTc: String? = null
@@ -49,6 +55,8 @@ object DefaultSavedRouteSeeder {
                     routeNameTc = line.removePrefix("# route_name_tc:").trim()
                 line.startsWith("# route_name:") ->
                     routeName = line.removePrefix("# route_name:").trim()
+                line.startsWith("# route_id:") ->
+                    routeId = line.removePrefix("# route_id:").trim().ifBlank { routeId }
                 line.startsWith("# version:") ->
                     version = line.removePrefix("# version:").trim().toIntOrNull() ?: 1
                 line.startsWith("#") -> {
@@ -57,28 +65,30 @@ object DefaultSavedRouteSeeder {
                     if (routeId == null && body.isNotEmpty() && !body.contains(':')) routeId = body
                 }
                 line.isEmpty() -> Unit
-                !headerSkipped -> headerSkipped = true // skip "name,latitude,longitude" header
                 else -> {
                     val parts = parseCsvLine(line)
-                    if (parts.size >= 4) {
-                        val lat = parts[0].toDoubleOrNull() ?: continue
-                        val lng = parts[1].toDoubleOrNull() ?: continue
-                        val name = parts[2].ifBlank { parts[3] }
-                        coordinates.add(DefaultLocationAsset(name = name, latitude = lat, longitude = lng))
-                    } else if (parts.size >= 3) {
-                        val lat = parts[0].toDoubleOrNull() ?: continue
-                        val lng = parts[1].toDoubleOrNull() ?: continue
-                        coordinates.add(DefaultLocationAsset(name = parts[2], latitude = lat, longitude = lng))
+                    val lat = parts.getOrNull(0)?.toDoubleOrNull()
+                    val lng = parts.getOrNull(1)?.toDoubleOrNull()
+                    if (lat == null || lng == null) {
+                        // Non-numeric row: treat the first one as the column header, ignore the rest.
+                        if (!headerSkipped) headerSkipped = true
+                        continue
                     }
+                    val name = when {
+                        parts.size >= 4 -> parts[2].ifBlank { parts[3] }
+                        parts.size == 3 -> parts[2]
+                        else -> ""
+                    }
+                    coordinates.add(DefaultLocationAsset(name = name, latitude = lat, longitude = lng))
                 }
             }
         }
 
-        val finalName = routeName ?: routeNameTc
-        if (finalName == null || coordinates.isEmpty()) return null
+        if (coordinates.isEmpty()) return null
         return DefaultRouteAsset(
             routeId = routeId,
-            routeName = finalName,
+            routeName = routeName ?: routeNameTc ?: "",
+            routeNameTc = routeNameTc,
             version = version,
             coordinates = coordinates
         )
@@ -120,35 +130,86 @@ object DefaultSavedRouteSeeder {
                 runCatching {
                     val content = appContext.assets.open("$ASSET_FOLDER/$filename")
                         .bufferedReader().use { it.readText() }
-                    parseCsv(content)
+                    parseCsv(content)?.takeIf { it.routeName.isNotBlank() }
                 }.getOrNull()
             } ?: emptyList()
     }
 
-    /** Import every bundled route into the DB on demand (no auto-seed gate). */
+    /** Waypoint signature: first point (5 dp) + point count. Identifies a route regardless of its display name. */
+    private fun waypointSignature(points: List<LocationPoint>): String? =
+        points.firstOrNull()?.let { "%.5f,%.5f|%d".format(it.latitude, it.longitude, points.size) }
+
+    /**
+     * Import every bundled route into the DB on demand (no auto-seed gate).
+     *
+     * A bundled route is matched against existing rows by routeId, by either of its
+     * display names (English or Traditional Chinese — older versions seeded the TC name),
+     * or by waypoint signature. Matching rows are kept (the best one gets the routeId
+     * backfilled) and redundant seed copies are deleted, so re-importing heals
+     * duplicates instead of creating more.
+     */
     suspend fun importAll(context: Context, routeDao: RouteDao) = withContext(Dispatchers.IO) {
         mutex.withLock {
             val appContext = context.applicationContext
+            val existing = routeDao.getAll().toMutableList()
+
             loadAllAssets(appContext).forEach { route ->
                 val points = route.toLocationPoints()
                 if (points.isEmpty()) return@forEach
-                val alreadyExists = if (route.routeId != null) {
-                    routeDao.countByRouteId(route.routeId) > 0 || routeDao.countByName(route.routeName) > 0
-                } else {
-                    routeDao.countByName(route.routeName) > 0
+                val assetSig = waypointSignature(points)
+                val assetNames = listOfNotNull(
+                    route.routeName.trim().takeIf { it.isNotEmpty() },
+                    route.routeNameTc?.trim()?.takeIf { it.isNotEmpty() }
+                )
+
+                val matches = existing.filter { row ->
+                    (route.routeId != null && row.routeId == route.routeId) ||
+                        row.name.trim() in assetNames ||
+                        waypointSignature(WaypointJson.fromJson(row.waypointsJson)) == assetSig
                 }
-                if (!alreadyExists) {
-                    routeDao.insert(
-                        SavedRoute(
-                            name = route.routeName,
-                            waypointsJson = WaypointJson.toJson(points),
-                            routeMethod = DEFAULT_ROUTE_METHOD,
-                            distanceMeters = estimateDistance(points),
-                            routeId = route.routeId
-                        )
+
+                if (matches.isEmpty()) {
+                    val inserted = SavedRoute(
+                        name = route.routeName,
+                        nameTc = route.routeNameTc.orEmpty(),
+                        waypointsJson = WaypointJson.toJson(points),
+                        routeMethod = DEFAULT_ROUTE_METHOD,
+                        distanceMeters = estimateDistance(points),
+                        routeId = route.routeId
                     )
+                    val newId = routeDao.insert(inserted)
+                    existing.add(inserted.copy(id = newId))
+                    return@forEach
+                }
+
+                // Keep the best match: prefer a row that already carries the routeId, then the oldest.
+                val keep = matches.sortedWith(
+                    compareByDescending<SavedRoute> { it.routeId != null }.thenBy { it.createdAt }
+                ).first()
+                val needsUpdate = (route.routeId != null && keep.routeId == null) ||
+                    (route.routeNameTc != null && keep.nameTc.isBlank())
+                if (needsUpdate) {
+                    val updated = keep.copy(
+                        routeId = route.routeId ?: keep.routeId,
+                        nameTc = route.routeNameTc.orEmpty().ifBlank { keep.nameTc }
+                    )
+                    routeDao.update(updated)
+                    existing[existing.indexOf(keep)] = updated
+                }
+
+                // Delete redundant seed copies: rows that are clearly this bundled route
+                // (matching routeId or one of its known names). Rows matching only by
+                // waypoint signature may be user-edited copies, so they are left alone.
+                val redundant = matches.filter { row ->
+                    row !== keep &&
+                        ((route.routeId != null && row.routeId == route.routeId) || row.name.trim() in assetNames)
+                }
+                if (redundant.isNotEmpty()) {
+                    routeDao.deleteByIds(redundant.map { it.id })
+                    existing.removeAll(redundant)
                 }
             }
+
             appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 .edit().putBoolean(KEY_SEEDED, true).apply()
         }

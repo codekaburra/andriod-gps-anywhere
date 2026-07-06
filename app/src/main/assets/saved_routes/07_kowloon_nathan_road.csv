@@ -1,5 +1,6 @@
 # route_id: 20260613T150000
-# route_name: 九龍幹線彌敦道
+# route_name_tc: 香港 - 彌敦道
+# route_name_eng: Hong Kong - Nathan Road
 latitude,longitude,name_tc,name_en
 22.296610,114.172050,彌敦道起點（梳士巴利道交界/半島酒店）,Nathan Road Start (Salisbury Road / Peninsula Hotel)
 22.297450,114.172150,彌敦道（中間道交界/九龍酒店）,Nathan Road (Middle Road Junction / Kowloon Hotel)

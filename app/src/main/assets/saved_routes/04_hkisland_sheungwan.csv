@@ -1,5 +1,6 @@
-# version: 1
-# route_name: 港島 - 上環
+# route_id: 20260613T150004
+# route_name_tc: 香港 - 上環
+# route_name_eng: Hong Kong - Sheung Wan
 latitude,longitude,name_tc,name_en
 22.2880927,114.1517666,港澳客輪碼頭,Macau Ferry Terminal
 22.2867652,114.1503102,上環郵政局,Sheung Wan Post Office

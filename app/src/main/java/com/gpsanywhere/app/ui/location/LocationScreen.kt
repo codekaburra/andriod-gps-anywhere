@@ -89,6 +89,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -290,13 +292,14 @@ fun LocationScreen(
         else -> null
     }
 
+    val currentPositionLabel = stringResource(R.string.current_position)
     val previewPoint: LocationPoint? = when {
         selectedLocation != null ->
             LocationPoint(selectedLocation!!.latitude, selectedLocation!!.longitude, selectedLocation!!.name)
         isSpoofing && currentLat != null && currentLng != null ->
-            LocationPoint(currentLat!!, currentLng!!, "Current position")
+            LocationPoint(currentLat!!, currentLng!!, currentPositionLabel)
         currentLat != null && currentLng != null ->
-            LocationPoint(currentLat!!, currentLng!!, "Current position")
+            LocationPoint(currentLat!!, currentLng!!, currentPositionLabel)
         else -> null
     }
 
@@ -333,11 +336,6 @@ fun LocationScreen(
                                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                 )
                                 Text(
-                                    "",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
                                     "${"%.1f".format(liveSpeedKmh)} km/h",
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -358,7 +356,7 @@ fun LocationScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                "Speed",
+                                stringResource(R.string.speed),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
@@ -391,7 +389,7 @@ fun LocationScreen(
                             ),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                         ) {
-                            Text("Stop")
+                            Text(stringResource(R.string.action_stop))
                         }
                     }
                 }
@@ -427,7 +425,7 @@ fun LocationScreen(
                             IconButton(onClick = { showAddSheet = true }) {
                                 Icon(
                                     Icons.Default.Add,
-                                    contentDescription = "Add location",
+                                    contentDescription = stringResource(R.string.add_location),
                                     tint = Color.White
                                 )
                             }
@@ -445,7 +443,7 @@ fun LocationScreen(
                             IconButton(onClick = { showAddSheet = true }) {
                                 Icon(
                                     Icons.Default.Add,
-                                    contentDescription = "Add location",
+                                    contentDescription = stringResource(R.string.add_location),
                                     tint = Color.White
                                 )
                             }
@@ -496,7 +494,7 @@ fun LocationScreen(
             }
 
             item {
-                SectionHeader(title = "Saved Locations")
+                SectionHeader(title = stringResource(R.string.saved_locations))
             }
 
             item(key = "tag_filter") {
@@ -515,10 +513,14 @@ fun LocationScreen(
                 item {
                     EmptyState(
                         icon = Icons.Default.LocationOn,
-                        title = if (allLocations.isEmpty()) "No locations yet" else "No matching locations",
-                        body = if (allLocations.isEmpty())
-                            "Tap + to add one, or import the prebuilt set from Settings"
-                        else "Try a different filter"
+                        title = stringResource(
+                            if (allLocations.isEmpty()) R.string.no_locations_yet
+                            else R.string.no_matching_locations
+                        ),
+                        body = stringResource(
+                            if (allLocations.isEmpty()) R.string.no_locations_hint
+                            else R.string.try_different_filter
+                        )
                     )
                 }
             } else {
@@ -553,16 +555,16 @@ fun LocationScreen(
     walkBreakLocation?.let { loc ->
         AlertDialog(
             onDismissRequest = { walkBreakLocation = null },
-            title = { Text("Stop walk mode?") },
-            text = { Text("Starting Walk Around at \"${loc.name}\" will stop the current walk. Continue?") },
+            title = { Text(stringResource(R.string.dialog_stop_walk_title)) },
+            text = { Text(stringResource(R.string.dialog_stop_walk_text, loc.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     applySpiral(loc)
                     walkBreakLocation = null
-                }) { Text("Stop & start new walk") }
+                }) { Text(stringResource(R.string.stop_and_start_new_walk)) }
             },
             dismissButton = {
-                TextButton(onClick = { walkBreakLocation = null }) { Text("Cancel") }
+                TextButton(onClick = { walkBreakLocation = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -570,23 +572,23 @@ fun LocationScreen(
     deleteLocation?.let { loc ->
         AlertDialog(
             onDismissRequest = { deleteLocation = null },
-            title = { Text("Delete location?") },
-            text = { Text("Delete \"${loc.name}\"? This cannot be undone.") },
+            title = { Text(stringResource(R.string.dialog_delete_location_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_location_text, loc.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteLocation(loc)
                     deleteLocation = null
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { deleteLocation = null }) { Text("Cancel") }
+                TextButton(onClick = { deleteLocation = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
 
     editLocation?.let { loc ->
         AddLocationSheet(
-            title = "Edit Location",
+            title = stringResource(R.string.edit_location),
             initialName = loc.name,
             initialLat = "%.6f".format(loc.latitude),
             initialLng = "%.6f".format(loc.longitude),
@@ -601,6 +603,7 @@ fun LocationScreen(
 
     if (showAddSheet) {
         AddLocationSheet(
+            title = stringResource(R.string.add_location),
             onDismiss = { showAddSheet = false },
             onSave = { name, lat, lng, tags ->
                 viewModel.addLocation(name, lat, lng, tags)
@@ -632,7 +635,7 @@ private fun TagFilterRow(
         FilterChip(
             selected = customOnly,
             onClick = onCustomToggle,
-            label = { Text("Custom") },
+            label = { Text(stringResource(R.string.filter_custom)) },
             leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp)) },
             colors = chipColors,
             border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
@@ -857,23 +860,23 @@ private fun TransportButtons(
         disabledContentColor = Color.White.copy(alpha = 0.5f)
     )
     FilledIconButton(onClick = onJump, enabled = enabled, colors = colors) {
-        Icon(Icons.Default.DoorFront, contentDescription = "Jump", modifier = Modifier.size(iconSize))
+        Icon(Icons.Default.DoorFront, contentDescription = stringResource(R.string.transport_jump), modifier = Modifier.size(iconSize))
     }
     Spacer(Modifier.width(4.dp))
     FilledIconButton(onClick = onSpiral, enabled = enabled, colors = colors) {
-        Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = "Walk Around", modifier = Modifier.size(iconSize))
+        Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = stringResource(R.string.transport_walk_around), modifier = Modifier.size(iconSize))
     }
     Spacer(Modifier.width(4.dp))
     FilledIconButton(onClick = { onFly(FLY_HELI_KMH) }, enabled = enabled, colors = colors) {
-        Icon(painterResource(R.drawable.ic_helicopter), contentDescription = "80 km/h", modifier = Modifier.size(iconSize))
+        Icon(painterResource(R.drawable.ic_helicopter), contentDescription = stringResource(R.string.transport_heli), modifier = Modifier.size(iconSize))
     }
     Spacer(Modifier.width(4.dp))
     FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled, colors = colors) {
-        Icon(Icons.Default.Flight, contentDescription = "500 km/h", modifier = Modifier.size(iconSize))
+        Icon(Icons.Default.Flight, contentDescription = stringResource(R.string.transport_flight), modifier = Modifier.size(iconSize))
     }
     Spacer(Modifier.width(4.dp))
     FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled, colors = colors) {
-        Icon(Icons.Default.RocketLaunch, contentDescription = "2000 km/h", modifier = Modifier.size(iconSize))
+        Icon(Icons.Default.RocketLaunch, contentDescription = stringResource(R.string.transport_rocket), modifier = Modifier.size(iconSize))
     }
 }
 
@@ -910,7 +913,7 @@ private fun EmptyState(
 private fun AddLocationSheet(
     onDismiss: () -> Unit,
     onSave: (name: String, lat: Double, lng: Double, tags: String) -> Unit,
-    title: String = "Add Location",
+    title: String,
     initialName: String = "",
     initialLat: String = "",
     initialLng: String = "",
@@ -918,6 +921,7 @@ private fun AddLocationSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val clipboard = LocalClipboardManager.current
+    val sheetContext = LocalContext.current
 
     var name by remember { mutableStateOf(initialName) }
     var latText by remember { mutableStateOf(initialLat) }
@@ -972,14 +976,14 @@ private fun AddLocationSheet(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it; error = null },
-                label = { Text("Name") },
+                label = { Text(stringResource(R.string.name)) },
                 singleLine = true,
                 colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
             )
 
             Text(
-                "Format: latitude, longitude  (e.g. 25.0330, 121.5654)",
+                stringResource(R.string.coordinate_format_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
             )
@@ -992,8 +996,8 @@ private fun AddLocationSheet(
                 OutlinedTextField(
                     value = latText,
                     onValueChange = { latText = it; error = null },
-                    label = { Text("Latitude") },
-                    placeholder = { Text("Latitude") },
+                    label = { Text(stringResource(R.string.latitude)) },
+                    placeholder = { Text(stringResource(R.string.latitude)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     colors = fieldColors,
@@ -1002,8 +1006,8 @@ private fun AddLocationSheet(
                 OutlinedTextField(
                     value = lngText,
                     onValueChange = { lngText = it; error = null },
-                    label = { Text("Longitude") },
-                    placeholder = { Text("Longitude") },
+                    label = { Text(stringResource(R.string.longitude)) },
+                    placeholder = { Text(stringResource(R.string.longitude)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     colors = fieldColors,
@@ -1014,7 +1018,7 @@ private fun AddLocationSheet(
                         val raw = clipboard.getText()?.text?.trim().orEmpty()
                         val parsed = parseClipboardCoordinates(raw)
                         if (parsed == null) {
-                            error = "Invalid Format [$raw]. Clipboard must be latitude, longitude"
+                            error = sheetContext.getString(R.string.clipboard_invalid_format, raw)
                         } else {
                             lngText = parsed.first.toBigDecimal().stripTrailingZeros().toPlainString()
                             latText = parsed.second.toBigDecimal().stripTrailingZeros().toPlainString()
@@ -1026,14 +1030,14 @@ private fun AddLocationSheet(
                         contentColor = Color.White
                     )
                 ) {
-                    Icon(Icons.Default.ContentPaste, contentDescription = "Paste coordinates", modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.ContentPaste, contentDescription = stringResource(R.string.action_paste), modifier = Modifier.size(18.dp))
                 }
             }
 
             OutlinedTextField(
                 value = tagsText,
                 onValueChange = { tagsText = it },
-                label = { Text("Tags (optional)") },
+                label = { Text(stringResource(R.string.tags)) },
                 placeholder = { Text("cafe | park | work") },
                 singleLine = true,
                 colors = fieldColors,
@@ -1054,16 +1058,16 @@ private fun AddLocationSheet(
                         containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg,
                         contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
                     )
-                ) { Text("Cancel") }
+                ) { Text(stringResource(R.string.action_cancel)) }
                 Button(
                     onClick = {
                         val n = name.trim()
                         val lat = latText.trim().toDoubleOrNull()
                         val lng = lngText.trim().toDoubleOrNull()
                         when {
-                            n.isEmpty() -> error = "Name is required"
-                            lng == null || lng !in -180.0..180.0 -> error = "Longitude must be between -180 and 180"
-                            lat == null || lat !in -90.0..90.0 -> error = "Latitude must be between -90 and 90"
+                            n.isEmpty() -> error = sheetContext.getString(R.string.error_name_required)
+                            lng == null || lng !in -180.0..180.0 -> error = sheetContext.getString(R.string.error_longitude_range)
+                            lat == null || lat !in -90.0..90.0 -> error = sheetContext.getString(R.string.error_latitude_range)
                             else -> {
                                 val normTags = tagsText.split("|", ",")
                                     .map { it.trim() }.filter { it.isNotEmpty() }
@@ -1076,7 +1080,7 @@ private fun AddLocationSheet(
                         containerColor = com.gpsanywhere.app.ui.theme.GlassGreen,
                         contentColor = Color.White
                     )
-                ) { Text("Save") }
+                ) { Text(stringResource(R.string.action_save)) }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -1110,7 +1114,7 @@ private fun CustomJumpPanel(
                 OutlinedTextField(
                     value = coordinateText,
                     onValueChange = onCoordinateChange,
-                    label = { Text("Coordinate") },
+                    label = { Text(stringResource(R.string.coordinate)) },
                     placeholder = { Text("22.3168,114.0451") },
                     isError = hasInput && !isValid,
                     singleLine = true,
@@ -1135,7 +1139,7 @@ private fun CustomJumpPanel(
                 ) {
                     Icon(
                         Icons.Default.ContentPaste,
-                        contentDescription = "Paste",
+                        contentDescription = stringResource(R.string.action_paste),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -1157,7 +1161,7 @@ private fun CustomJumpPanel(
 
             if (hasInput && !isValid) {
                 Text(
-                    text = "Use format: latitude,longitude (e.g. 22.3168,114.0451)",
+                    text = stringResource(R.string.coordinate_format_error),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -1343,7 +1347,7 @@ private fun ResetIntervalInput() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Reset every", style = MaterialTheme.typography.bodyMedium, color = labelColor)
+        Text(stringResource(R.string.reset_every), style = MaterialTheme.typography.bodyMedium, color = labelColor)
         OutlinedTextField(
             value = text,
             onValueChange = { input -> text = input.filter { it.isDigit() } },
@@ -1357,7 +1361,7 @@ private fun ResetIntervalInput() {
             textStyle = MaterialTheme.typography.bodyMedium,
             singleLine = true
         )
-        Text("min", style = MaterialTheme.typography.bodyMedium, color = labelColor)
+        Text(stringResource(R.string.minutes_short), style = MaterialTheme.typography.bodyMedium, color = labelColor)
         FilledIconButton(
             onClick = { submit() },
             enabled = valid && dirty,
@@ -1367,7 +1371,7 @@ private fun ResetIntervalInput() {
                 contentColor = Color.White
             )
         ) {
-            Icon(Icons.Default.Check, contentDescription = "Apply reset interval", modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Check, contentDescription = stringResource(R.string.action_apply), modifier = Modifier.size(18.dp))
         }
     }
 }

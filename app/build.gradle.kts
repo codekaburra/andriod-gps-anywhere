@@ -4,6 +4,14 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Count commits on the default branch so versionName = "1.<commits>.0"
+// Uses providers.exec so the value is configuration-cache-safe.
+// Falls back to 0 when git is unavailable (e.g. shallow CI checkout).
+val commitCount: Int = providers.exec {
+    commandLine("git", "rev-list", "--count", "origin/main")
+}.standardOutput.asText.map { it.trim().toIntOrNull() ?: 0 }
+    .orElse(0).get()
+
 android {
     namespace = "com.gpsanywhere.app"
     compileSdk = 36
@@ -12,8 +20,8 @@ android {
         applicationId = "com.gpsanywhere.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = commitCount
+        versionName = "1.$commitCount.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

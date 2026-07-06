@@ -1,27 +1,157 @@
 <resources>
     <string name="app_name">GPS Anywhere</string>
 
-    <!-- Master Toggle -->
-    <string name="status_active">Spoofing Active</string>
-    <string name="status_inactive">Using Real GPS</string>
-
     <!-- Bottom Navigation -->
-    <string name="nav_set_location">Set Location</string>
-    <string name="nav_walk_route">Walk Route</string>
-    <string name="nav_saved_routes">Saved Routes</string>
+    <string name="nav_location">Location</string>
+    <string name="nav_route">Route</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Common actions -->
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_import">Import</string>
+    <string name="action_apply">Apply</string>
+    <string name="action_paste">Paste</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_back">Back</string>
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
+    <string name="action_next">Next</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_got_it">Got it</string>
+    <string name="action_add">Add</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_title">Setup Required</string>
-    <string name="onboarding_message">To use GPS Anywhere, you need to:\n\n1. Enable Developer Options on your phone\n   (Settings → About Phone → tap Build Number 7 times)\n\n2. Go to Developer Options → Select Mock Location App → choose GPS Anywhere</string>
-    <string name="onboarding_ok">Got it</string>
+    <string name="onboarding_title">Setup GPS Anywhere</string>
+    <string name="onboarding_step_1_title">Enable Developer Options</string>
+    <string name="onboarding_step_1_body">Go to Settings → About Phone → tap Build Number 7 times to enable Developer Options.</string>
+    <string name="onboarding_step_2_title">Select Mock Location App</string>
+    <string name="onboarding_step_2_body">Open Developer Options → Select Mock Location App → choose GPS Anywhere.</string>
+    <string name="onboarding_step_3_title">Grant Permissions</string>
+    <string name="onboarding_step_3_body">Allow location and notification permissions when prompted so custom location mode and the status notification work correctly.</string>
+    <string name="onboarding_step_n_of">Step %1$d of %2$d</string>
 
-    <!-- Theme -->
-    <string name="theme_system">System</string>
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="language_system">System</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_traditional_chinese" translatable="false">繁體中文</string>
+    <string name="settings_theme">Colour Theme</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="settings_prebuilt">Prebuilt Data</string>
+    <string name="settings_prebuilt_desc">Import bundled sample locations or routes. Existing items are kept; you can delete any of them afterwards.</string>
+    <string name="import_prebuilt_locations">Import Prebuilt Locations</string>
+    <string name="import_prebuilt_routes">Import Prebuilt Routes</string>
+    <string name="working">Working…</string>
+    <string name="delete_prebuilt_locations">Delete All Prebuilt Locations</string>
+    <string name="delete_prebuilt_routes">Delete All Prebuilt Routes</string>
+    <string name="delete_custom_data">Delete All Custom Data</string>
+    <string name="settings_dev_options">Developer Options</string>
+    <string name="settings_dev_options_desc">Open Android Developer Options to select this app as the mock location app.</string>
+    <string name="open_dev_options">Open Developer Options</string>
+    <string name="dev_options_manual_hint">Please go to Settings → Developer Options manually</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_last_updated">Last updated: %1$s</string>
+    <string name="settings_copyright">© 2026 eye7290. All rights reserved.</string>
+    <string name="settings_disclaimer">This app is intended for development and testing purposes only.</string>
 
-    <!-- General -->
-    <string name="start">Start</string>
-    <string name="pause">Pause</string>
-    <string name="stop">Stop</string>
+    <!-- Settings dialogs / toasts -->
+    <string name="dialog_import_locations_title">Import prebuilt locations?</string>
+    <string name="dialog_import_locations_text">This adds all bundled sample locations to your list. Your existing items are kept. Continue?</string>
+    <string name="dialog_import_routes_title">Import prebuilt routes?</string>
+    <string name="dialog_import_routes_text">This adds all bundled sample routes to your list. Existing routes are kept and duplicated prebuilt routes are cleaned up. Continue?</string>
+    <string name="dialog_delete_prebuilt_title">Delete all prebuilt locations?</string>
+    <string name="dialog_delete_prebuilt_text">This removes all bundled sample locations. Your own created locations are kept. Continue?</string>
+    <string name="dialog_delete_custom_title">Delete all custom data?</string>
+    <string name="dialog_delete_custom_text">This removes all locations and routes you created yourself. Prebuilt items are kept. This cannot be undone. Continue?</string>
+    <string name="toast_locations_imported">Prebuilt locations imported</string>
+    <string name="toast_routes_imported">Prebuilt routes imported</string>
+    <string name="toast_prebuilt_deleted">Prebuilt locations deleted</string>
+    <string name="toast_prebuilt_routes_deleted">Prebuilt routes deleted</string>
+    <string name="dialog_delete_prebuilt_routes_title">Delete all prebuilt routes?</string>
+    <string name="dialog_delete_prebuilt_routes_text">This removes all bundled sample routes. Your own created routes are kept. Continue?</string>
+    <string name="toast_custom_deleted">Custom data deleted</string>
+
+    <!-- Location screen -->
+    <string name="saved_locations">Saved Locations</string>
+    <string name="add_location">Add Location</string>
+    <string name="edit_location">Edit Location</string>
+    <string name="filter_custom">Custom</string>
+    <string name="no_locations_yet">No locations yet</string>
+    <string name="no_matching_locations">No matching locations</string>
+    <string name="no_locations_hint">Tap + to add one, or import the prebuilt set from Settings</string>
+    <string name="try_different_filter">Try a different filter</string>
+    <string name="current_position">Current position</string>
+    <string name="coordinate">Coordinate</string>
+    <string name="coordinate_format_error">Use format: latitude,longitude (e.g. 22.3168,114.0451)</string>
+    <string name="name">Name</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="coordinate_format_hint">Format: latitude, longitude  (e.g. 25.0330, 121.5654)</string>
+    <string name="clipboard_invalid_format">Invalid format [%1$s]. Clipboard must be latitude, longitude</string>
+    <string name="tags">Tags</string>
+    <string name="tags_hint_1">Tags (optional) can be anything</string>
+    <string name="tags_hint_2" translatable="false">[] or [cafe] or [cafe | park | work]</string>
+    <string name="error_name_required">Name is required</string>
+    <string name="error_longitude_range">Longitude must be between -180 and 180</string>
+    <string name="error_latitude_range">Latitude must be between -90 and 90</string>
+    <string name="dialog_delete_location_title">Delete location?</string>
+    <string name="dialog_delete_location_text">Delete \"%1$s\"? This cannot be undone.</string>
+    <string name="dialog_stop_walk_title">Stop walk mode?</string>
+    <string name="dialog_stop_walk_text">Starting Walk Around at \"%1$s\" will stop the current walk. Continue?</string>
+    <string name="stop_and_start_new_walk">Stop &amp; start new walk</string>
+    <string name="reset_every">Reset every</string>
+    <string name="minutes_short">min</string>
+    <string name="speed">Speed</string>
+    <string name="kmh" translatable="false">km/h</string>
+    <string name="transport_jump">Jump</string>
+    <string name="transport_walk_around">Walk Around</string>
+    <string name="transport_heli">Helicopter (200 km/h)</string>
+    <string name="transport_flight">Flight (1000 km/h)</string>
+    <string name="transport_rocket">Rocket (5000 km/h)</string>
+
+    <!-- Walk / route screen -->
+    <string name="walk_title">Walk</string>
+    <string name="not_started">Not started</string>
+    <string name="current_speed">Current Speed</string>
+    <string name="base_speed">Base Speed</string>
+    <string name="saved_routes">Saved Routes</string>
+    <string name="add_route">Add route</string>
+    <string name="no_routes_yet">No routes yet</string>
+    <string name="no_routes_hint">Tap + to create a route, or import prebuilt routes from Settings</string>
+    <string name="route_meta">%1$s · %2$d stops</string>
+    <string name="waypoint_n">Waypoint %1$d</string>
+    <string name="dialog_delete_route_title">Delete route?</string>
+    <string name="dialog_delete_route_text">Delete \"%1$s\"? This cannot be undone.</string>
+    <string name="reverse_direction">Reverse direction</string>
+    <string name="edit_route">Edit route</string>
+    <string name="delete_route">Delete route</string>
+
+    <!-- Route editor -->
+    <string name="new_route_title">New Route</string>
+    <string name="edit_route_title">Edit Route</string>
+    <string name="route_name">Route name</string>
+    <string name="editor_map">Map</string>
+    <string name="editor_csv" translatable="false">CSV</string>
+    <string name="csv_hint">Edit or paste the route as CSV. Lines starting with # are metadata; each data row is latitude,longitude,name_tc,name_en.</string>
+    <string name="route_csv">Route CSV</string>
+    <string name="csv_parse_error">No valid coordinates found. Each row needs: latitude,longitude,name_tc,name_en</string>
+    <string name="tap_map_hint">Tap the map to add a waypoint · %1$d stop(s)</string>
+    <string name="click_map_hint">Click the map to add points</string>
+    <string name="add_point">Add point</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+
+    <!-- Spoof service notification -->
+    <string name="notif_channel_name">Custom Location</string>
+    <string name="notif_channel_desc">Shows when using a custom location</string>
+    <string name="notif_title">GPS Anywhere — Active</string>
+    <string name="notif_fixed">Custom Location: %1$s</string>
+    <string name="notif_walking">Walking @ %1$s km/h</string>
 </resources>

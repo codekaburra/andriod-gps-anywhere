@@ -41,6 +41,13 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_COMPLIANCE_ACK, false)
         set(value) = prefs.edit().putBoolean(KEY_COMPLIANCE_ACK, value).apply()
 
+    var appLanguage: AppLanguage
+        get() {
+            val name = prefs.getString(KEY_APP_LANGUAGE, AppLanguage.SYSTEM.name)
+            return try { AppLanguage.valueOf(name!!) } catch (_: Exception) { AppLanguage.SYSTEM }
+        }
+        set(value) = prefs.edit().putString(KEY_APP_LANGUAGE, value.name).apply()
+
     fun applySavedTheme() {
         val nightMode = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_NO)
         AppCompatDelegate.setDefaultNightMode(nightMode)
@@ -52,5 +59,6 @@ class AppPreferences(context: Context) {
         private const val KEY_ONBOARDING_SHOWN = "onboarding_shown"
         private const val KEY_COLOR_THEME = "color_theme"
         private const val KEY_COMPLIANCE_ACK = "compliance_ack"
+        private const val KEY_APP_LANGUAGE = "app_language"
     }
 }

@@ -17,28 +17,21 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.gpsanywhere.app.R
 import kotlinx.coroutines.launch
 
 private data class OnboardingPage(
-    val title: String,
-    val body: String
+    val title: Int,
+    val body: Int
 )
 
 private val pages = listOf(
-    OnboardingPage(
-        title = "Enable Developer Options",
-        body = "Go to Settings → About Phone → tap Build Number 7 times to enable Developer Options."
-    ),
-    OnboardingPage(
-        title = "Select Mock Location App",
-        body = "Open Developer Options → Select Mock Location App → choose GPS Anywhere."
-    ),
-    OnboardingPage(
-        title = "Grant Permissions",
-        body = "Allow location and notification permissions when prompted so custom location mode and the status notification work correctly."
-    )
+    OnboardingPage(R.string.onboarding_step_1_title, R.string.onboarding_step_1_body),
+    OnboardingPage(R.string.onboarding_step_2_title, R.string.onboarding_step_2_body),
+    OnboardingPage(R.string.onboarding_step_3_title, R.string.onboarding_step_3_body)
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -51,7 +44,7 @@ fun OnboardingDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Setup GPS Anywhere") },
+        title = { Text(stringResource(R.string.onboarding_title)) },
         text = {
             Column {
                 HorizontalPager(
@@ -63,11 +56,11 @@ fun OnboardingDialog(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = pages[page].title,
+                            text = stringResource(pages[page].title),
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = pages[page].body,
+                            text = stringResource(pages[page].body),
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Start
                         )
@@ -75,7 +68,7 @@ fun OnboardingDialog(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Step ${pagerState.currentPage + 1} of ${pages.size}",
+                    text = stringResource(R.string.onboarding_step_n_of, pagerState.currentPage + 1, pages.size),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -84,7 +77,7 @@ fun OnboardingDialog(
         confirmButton = {
             Row {
                 TextButton(onClick = onDismiss) {
-                    Text("Skip")
+                    Text(stringResource(R.string.action_skip))
                 }
                 TextButton(
                     onClick = {
@@ -98,7 +91,10 @@ fun OnboardingDialog(
                     }
                 ) {
                     Text(
-                        if (pagerState.currentPage == pages.size - 1) "Got it" else "Next"
+                        stringResource(
+                            if (pagerState.currentPage == pages.size - 1) R.string.action_got_it
+                            else R.string.action_next
+                        )
                     )
                 }
             }
