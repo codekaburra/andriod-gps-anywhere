@@ -14,6 +14,7 @@
     <string name="action_import">匯入</string>
     <string name="action_apply">套用</string>
     <string name="action_paste">貼上</string>
+    <string name="action_copy">複製</string>
     <string name="action_back">返回</string>
     <string name="action_start">開始</string>
     <string name="action_stop">停止</string>

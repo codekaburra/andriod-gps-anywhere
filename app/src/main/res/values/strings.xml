@@ -14,6 +14,7 @@
     <string name="action_import">Import</string>
     <string name="action_apply">Apply</string>
     <string name="action_paste">Paste</string>
+    <string name="action_copy">Copy</string>
     <string name="action_back">Back</string>
     <string name="action_start">Start</string>
     <string name="action_stop">Stop</string>
