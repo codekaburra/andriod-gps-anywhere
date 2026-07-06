@@ -49,6 +49,7 @@
     <string name="import_prebuilt_routes">Import Prebuilt Routes</string>
     <string name="working">Working…</string>
     <string name="delete_prebuilt_locations">Delete All Prebuilt Locations</string>
+    <string name="delete_prebuilt_routes">Delete All Prebuilt Routes</string>
     <string name="delete_custom_data">Delete All Custom Data</string>
     <string name="settings_dev_options">Developer Options</string>
     <string name="settings_dev_options_desc">Open Android Developer Options to select this app as the mock location app.</string>
@@ -71,6 +72,9 @@
     <string name="toast_locations_imported">Prebuilt locations imported</string>
     <string name="toast_routes_imported">Prebuilt routes imported</string>
     <string name="toast_prebuilt_deleted">Prebuilt locations deleted</string>
+    <string name="toast_prebuilt_routes_deleted">Prebuilt routes deleted</string>
+    <string name="dialog_delete_prebuilt_routes_title">Delete all prebuilt routes?</string>
+    <string name="dialog_delete_prebuilt_routes_text">This removes all bundled sample routes. Your own created routes are kept. Continue?</string>
     <string name="toast_custom_deleted">Custom data deleted</string>
 
     <!-- Location screen -->

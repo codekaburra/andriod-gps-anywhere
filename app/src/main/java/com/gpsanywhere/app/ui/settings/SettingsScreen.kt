@@ -53,6 +53,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
     var showImportLocationsConfirm by remember { mutableStateOf(false) }
     var showImportRoutesConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showDeleteRoutesConfirm by remember { mutableStateOf(false) }
     var showDeleteCustomConfirm by remember { mutableStateOf(false) }
     val versionName = packageInfo.versionName ?: "unknown"
     val lastUpdated = remember {
@@ -196,6 +197,17 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     )
                 ) {
                     Text(stringResource(R.string.delete_prebuilt_locations))
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { showDeleteRoutesConfirm = true },
+                    enabled = !isImporting,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(stringResource(R.string.delete_prebuilt_routes))
                 }
                 Spacer(Modifier.height(8.dp))
                 Button(
@@ -378,6 +390,25 @@ fun SettingsScreen(viewModel: MainViewModel) {
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        )
+    }
+
+    if (showDeleteRoutesConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteRoutesConfirm = false },
+            title = { Text(stringResource(R.string.dialog_delete_prebuilt_routes_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_prebuilt_routes_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteRoutesConfirm = false
+                    viewModel.deletePrebuiltRoutes {
+                        Toast.makeText(context, context.getString(R.string.toast_prebuilt_routes_deleted), Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text(stringResource(R.string.action_delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteRoutesConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }

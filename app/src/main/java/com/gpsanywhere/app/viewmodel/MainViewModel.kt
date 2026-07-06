@@ -82,6 +82,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Remove all bundled prebuilt routes (keeps user-created routes and all locations). */
+    fun deletePrebuiltRoutes(onDone: () -> Unit = {}) {
+        if (_isImporting.value == true) return
+        _isImporting.value = true
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val routeDao = AppDatabase.getInstance(getApplication()).routeDao()
+                val ids = routeDao.getAll().filter { it.isPreinstalled }.map { it.id }
+                if (ids.isNotEmpty()) routeDao.deleteByIds(ids)
+            }
+            _isImporting.value = false
+            onDone()
+        }
+    }
+
     /** Remove all bundled prebuilt locations (keeps user-created items and routes). */
     fun deletePrebuiltLocations(onDone: () -> Unit = {}) {
         if (_isImporting.value == true) return

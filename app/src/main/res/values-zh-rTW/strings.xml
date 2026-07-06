@@ -47,6 +47,7 @@
     <string name="import_prebuilt_routes">匯入預設路線</string>
     <string name="working">處理中…</string>
     <string name="delete_prebuilt_locations">刪除所有預設地點</string>
+    <string name="delete_prebuilt_routes">刪除所有預設路線</string>
     <string name="delete_custom_data">刪除所有自訂資料</string>
     <string name="settings_dev_options">開發人員選項</string>
     <string name="settings_dev_options_desc">開啟 Android 開發人員選項,將本 App 設為模擬位置應用程式。</string>
@@ -69,6 +70,9 @@
     <string name="toast_locations_imported">已匯入預設地點</string>
     <string name="toast_routes_imported">已匯入預設路線</string>
     <string name="toast_prebuilt_deleted">已刪除預設地點</string>
+    <string name="toast_prebuilt_routes_deleted">已刪除預設路線</string>
+    <string name="dialog_delete_prebuilt_routes_title">刪除所有預設路線?</string>
+    <string name="dialog_delete_prebuilt_routes_text">會刪除所有內建範例路線,你自己建立的路線會保留。要繼續嗎?</string>
     <string name="toast_custom_deleted">已刪除自訂資料</string>
 
     <!-- Location screen -->
