@@ -256,6 +256,18 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 ) {
                     Text(stringResource(R.string.open_dev_options))
                 }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    stringResource(R.string.dev_options_step1),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    stringResource(R.string.dev_options_step2),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
             }
         }
 
