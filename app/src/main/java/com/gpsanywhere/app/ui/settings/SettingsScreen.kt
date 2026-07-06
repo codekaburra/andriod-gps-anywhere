@@ -412,4 +412,23 @@ fun SettingsScreen(viewModel: MainViewModel) {
             }
         )
     }
+
+    if (showDeleteCustomConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteCustomConfirm = false },
+            title = { Text("Delete all custom data?") },
+            text = { Text("This removes all locations and routes you created. Bundled prebuilt items are kept. Continue?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteCustomConfirm = false
+                    viewModel.deleteCustom {
+                        Toast.makeText(context, "Custom data deleted", Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteCustomConfirm = false }) { Text("Cancel") }
+            }
+        )
+    }
 }

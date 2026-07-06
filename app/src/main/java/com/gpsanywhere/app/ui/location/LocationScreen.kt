@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.ui.res.painterResource
@@ -1323,7 +1324,22 @@ private fun ResetCountdown() {
 private fun ResetIntervalInput() {
     val defaultMin = LocationViewModel.SPIRAL_RESET_INTERVAL_MS / 60_000L
     var text by remember { mutableStateOf(defaultMin.toString()) }
+    var appliedMin by remember { mutableStateOf(defaultMin) }
     val labelColor = MaterialTheme.colorScheme.onSurface
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+
+    val mins = text.toLongOrNull()
+    val valid = mins != null && mins > 0
+    val dirty = mins != appliedMin
+
+    fun submit() {
+        val m = text.toLongOrNull() ?: return
+        if (m <= 0) return
+        SpoofService.liveResetIntervalMs = m * 60_000L
+        appliedMin = m
+        keyboard?.hide()
+    }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1331,17 +1347,28 @@ private fun ResetIntervalInput() {
         Text(stringResource(R.string.reset_every), style = MaterialTheme.typography.bodyMedium, color = labelColor)
         OutlinedTextField(
             value = text,
-            onValueChange = { input ->
-                text = input.filter { it.isDigit() }
-                val mins = text.toLongOrNull()
-                if (mins != null && mins > 0) {
-                    SpoofService.liveResetIntervalMs = mins * 60_000L
-                }
-            },
+            onValueChange = { input -> text = input.filter { it.isDigit() } },
+            isError = text.isNotEmpty() && !valid,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Done
+            ),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { submit() }),
             modifier = Modifier.width(72.dp),
             textStyle = MaterialTheme.typography.bodyMedium,
             singleLine = true
         )
         Text(stringResource(R.string.minutes_short), style = MaterialTheme.typography.bodyMedium, color = labelColor)
+        FilledIconButton(
+            onClick = { submit() },
+            enabled = valid && dirty,
+            modifier = Modifier.size(40.dp),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.85f),
+                contentColor = Color.White
+            )
+        ) {
+            Icon(Icons.Default.Check, contentDescription = stringResource(R.string.action_apply), modifier = Modifier.size(18.dp))
+        }
     }
 }

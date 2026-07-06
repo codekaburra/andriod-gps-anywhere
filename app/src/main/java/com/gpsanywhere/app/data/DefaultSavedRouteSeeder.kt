@@ -38,7 +38,7 @@ object DefaultSavedRouteSeeder {
      * The route name may be blank when the content has no `# route_name*` header
      * (callers that require a name should check `routeName.isNotBlank()`).
      */
-    fun parseCsv(content: String): DefaultRouteAsset? {
+    internal fun parseCsv(content: String): DefaultRouteAsset? {
         var routeName: String? = null
         var routeNameTc: String? = null
         var routeId: String? = null
