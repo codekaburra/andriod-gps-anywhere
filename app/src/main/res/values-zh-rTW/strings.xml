@@ -58,7 +58,7 @@
     <string name="dev_options_step2">② 點「選取模擬位置應用程式」→ 選擇 GPS Anywhere。</string>
     <string name="settings_version">版本 %1$s</string>
     <string name="settings_last_updated">最後更新:%1$s</string>
-    <string name="settings_copyright">© 2026 eye7290. 版權所有。</string>
+    <string name="settings_copyright">© 2026 em. 版權所有。</string>
     <string name="settings_disclaimer">本 App 僅供開發與測試用途。</string>
 
     <!-- Settings dialogs / toasts -->
