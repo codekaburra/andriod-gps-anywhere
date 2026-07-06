@@ -1,4 +1,6 @@
-# route_name: 尖沙咀 Tsim Sha Tsui
+# route_id: 20260613T150008
+# route_name_tc: 香港 - 尖沙咀
+# route_name_eng: Hong Kong - Tsim Sha Tsui
 latitude,longitude,name_tc,name_en
 22.294590,114.164723,海港城盡頭 (郵輪碼頭/廣東道口),End of Harbour City (Canton Road)
 22.294810,114.166500,廣東道沿步道向南 (海港城外),Canton Road Southbound Walkway
