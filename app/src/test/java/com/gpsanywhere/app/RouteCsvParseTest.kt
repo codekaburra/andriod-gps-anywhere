@@ -51,8 +51,16 @@ class RouteCsvParseTest {
     }
 
     @Test
-    fun `returns null when no name or no coordinates`() {
+    fun `returns null only when there are no coordinates`() {
+        // Header present but no data rows → no coordinates → null.
         assertNull(DefaultSavedRouteSeeder.parseCsv("# route_name_eng: Empty\nlatitude,longitude,name_tc,name_en"))
-        assertNull(DefaultSavedRouteSeeder.parseCsv("22.0,114.0,A,A"))
+    }
+
+    @Test
+    fun `coordinate-only csv parses with a blank name`() {
+        // A route with coordinates but no name header is allowed; name comes back blank.
+        val route = DefaultSavedRouteSeeder.parseCsv("22.0,114.0,A,A")!!
+        assertEquals("", route.routeName)
+        assertEquals(1, route.coordinates.size)
     }
 }
