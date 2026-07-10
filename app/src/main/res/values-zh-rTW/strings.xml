@@ -39,6 +39,8 @@
     <string name="settings_title">設定</string>
     <string name="settings_language">語言</string>
     <string name="language_system">系統</string>
+    <string name="language_english">English</string>
+    <string name="language_traditional_chinese">繁體中文</string>
     <string name="settings_theme">顏色主題</string>
     <string name="theme_light">淺色</string>
     <string name="theme_dark">深色</string>
@@ -97,6 +99,7 @@
     <string name="clipboard_invalid_format">格式錯誤 [%1$s]。剪貼簿內容須為「緯度, 經度」</string>
     <string name="tags">標籤</string>
     <string name="tags_hint_1">標籤(選填),內容不限</string>
+    <string name="tags_hint_2">[] 或 [咖啡廳] 或 [咖啡廳 | 公園 | 工作]</string>
     <string name="error_name_required">請輸入名稱</string>
     <string name="error_longitude_range">經度須介於 -180 至 180</string>
     <string name="error_latitude_range">緯度須介於 -90 至 90</string>
@@ -108,6 +111,7 @@
     <string name="reset_every">重設間隔</string>
     <string name="minutes_short">分鐘</string>
     <string name="speed">速度</string>
+    <string name="kmh">km/h</string>
     <string name="transport_jump">瞬移</string>
     <string name="transport_walk_around">繞圈步行</string>
     <string name="transport_heli">直升機(200 km/h)</string>
@@ -136,6 +140,7 @@
     <string name="edit_route_title">編輯路線</string>
     <string name="route_name">路線名稱</string>
     <string name="editor_map">地圖</string>
+    <string name="editor_csv">CSV</string>
     <string name="csv_hint">以 CSV 編輯或貼上路線。# 開頭為中繼資料;每行資料為 latitude,longitude,name_tc,name_en。</string>
     <string name="route_csv">路線 CSV</string>
     <string name="csv_parse_error">找不到有效座標。每行需要:latitude,longitude,name_tc,name_en</string>
