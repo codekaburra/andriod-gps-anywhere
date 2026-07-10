@@ -84,8 +84,7 @@ dependencies {
     // OSMDroid
     implementation(libs.osmdroid)
 
-    // OkHttp / Gson
-    implementation(libs.okhttp)
+    // Gson
     implementation(libs.gson)
 
     // Health Connect for step data (to make games notice the steps)
