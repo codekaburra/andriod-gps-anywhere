@@ -6,8 +6,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.gpsanywhere.app.data.AppDatabase
 import com.gpsanywhere.app.data.DefaultLocationSeeder
-import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationAsset
-import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationPack
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
 import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
@@ -38,7 +36,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     private val dao = AppDatabase.getInstance(application).savedLocationDao()
 
-    val customLocations: LiveData<List<SavedLocation>> = dao.observeCustom()
     /** All saved locations (prebuilt + custom), all editable/deletable. */
     val allLocations: LiveData<List<SavedLocation>> = dao.observeAll()
     val isSpoofing: LiveData<Boolean> = SpoofService.isRunning
@@ -94,15 +91,8 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         startSpoofing(location.latitude, location.longitude)
     }
 
-    fun startSpoofing(asset: DefaultLocationAsset) {
-        startSpoofing(asset.latitude, asset.longitude)
-    }
-
     fun startSpiralWalk(location: SavedLocation) =
         startSpiralWalk(location.latitude, location.longitude)
-
-    fun startSpiralWalk(asset: DefaultLocationAsset) =
-        startSpiralWalk(asset.latitude, asset.longitude)
 
     fun startSpiralWalk(lat: Double, lng: Double) {
         val (lats, lngs) = SpiralWalkGenerator.generate(lat, lng)
@@ -149,9 +139,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     fun flyTo(location: SavedLocation, speedKmh: Float = MAX_SPEED_KMH) =
         flyTo(location.latitude, location.longitude, speedKmh)
-
-    fun flyTo(asset: DefaultLocationAsset, speedKmh: Float = MAX_SPEED_KMH) =
-        flyTo(asset.latitude, asset.longitude, speedKmh)
 
     fun nudgeSpiral(dLatDeg: Double, dLngDeg: Double) {
         val spoofLat = SpoofService.currentLat.value ?: 0.0
