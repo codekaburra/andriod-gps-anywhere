@@ -39,8 +39,8 @@
     <string name="settings_title">Settings</string>
     <string name="settings_language">Language</string>
     <string name="language_system">System</string>
-    <string name="language_english" translatable="false">English</string>
-    <string name="language_traditional_chinese" translatable="false">繁體中文</string>
+    <string name="language_english">English</string>
+    <string name="language_traditional_chinese">繁體中文</string>
     <string name="settings_theme">Colour Theme</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
@@ -99,7 +99,7 @@
     <string name="clipboard_invalid_format">Invalid format [%1$s]. Clipboard must be latitude, longitude</string>
     <string name="tags">Tags</string>
     <string name="tags_hint_1">Tags (optional) can be anything</string>
-    <string name="tags_hint_2" translatable="false">[] or [cafe] or [cafe | park | work]</string>
+    <string name="tags_hint_2">[] or [cafe] or [cafe | park | work]</string>
     <string name="error_name_required">Name is required</string>
     <string name="error_longitude_range">Longitude must be between -180 and 180</string>
     <string name="error_latitude_range">Latitude must be between -90 and 90</string>
@@ -111,7 +111,7 @@
     <string name="reset_every">Reset every</string>
     <string name="minutes_short">min</string>
     <string name="speed">Speed</string>
-    <string name="kmh" translatable="false">km/h</string>
+    <string name="kmh">km/h</string>
     <string name="transport_jump">Jump</string>
     <string name="transport_walk_around">Walk Around</string>
     <string name="transport_heli">Helicopter (200 km/h)</string>
@@ -140,7 +140,7 @@
     <string name="edit_route_title">Edit Route</string>
     <string name="route_name">Route name</string>
     <string name="editor_map">Map</string>
-    <string name="editor_csv" translatable="false">CSV</string>
+    <string name="editor_csv">CSV</string>
     <string name="csv_hint">Edit or paste the route as CSV. Lines starting with # are metadata; each data row is latitude,longitude,name_tc,name_en.</string>
     <string name="route_csv">Route CSV</string>
     <string name="csv_parse_error">No valid coordinates found. Each row needs: latitude,longitude,name_tc,name_en</string>
