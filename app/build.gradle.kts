@@ -42,6 +42,13 @@ android {
     buildFeatures {
         compose = true
     }
+    bundle {
+        // The app changes locale at runtime, so every installed bundle must
+        // include all packaged language resources.
+        language {
+            enableSplit = false
+        }
+    }
 }
 
 dependencies {
