@@ -99,8 +99,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationAsset
-import com.gpsanywhere.app.data.DefaultLocationSeeder.DefaultLocationPack
 import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
@@ -135,33 +133,10 @@ private fun sliderToSpeed(frac: Float): Float {
     }
 }
 
-private sealed class PendingLocation {
-    abstract val name: String
-    abstract val latitude: Double
-    abstract val longitude: Double
-    abstract val selectionKey: String
-    abstract val tags: List<String>
+private fun SavedLocation?.matches(other: SavedLocation?): Boolean =
+    this != null && other != null && id == other.id
 
-    data class Prebuilt(val asset: DefaultLocationAsset) : PendingLocation() {
-        override val name get() = asset.name
-        override val latitude get() = asset.latitude
-        override val longitude get() = asset.longitude
-        override val selectionKey get() = "prebuilt_${asset.sourceId}"
-        override val tags: List<String>
-            get() = if (asset.tags.isBlank()) emptyList() else asset.tags.split("|").map { it.trim() }.filter { it.isNotEmpty() }
-    }
-
-    data class Custom(val location: SavedLocation) : PendingLocation() {
-        override val name get() = location.name
-        override val latitude get() = location.latitude
-        override val longitude get() = location.longitude
-        override val selectionKey get() = "custom_${location.id}"
-        override val tags get() = location.tagList
-    }
-}
-
-private fun PendingLocation?.matches(other: PendingLocation?): Boolean =
-    this != null && other != null && selectionKey == other.selectionKey
+private fun SavedLocation.selectionKey(): String = "custom_$id"
 
 private fun coordinatesMatch(
     lat1: Double,
@@ -206,8 +181,8 @@ fun LocationScreen(
 
 
     var showAddSheet by remember { mutableStateOf(false) }
-    var selectedLocation by remember { mutableStateOf<PendingLocation?>(null) }
-    var walkBreakLocation by remember { mutableStateOf<PendingLocation?>(null) }
+    var selectedLocation by remember { mutableStateOf<SavedLocation?>(null) }
+    var walkBreakLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var deleteLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var editLocation by remember { mutableStateOf<SavedLocation?>(null) }
     var selectedTag by remember { mutableStateOf<String?>(null) }
@@ -238,47 +213,35 @@ fun LocationScreen(
         activeLocationKey(currentLat, currentLng, isSpoofing, isWalkMode, allLocations)
     }
 
-    fun onLocationSelected(pending: PendingLocation) {
-        selectedLocation = pending
+    fun onLocationSelected(location: SavedLocation) {
+        selectedLocation = location
     }
 
-    fun applyJump(pending: PendingLocation) {
-        when (pending) {
-            is PendingLocation.Prebuilt -> viewModel.startSpoofing(pending.asset)
-            is PendingLocation.Custom -> viewModel.startSpoofing(pending.location)
-        }
+    fun applyJump(location: SavedLocation) {
+        viewModel.startSpoofing(location)
         selectedLocation = null
     }
 
-    fun applySpiral(pending: PendingLocation) {
-        when (pending) {
-            is PendingLocation.Prebuilt -> viewModel.startSpiralWalk(pending.asset)
-            is PendingLocation.Custom -> viewModel.startSpiralWalk(pending.location)
-        }
+    fun applySpiral(location: SavedLocation) {
+        viewModel.startSpiralWalk(location)
         selectedLocation = null
     }
 
-    fun onJump(pending: PendingLocation) {
-        when (pending) {
-            is PendingLocation.Prebuilt -> viewModel.startSpoofing(pending.asset)
-            is PendingLocation.Custom -> viewModel.startSpoofing(pending.location)
-        }
+    fun onJump(location: SavedLocation) {
+        viewModel.startSpoofing(location)
         selectedLocation = null
     }
 
-    fun onFly(pending: PendingLocation, speedKmh: Float) {
-        when (pending) {
-            is PendingLocation.Prebuilt -> viewModel.flyTo(pending.asset, speedKmh)
-            is PendingLocation.Custom -> viewModel.flyTo(pending.location, speedKmh)
-        }
+    fun onFly(location: SavedLocation, speedKmh: Float) {
+        viewModel.flyTo(location, speedKmh)
         selectedLocation = null
     }
 
-    fun onSpiral(pending: PendingLocation) {
+    fun onSpiral(location: SavedLocation) {
         if (isWalkMode) {
-            walkBreakLocation = pending  // reuse same walk-break dialog; user confirms stop+restart
+            walkBreakLocation = location
         } else {
-            applySpiral(pending)
+            applySpiral(location)
         }
     }
 
@@ -525,21 +488,20 @@ fun LocationScreen(
                 }
             } else {
                 items(filteredLocations, key = { it.id }) { loc ->
-                    val pending = PendingLocation.Custom(loc)
                     LocationCard(
                         name = loc.name,
                         latitude = loc.latitude,
                         longitude = loc.longitude,
                         tags = loc.tagList,
                         routeHint = viewModel.routeHintFor(loc.name, loc.latitude, loc.longitude, routeHints),
-                        isSelected = selectedLocation.matches(pending),
-                        isActive = !selectedLocation.matches(pending) &&
-                            activeLocationKey == pending.selectionKey,
-                        showJumpButton = selectedLocation.matches(pending),
-                        onClick = { onLocationSelected(pending) },
-                        onJump = { onJump(pending) },
-                        onSpiral = { onSpiral(pending) },
-                        onFly = { speed -> onFly(pending, speed) },
+                        isSelected = selectedLocation.matches(loc),
+                        isActive = !selectedLocation.matches(loc) &&
+                            activeLocationKey == loc.selectionKey(),
+                        showJumpButton = selectedLocation.matches(loc),
+                        onClick = { onLocationSelected(loc) },
+                        onJump = { onJump(loc) },
+                        onSpiral = { onSpiral(loc) },
+                        onFly = { speed -> onFly(loc, speed) },
                         onEdit = { editLocation = loc },
                         onDelete = { deleteLocation = loc }
                     )

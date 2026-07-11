@@ -5,14 +5,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.gpsanywhere.app.data.AppDatabase
-import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
-import com.gpsanywhere.app.data.DefaultSavedRouteSeeder.DefaultRouteAsset
 import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -46,15 +43,8 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
     private val _activeRoute = MutableStateFlow<SavedRoute?>(null)
     val activeRoute: StateFlow<SavedRoute?> = _activeRoute
 
-    private val _defaultRoutes = MutableStateFlow<List<DefaultRouteAsset>>(emptyList())
-    val defaultRoutes: StateFlow<List<DefaultRouteAsset>> = _defaultRoutes
-
     init {
         CurrentLocationProvider.ensureStarted(getApplication())
-        // Prebuilt routes are no longer auto-imported; the user imports from Settings.
-        viewModelScope.launch(Dispatchers.IO) {
-            _defaultRoutes.value = DefaultSavedRouteSeeder.loadAllAssets(getApplication())
-        }
     }
 
     fun deleteRoute(route: SavedRoute) {
@@ -97,51 +87,12 @@ class WalkViewModel(application: Application) : AndroidViewModel(application) {
 
     fun waypointsOf(route: SavedRoute): List<LocationPoint> = WaypointJson.fromJson(route.waypointsJson)
 
-    fun startDefaultRoute(asset: DefaultRouteAsset) {
-        val points = asset.toLocationPoints()
-        if (points.size >= 2) {
-            val lats = points.map { it.latitude }.toDoubleArray()
-            val lngs = points.map { it.longitude }.toDoubleArray()
-            SpoofService.startWalk(
-                getApplication(), lats, lngs,
-                speedKmh = _speedKmh.value,
-                minSpeedKmh = _minSpeedKmh.value,
-                maxSpeedKmh = _maxSpeedKmh.value,
-                varyKmh = _varyKmh.value
-            )
-        }
-    }
-
-    fun saveDefaultRoute(asset: DefaultRouteAsset) {
-        viewModelScope.launch {
-            val points = asset.toLocationPoints()
-            if (points.isNotEmpty() && routeDao.countByName(asset.routeName) == 0) {
-                routeDao.insert(
-                    SavedRoute(
-                        name = asset.routeName,
-                        waypointsJson = WaypointJson.toJson(points),
-                        routeMethod = "MANUAL_MAP",
-                        distanceMeters = estimateDistance(points)
-                    )
-                )
-            }
-        }
-    }
-
-    fun defaultRouteDistanceKm(asset: DefaultRouteAsset): String {
-        val dist = estimateDistance(asset.toLocationPoints())
-        return "%.1f km".format(dist / 1000.0)
-    }
-
     fun setSpeed(speed: Float) {
         _speedKmh.value = speed
         if (SpoofService.isRunning.value == true) {
             SpoofService.updateSpeed(getApplication(), speed)
         }
     }
-    fun setMinSpeed(v: Float) { _minSpeedKmh.value = v.coerceIn(0f, 20f) }
-    fun setMaxSpeed(v: Float) { _maxSpeedKmh.value = v.coerceIn(0f, 20f) }
-    fun setVary(v: Float) { _varyKmh.value = v.coerceAtLeast(0f) }
 
     fun startWalk(route: SavedRoute, reversed: Boolean = false) {
         val points = WaypointJson.fromJson(route.waypointsJson)
