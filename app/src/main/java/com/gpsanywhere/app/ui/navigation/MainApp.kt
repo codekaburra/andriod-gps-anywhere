@@ -5,9 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Settings
@@ -56,23 +54,16 @@ import com.gpsanywhere.app.ui.theme.NavSelected
 import com.gpsanywhere.app.ui.theme.NavUnselected
 import com.gpsanywhere.app.ui.theme.SoftPurple
 import com.gpsanywhere.app.ui.settings.SettingsScreen
-import com.gpsanywhere.app.ui.step.StepScreen
 import com.gpsanywhere.app.ui.walk.WalkScreen
 import com.gpsanywhere.app.viewmodel.MainViewModel
 import com.gpsanywhere.app.viewmodel.LocationViewModel
-import com.gpsanywhere.app.viewmodel.StepViewModel
 import com.gpsanywhere.app.viewmodel.WalkViewModel
-
-// Steps tab is hidden for now: the Health Connect write path isn't usable yet.
-// Flip to true to bring the tab back once it works. Screen/ViewModel code is kept.
-private const val STEP_TAB_ENABLED = false
 
 @Composable
 fun MainApp(preferences: AppPreferences) {
     val mainViewModel: MainViewModel = viewModel()
     val locationViewModel: LocationViewModel = viewModel()
     val walkViewModel: WalkViewModel = viewModel()
-    val stepViewModel: StepViewModel = viewModel()
 
     val themeMode by mainViewModel.themeMode.observeAsState(ThemeMode.LIGHT)
     val colorTheme = if (themeMode == ThemeMode.DARK) ColorTheme.GOLDEN_HOUR else ColorTheme.COCOA_SAGE
@@ -97,16 +88,7 @@ fun MainApp(preferences: AppPreferences) {
         )
     }
 
-    // Replacing LocalContext with a configuration context hides the Activity from
-    // rememberLauncherForActivityResult, so re-provide the registry owner explicitly
-    // or any screen using an activity-result launcher crashes under a language override.
-    val activityResultRegistryOwner = LocalActivityResultRegistryOwner.current
-    val contextOverrides = buildList {
-        add(LocalContext provides localizedContext)
-        activityResultRegistryOwner?.let { add(LocalActivityResultRegistryOwner provides it) }
-    }.toTypedArray()
-
-    CompositionLocalProvider(*contextOverrides) {
+    CompositionLocalProvider(LocalContext provides localizedContext) {
     GPSAnywhereTheme(themeMode = themeMode, colorTheme = colorTheme) {
       val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
       Box(modifier = Modifier.fillMaxSize()) {
@@ -153,15 +135,6 @@ fun MainApp(preferences: AppPreferences) {
                         label = { Text(stringResource(R.string.nav_route)) },
                         colors = navItemColors(SoftPurple)
                     )
-                    if (STEP_TAB_ENABLED) {
-                        NavigationBarItem(
-                            selected = currentRoute == Routes.STEP,
-                            onClick = { nav(Routes.STEP) },
-                            icon = { Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = stringResource(R.string.nav_step)) },
-                            label = { Text(stringResource(R.string.nav_step)) },
-                            colors = navItemColors(SoftPurple)
-                        )
-                    }
                     NavigationBarItem(
                         selected = currentRoute == Routes.SETTINGS,
                         onClick = { nav(Routes.SETTINGS) },
@@ -182,11 +155,6 @@ fun MainApp(preferences: AppPreferences) {
                 }
                 composable(Routes.WALK) {
                     WalkScreen(viewModel = walkViewModel, appLanguage = appLanguage)
-                }
-                if (STEP_TAB_ENABLED) {
-                    composable(Routes.STEP) {
-                        StepScreen(viewModel = stepViewModel)
-                    }
                 }
                 composable(Routes.SETTINGS) {
                     SettingsScreen(viewModel = mainViewModel)

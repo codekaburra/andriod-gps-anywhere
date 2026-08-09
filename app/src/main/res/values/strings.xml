@@ -156,25 +156,4 @@
     <string name="notif_title">GPS Anywhere — Active</string>
     <string name="notif_fixed">Custom Location: %1$s</string>
     <string name="notif_walking">Walking @ %1$s km/h</string>
-
-    <!-- Manual step input (Health Connect) -->
-    <string name="nav_step">Steps</string>
-    <string name="step_title">Steps</string>
-    <string name="steps_card_title">Add Steps (Health Connect)</string>
-    <string name="steps_hc_not_installed">Health Connect is not installed on this device.</string>
-    <string name="steps_hc_install">Install Health Connect</string>
-    <string name="steps_hc_update_required">Health Connect needs an update before steps can be written.</string>
-    <string name="steps_hc_grant_hint">Grant step permissions in Health Connect so other apps can see the steps you add.</string>
-    <string name="steps_hc_grant">Grant permission</string>
-    <string name="steps_input_label">Steps</string>
-    <string name="steps_add">Add</string>
-    <plurals name="steps_today_total">
-        <item quantity="one">Today in Health Connect: %1$d step</item>
-        <item quantity="other">Today in Health Connect: %1$d steps</item>
-    </plurals>
-    <plurals name="steps_write_success">
-        <item quantity="one">Added %1$d step ✓</item>
-        <item quantity="other">Added %1$d steps ✓</item>
-    </plurals>
-    <string name="steps_write_failed">Couldn\'t write to Health Connect — please try again.</string>
 </resources>

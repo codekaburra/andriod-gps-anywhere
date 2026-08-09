@@ -94,9 +94,6 @@ dependencies {
     // Gson
     implementation(libs.gson)
 
-    // Health Connect for step data (to make games notice the steps)
-    implementation(libs.androidx.health.connect.client)
-
     // Preferences
     implementation(libs.androidx.preference)
 
