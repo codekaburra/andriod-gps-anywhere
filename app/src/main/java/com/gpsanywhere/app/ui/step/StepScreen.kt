@@ -153,7 +153,9 @@ fun StepScreen(
                                         result.steps
                                     )
                                 } else {
-                                    stringResource(R.string.steps_write_failed, result.error ?: "")
+                                    // Show a localized message rather than the raw
+                                    // exception text; the cause is already logged.
+                                    stringResource(R.string.steps_write_failed)
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (result.success) CandyGreen else MaterialTheme.colorScheme.error

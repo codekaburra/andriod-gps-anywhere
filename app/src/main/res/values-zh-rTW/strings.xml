@@ -174,5 +174,5 @@
     <plurals name="steps_write_success">
         <item quantity="other">已寫入 %1$d 步 ✓</item>
     </plurals>
-    <string name="steps_write_failed">寫入失敗:%1$s</string>
+    <string name="steps_write_failed">寫入 Health Connect 失敗,請再試一次。</string>
 </resources>
