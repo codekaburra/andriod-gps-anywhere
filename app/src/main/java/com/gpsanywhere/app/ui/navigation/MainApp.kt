@@ -63,6 +63,10 @@ import com.gpsanywhere.app.viewmodel.LocationViewModel
 import com.gpsanywhere.app.viewmodel.StepViewModel
 import com.gpsanywhere.app.viewmodel.WalkViewModel
 
+// Steps tab is hidden for now: the Health Connect write path isn't usable yet.
+// Flip to true to bring the tab back once it works. Screen/ViewModel code is kept.
+private const val STEP_TAB_ENABLED = false
+
 @Composable
 fun MainApp(preferences: AppPreferences) {
     val mainViewModel: MainViewModel = viewModel()
@@ -149,13 +153,15 @@ fun MainApp(preferences: AppPreferences) {
                         label = { Text(stringResource(R.string.nav_route)) },
                         colors = navItemColors(SoftPurple)
                     )
-                    NavigationBarItem(
-                        selected = currentRoute == Routes.STEP,
-                        onClick = { nav(Routes.STEP) },
-                        icon = { Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = stringResource(R.string.nav_step)) },
-                        label = { Text(stringResource(R.string.nav_step)) },
-                        colors = navItemColors(SoftPurple)
-                    )
+                    if (STEP_TAB_ENABLED) {
+                        NavigationBarItem(
+                            selected = currentRoute == Routes.STEP,
+                            onClick = { nav(Routes.STEP) },
+                            icon = { Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = stringResource(R.string.nav_step)) },
+                            label = { Text(stringResource(R.string.nav_step)) },
+                            colors = navItemColors(SoftPurple)
+                        )
+                    }
                     NavigationBarItem(
                         selected = currentRoute == Routes.SETTINGS,
                         onClick = { nav(Routes.SETTINGS) },
@@ -177,8 +183,10 @@ fun MainApp(preferences: AppPreferences) {
                 composable(Routes.WALK) {
                     WalkScreen(viewModel = walkViewModel, appLanguage = appLanguage)
                 }
-                composable(Routes.STEP) {
-                    StepScreen(viewModel = stepViewModel)
+                if (STEP_TAB_ENABLED) {
+                    composable(Routes.STEP) {
+                        StepScreen(viewModel = stepViewModel)
+                    }
                 }
                 composable(Routes.SETTINGS) {
                     SettingsScreen(viewModel = mainViewModel)
