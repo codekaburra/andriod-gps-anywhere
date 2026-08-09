@@ -18,12 +18,9 @@ import com.gpsanywhere.app.R
 import com.gpsanywhere.app.routes.SpiralWalkGenerator
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.AppPreferences
-import java.time.Duration
-import java.time.Instant
 import java.util.Locale
 import kotlinx.coroutines.*
 import kotlin.random.Random
-import com.gpsanywhere.app.health.HealthConnectSteps
 
 class SpoofService : Service() {
 
@@ -38,9 +35,6 @@ class SpoofService : Service() {
         const val ACTION_JUMP_TO = "com.gpsanywhere.app.JUMP_TO"
         const val ACTION_PAUSE = "com.gpsanywhere.app.PAUSE"
         const val ACTION_RESUME = "com.gpsanywhere.app.RESUME"
-
-        /** Minimum real-time span a batched Health Connect step record must cover. */
-        private val STEP_FLUSH_INTERVAL: Duration = Duration.ofSeconds(30)
 
         const val EXTRA_LATITUDE = "extra_latitude"
         const val EXTRA_LONGITUDE = "extra_longitude"
@@ -78,14 +72,6 @@ class SpoofService : Service() {
 
         private val _resetDeadlineMs = MutableLiveData(0L)
         val resetDeadlineMs: LiveData<Long> = _resetDeadlineMs
-
-        private val _stepCount = MutableLiveData(0)
-        val stepCount: LiveData<Int> = _stepCount
-
-        fun incrementSteps(amount: Int) {
-            val current = _stepCount.value ?: 0
-            _stepCount.postValue(current + amount)
-        }
 
         fun startFixed(context: Context, lat: Double, lng: Double) {
             val intent = Intent(context, SpoofService::class.java).apply {
@@ -187,14 +173,6 @@ class SpoofService : Service() {
     private var minSpeedMps: Float = 0f
     private var maxSpeedMps: Float = 20f * 1000f / 3600f
     private var varyMps: Float = 0f
-
-    // Health Connect step batching. Writing a StepsRecord every tick produces
-    // overlapping time windows, which Health Connect rejects; accumulate steps
-    // and flush them as a single contiguous record covering the real elapsed
-    // walking window instead. Written from the walk coroutine (recordSteps) and
-    // read/reset from the main thread (cancelWalkJob), so both are @Volatile.
-    @Volatile private var pendingSteps: Long = 0L
-    @Volatile private var pendingWindowStart: Instant? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -344,9 +322,6 @@ class SpoofService : Service() {
         walkGeneration++
         walkJob?.cancel()
         walkJob = null
-        // Persist the final partial batch before it is discarded on the next walk.
-        flushPendingSteps()
-        pendingWindowStart = null
     }
 
     private fun startWalkJob(
@@ -374,7 +349,7 @@ class SpoofService : Service() {
 
             if (spiralAfterKmh > 0f) {
                 // Phase 1: fly straight to the target at the current (fast) speed.
-                walkPath(lats, lngs, tickMs, gen, countSteps = false)
+                walkPath(lats, lngs, tickMs, gen)
                 if (walkGeneration != gen) return@launch
 
                 // Phase 2: settle into a self-resetting spiral walk at the slower speed.
@@ -418,7 +393,7 @@ class SpoofService : Service() {
             _resetDeadlineMs.postValue(if (shouldReset) deadline else 0L)
 
             // Walk the route until it finishes or the reset deadline arrives.
-            walkPath(walkLats, walkLngs, tickMs, gen, countSteps = true, deadlineMs = deadline)
+            walkPath(walkLats, walkLngs, tickMs, gen, deadlineMs = deadline)
 
             // In reset mode, head straight back to the origin and start over.
             if (shouldReset && currentCoroutineContext().isActive && walkGeneration == gen) {
@@ -426,8 +401,7 @@ class SpoofService : Service() {
                     doubleArrayOf(lastLat, originLat),
                     doubleArrayOf(lastLng, originLng),
                     tickMs,
-                    gen,
-                    countSteps = false
+                    gen
                 )
                 if (walkGeneration != gen) break
                 lastLat = originLat
@@ -452,7 +426,6 @@ class SpoofService : Service() {
         lngs: DoubleArray,
         tickMs: Long,
         gen: Int,
-        countSteps: Boolean,
         deadlineMs: Long = Long.MAX_VALUE
     ): Boolean {
         var segIdx = 0
@@ -478,36 +451,10 @@ class SpoofService : Service() {
                 val metersPerSec = currentSpeedMps.toDouble().coerceAtLeast(0.1)
                 val distThisTick = metersPerSec * (tickMs / 1000.0)
                 traveled += distThisTick
-                if (countSteps) recordSteps((distThisTick / 0.78).toInt())
             }
             segIdx++
         }
         return false
-    }
-
-    /** Add [steps] to the live counter and batch them for Health Connect (best-effort). */
-    private fun recordSteps(steps: Int) {
-        if (steps <= 0) return
-        SpoofService.incrementSteps(steps)
-        val now = Instant.now()
-        val start = pendingWindowStart ?: now.also { pendingWindowStart = it }
-        pendingSteps += steps
-        if (Duration.between(start, now) >= STEP_FLUSH_INTERVAL) flushPendingSteps(now)
-    }
-
-    /**
-     * Write accumulated steps to Health Connect as one record ending at [end].
-     * The next window starts where this one ends, so records never overlap.
-     */
-    private fun flushPendingSteps(end: Instant = Instant.now()) {
-        val start = pendingWindowStart
-        val count = pendingSteps
-        if (start == null || count <= 0L || !end.isAfter(start)) return
-        pendingSteps = 0L
-        pendingWindowStart = end
-        serviceScope.launch {
-            HealthConnectSteps.writeSteps(this@SpoofService, count, start, end)
-        }
     }
 
     private fun haversine(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
