@@ -317,7 +317,9 @@ class SpoofService : Service() {
                     locationManager?.addTestProvider(
                         provider,
                         false, false, false, false, true,
-                        true, true, 1, 1
+                        true, true,
+                        ProviderProperties.POWER_USAGE_LOW,
+                        ProviderProperties.ACCURACY_FINE
                     )
                 }
                 locationManager?.setTestProviderEnabled(provider, true)
