@@ -18,14 +18,12 @@ import com.gpsanywhere.app.R
 import com.gpsanywhere.app.routes.SpiralWalkGenerator
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.AppPreferences
+import java.time.Duration
+import java.time.Instant
 import java.util.Locale
 import kotlinx.coroutines.*
 import kotlin.random.Random
-import androidx.health.connect.client.HealthConnectClient
-import androidx.health.connect.client.records.StepsRecord
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
+import com.gpsanywhere.app.health.HealthConnectSteps
 
 class SpoofService : Service() {
 
@@ -40,6 +38,9 @@ class SpoofService : Service() {
         const val ACTION_JUMP_TO = "com.gpsanywhere.app.JUMP_TO"
         const val ACTION_PAUSE = "com.gpsanywhere.app.PAUSE"
         const val ACTION_RESUME = "com.gpsanywhere.app.RESUME"
+
+        /** Minimum real-time span a batched Health Connect step record must cover. */
+        private val STEP_FLUSH_INTERVAL: Duration = Duration.ofSeconds(30)
 
         const val EXTRA_LATITUDE = "extra_latitude"
         const val EXTRA_LONGITUDE = "extra_longitude"
@@ -186,6 +187,14 @@ class SpoofService : Service() {
     private var minSpeedMps: Float = 0f
     private var maxSpeedMps: Float = 20f * 1000f / 3600f
     private var varyMps: Float = 0f
+
+    // Health Connect step batching. Writing a StepsRecord every tick produces
+    // overlapping time windows, which Health Connect rejects; accumulate steps
+    // and flush them as a single contiguous record covering the real elapsed
+    // walking window instead. Written from the walk coroutine (recordSteps) and
+    // read/reset from the main thread (cancelWalkJob), so both are @Volatile.
+    @Volatile private var pendingSteps: Long = 0L
+    @Volatile private var pendingWindowStart: Instant? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -335,6 +344,9 @@ class SpoofService : Service() {
         walkGeneration++
         walkJob?.cancel()
         walkJob = null
+        // Persist the final partial batch before it is discarded on the next walk.
+        flushPendingSteps()
+        pendingWindowStart = null
     }
 
     private fun startWalkJob(
@@ -473,25 +485,28 @@ class SpoofService : Service() {
         return false
     }
 
-    /** Add [steps] to the live counter and write them to Health Connect (best-effort). */
+    /** Add [steps] to the live counter and batch them for Health Connect (best-effort). */
     private fun recordSteps(steps: Int) {
         if (steps <= 0) return
         SpoofService.incrementSteps(steps)
+        val now = Instant.now()
+        val start = pendingWindowStart ?: now.also { pendingWindowStart = it }
+        pendingSteps += steps
+        if (Duration.between(start, now) >= STEP_FLUSH_INTERVAL) flushPendingSteps(now)
+    }
+
+    /**
+     * Write accumulated steps to Health Connect as one record ending at [end].
+     * The next window starts where this one ends, so records never overlap.
+     */
+    private fun flushPendingSteps(end: Instant = Instant.now()) {
+        val start = pendingWindowStart
+        val count = pendingSteps
+        if (start == null || count <= 0L || !end.isAfter(start)) return
+        pendingSteps = 0L
+        pendingWindowStart = end
         serviceScope.launch {
-            try {
-                val client = HealthConnectClient.getOrCreate(this@SpoofService)
-                val now = Instant.now()
-                val start = now.minus(1, ChronoUnit.MINUTES)
-                client.insertRecords(listOf(
-                    StepsRecord(
-                        count = steps.toLong(),
-                        startTime = start,
-                        endTime = now,
-                        startZoneOffset = ZoneOffset.systemDefault().rules.getOffset(start),
-                        endZoneOffset = ZoneOffset.systemDefault().rules.getOffset(now)
-                    )
-                ))
-            } catch (_: Exception) {}
+            HealthConnectSteps.writeSteps(this@SpoofService, count, start, end)
         }
     }
 

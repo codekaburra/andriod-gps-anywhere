@@ -156,4 +156,23 @@
     <string name="notif_title">GPS Anywhere — 執行中</string>
     <string name="notif_fixed">自訂位置:%1$s</string>
     <string name="notif_walking">步行中 @ %1$s km/h</string>
+
+    <!-- Manual step input (Health Connect) -->
+    <string name="nav_step">步數</string>
+    <string name="step_title">步數</string>
+    <string name="steps_card_title">輸入步數(Health Connect)</string>
+    <string name="steps_hc_not_installed">此裝置未安裝 Health Connect。</string>
+    <string name="steps_hc_install">安裝 Health Connect</string>
+    <string name="steps_hc_update_required">Health Connect 需要更新才能寫入步數。</string>
+    <string name="steps_hc_grant_hint">請在 Health Connect 授予步數權限,其他 App 才能看到你新增的步數。</string>
+    <string name="steps_hc_grant">授予權限</string>
+    <string name="steps_input_label">步數</string>
+    <string name="steps_add">新增</string>
+    <plurals name="steps_today_total">
+        <item quantity="other">今日 Health Connect 步數:%1$d</item>
+    </plurals>
+    <plurals name="steps_write_success">
+        <item quantity="other">已寫入 %1$d 步 ✓</item>
+    </plurals>
+    <string name="steps_write_failed">寫入失敗:%1$s</string>
 </resources>
