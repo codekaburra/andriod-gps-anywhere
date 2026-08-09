@@ -898,6 +898,9 @@ private fun AddLocationSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                // Scroll keeps the tags field and buttons reachable when the
+                // map preview + keyboard push content past the sheet height.
+                .verticalScroll(rememberScrollState())
                 .imePadding()
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp),
@@ -1000,7 +1003,8 @@ private fun AddLocationSheet(
                 value = tagsText,
                 onValueChange = { tagsText = it },
                 label = { Text(stringResource(R.string.tags)) },
-                placeholder = { Text("cafe | park | work") },
+                placeholder = { Text(stringResource(R.string.tags_hint_2)) },
+                supportingText = { Text(stringResource(R.string.tags_hint_1)) },
                 singleLine = true,
                 colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()

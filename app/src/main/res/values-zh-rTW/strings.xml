@@ -99,7 +99,7 @@
     <string name="clipboard_invalid_format">格式錯誤 [%1$s]。剪貼簿內容須為「緯度, 經度」</string>
     <string name="tags">標籤</string>
     <string name="tags_hint_1">標籤(選填),內容不限</string>
-    <string name="tags_hint_2">[] 或 [咖啡廳] 或 [咖啡廳 | 公園 | 工作]</string>
+    <string name="tags_hint_2">咖啡廳 | 公園 | 工作</string>
     <string name="error_name_required">請輸入名稱</string>
     <string name="error_longitude_range">經度須介於 -180 至 180</string>
     <string name="error_latitude_range">緯度須介於 -90 至 90</string>
