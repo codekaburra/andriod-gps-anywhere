@@ -386,12 +386,20 @@ class SpoofService : Service() {
         do {
             val walkLats = if (forward) lats else lats.reversedArray()
             val walkLngs = if (forward) lngs else lngs.reversedArray()
-            val effectiveResetMs = if (resetIntervalMs > 0) liveResetIntervalMs else 0L
-            val deadline = if (shouldReset) System.currentTimeMillis() + (if (effectiveResetMs > 0) effectiveResetMs else resetIntervalMs) else Long.MAX_VALUE
-            _resetDeadlineMs.postValue(if (shouldReset) deadline else 0L)
+            // Re-read liveResetIntervalMs on every tick rather than pinning the
+            // deadline once per cycle, so editing the reset interval mid-walk
+            // takes effect immediately instead of only on the next lap.
+            val cycleStartMs = System.currentTimeMillis()
+            val deadlineAt: () -> Long = {
+                if (!shouldReset) Long.MAX_VALUE else {
+                    val live = liveResetIntervalMs
+                    cycleStartMs + (if (live > 0) live else resetIntervalMs)
+                }
+            }
+            _resetDeadlineMs.postValue(if (shouldReset) deadlineAt() else 0L)
 
             // Walk the route until it finishes or the reset deadline arrives.
-            walkPath(walkLats, walkLngs, tickMs, gen, deadlineMs = deadline)
+            walkPath(walkLats, walkLngs, tickMs, gen, deadlineAt = deadlineAt)
 
             // In reset mode, head straight back to the origin and start over.
             if (shouldReset && currentCoroutineContext().isActive && walkGeneration == gen) {
@@ -416,7 +424,10 @@ class SpoofService : Service() {
 
     /**
      * Walks through [lats]/[lngs] at the current speed, ticking every [tickMs].
-     * Stops when the path is exhausted or [deadlineMs] (absolute epoch millis) passes.
+     * Stops when the path is exhausted or the deadline from [deadlineAt] (absolute
+     * epoch millis) passes. [deadlineAt] is re-evaluated every tick so a deadline
+     * that moves while walking is honoured right away; whenever it changes, the new
+     * value is published so the countdown UI follows.
      * @return true if it returned because the deadline passed, false if the path completed.
      */
     private suspend fun walkPath(
@@ -424,11 +435,22 @@ class SpoofService : Service() {
         lngs: DoubleArray,
         tickMs: Long,
         gen: Int,
-        deadlineMs: Long = Long.MAX_VALUE
+        deadlineAt: () -> Long = { Long.MAX_VALUE }
     ): Boolean {
+        var lastPublishedDeadline = 0L
+
+        fun deadlinePassed(): Boolean {
+            val deadline = deadlineAt()
+            if (deadline != Long.MAX_VALUE && deadline != lastPublishedDeadline) {
+                lastPublishedDeadline = deadline
+                _resetDeadlineMs.postValue(deadline)
+            }
+            return System.currentTimeMillis() >= deadline
+        }
+
         var segIdx = 0
         while (currentCoroutineContext().isActive && walkGeneration == gen && segIdx < lats.size - 1) {
-            if (System.currentTimeMillis() >= deadlineMs) return true
+            if (deadlinePassed()) return true
             val aLat = lats[segIdx]; val aLng = lngs[segIdx]
             val bLat = lats[segIdx + 1]; val bLng = lngs[segIdx + 1]
             val segLen = haversine(aLat, aLng, bLat, bLng)
@@ -436,7 +458,7 @@ class SpoofService : Service() {
             currentBearing = bearing(aLat, aLng, bLat, bLng).toFloat()
             var traveled = 0.0
             while (currentCoroutineContext().isActive && walkGeneration == gen && traveled < segLen) {
-                if (System.currentTimeMillis() >= deadlineMs) return true
+                if (deadlinePassed()) return true
                 while (currentCoroutineContext().isActive && _isPaused.value == true) {
                     delay(200)
                 }
