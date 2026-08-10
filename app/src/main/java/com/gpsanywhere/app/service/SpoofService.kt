@@ -201,10 +201,9 @@ class SpoofService : Service() {
                 lastLng = lng
                 currentBearing = 0f
                 currentSpeedMps = 0f
-                startForeground(
-                    NOTIFICATION_ID,
-                    buildNotification(localizedContext().getString(R.string.notif_fixed, "$lat, $lng"))
-                )
+                if (!startForegroundSafely(localizedContext().getString(R.string.notif_fixed, "$lat, $lng"))) {
+                    return START_NOT_STICKY
+                }
                 setupTestProvider()
                 startPushLoop()
                 _isRunning.postValue(true)
@@ -231,10 +230,9 @@ class SpoofService : Service() {
                 varyMps = varyKmh * 1000f / 3600f
                 currentSpeedMps = baseSpeedMps
                 _currentSpeedKmh.postValue(speedKmh)
-                startForeground(
-                    NOTIFICATION_ID,
-                    buildNotification(localizedContext().getString(R.string.notif_walking, "%.1f".format(speedKmh)))
-                )
+                if (!startForegroundSafely(localizedContext().getString(R.string.notif_walking, "%.1f".format(speedKmh)))) {
+                    return START_NOT_STICKY
+                }
                 setupTestProvider()
                 startPushLoop()
                 startWalkJob(lats, lngs, loop, resetIntervalMs, spiralAfterKmh)
@@ -526,6 +524,20 @@ class SpoofService : Service() {
         _resetDeadlineMs.postValue(0L)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    /**
+     * Promote to a foreground service, or stop cleanly if the system refuses.
+     * On Android 14+ a `location`-typed foreground service can't start without the
+     * location permission granted; catching that here turns a hard crash into a
+     * graceful no-op (the UI already surfaces the missing-permission dialog).
+     */
+    private fun startForegroundSafely(contentText: String): Boolean = try {
+        startForeground(NOTIFICATION_ID, buildNotification(contentText))
+        true
+    } catch (e: Exception) {
+        stopSelf()
+        false
     }
 
     private fun createNotificationChannel() {

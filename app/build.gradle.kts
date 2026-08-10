@@ -1,16 +1,26 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
 }
 
-// Count commits on the default branch so versionName = "1.<commits>.0"
+// Count commits on the default branch so versionName = "1.0.<commits>".
 // Uses providers.exec so the value is configuration-cache-safe.
-// Falls back to 0 when git is unavailable (e.g. shallow CI checkout).
+// Falls back to 0 when git is unavailable (e.g. shallow CI checkout);
+// versionCode is coerced to >= 1 below so Play never sees 0.
 val commitCount: Int = providers.exec {
     commandLine("git", "rev-list", "--count", "origin/main")
 }.standardOutput.asText.map { it.trim().toIntOrNull() ?: 0 }
     .orElse(0).get()
+
+// Release signing is read from keystore.properties (git-ignored) when present,
+// so CI/dev builds without it still succeed (producing an unsigned release).
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) keystorePropsFile.inputStream().use { load(it) }
+}
 
 android {
     namespace = "com.gpsanywhere.app"
@@ -20,14 +30,28 @@ android {
         applicationId = "com.gpsanywhere.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = commitCount
-        versionName = "1.$commitCount.0"
+        versionCode = commitCount.coerceAtLeast(1)
+        versionName = "1.0.$commitCount"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (keystorePropsFile.exists()) {
+            create("release") {
+                storeFile = file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (keystorePropsFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

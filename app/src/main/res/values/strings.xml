@@ -156,4 +156,8 @@
     <string name="notif_title">GPS Anywhere — Active</string>
     <string name="notif_fixed">Custom Location: %1$s</string>
     <string name="notif_walking">Walking @ %1$s km/h</string>
+
+    <!-- Permissions -->
+    <string name="perm_required_title">Location permission needed</string>
+    <string name="perm_required_body">Custom location mode needs location permission. You can grant it in system Settings.</string>
 </resources>
