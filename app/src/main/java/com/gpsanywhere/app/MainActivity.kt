@@ -10,9 +10,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import com.gpsanywhere.app.R
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.ui.navigation.MainApp
@@ -21,11 +24,20 @@ class MainActivity : ComponentActivity() {
 
     private val preferences by lazy { AppPreferences(this) }
 
+    // Hoisted out of composition so the permission-result callback can flip it.
+    private var showPermissionDialog by mutableStateOf(false)
+
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
-        if (results[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+        val granted = results[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            results[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
             CurrentLocationProvider.ensureStarted(this)
+        } else {
+            // Without location permission the app can't spoof; guide the user instead
+            // of leaving them with a silently non-functional Start button.
+            showPermissionDialog = true
         }
     }
 
@@ -37,20 +49,16 @@ class MainActivity : ComponentActivity() {
         CurrentLocationProvider.ensureStarted(this)
 
         setContent {
-            val showPermissionDialog = remember { mutableStateOf(false) }
-
             MainApp(preferences = preferences)
 
-            if (showPermissionDialog.value) {
+            if (showPermissionDialog) {
                 AlertDialog(
-                    onDismissRequest = { showPermissionDialog.value = false },
-                    title = { Text("Permissions Required") },
-                    text = {
-                        Text("Location permission is required for custom location mode. Please grant it in app settings.")
-                    },
+                    onDismissRequest = { showPermissionDialog = false },
+                    title = { Text(stringResource(R.string.perm_required_title)) },
+                    text = { Text(stringResource(R.string.perm_required_body)) },
                     confirmButton = {
-                        TextButton(onClick = { showPermissionDialog.value = false }) {
-                            Text("OK")
+                        TextButton(onClick = { showPermissionDialog = false }) {
+                            Text(stringResource(R.string.action_got_it))
                         }
                     }
                 )

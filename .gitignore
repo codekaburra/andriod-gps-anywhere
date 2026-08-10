@@ -19,6 +19,11 @@ local.properties
 *.apk
 *.aab
 
+# Release signing — never commit the keystore or its passwords
+keystore.properties
+*.jks
+*.keystore
+
 # Go route formatter generated output
 go-route-formater/output/
 go-route-formater/cmd/json2iframe/output/
