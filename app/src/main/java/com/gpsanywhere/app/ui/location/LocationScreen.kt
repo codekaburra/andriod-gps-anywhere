@@ -37,12 +37,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.ui.res.painterResource
 import com.gpsanywhere.app.R
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -107,8 +105,6 @@ import com.gpsanywhere.app.ui.components.GlassCard
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
-import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_HELI_KMH
-import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_FLIGHT_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_ROCKET_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MAX_SPEED_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MOVE_STEP_DEG
@@ -358,13 +354,13 @@ fun LocationScreen(
                 }
             }
 
-            LazyColumn(
+            // Pinned header: the map and the custom-coordinate controls stay put;
+            // only the saved-locations list below them scrolls.
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-//                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
             ) {
-            item {
                 if (mapCenter != null) {
                     Box(
                         modifier = Modifier
@@ -413,17 +409,10 @@ fun LocationScreen(
                         }
                     }
                 }
-            }
 
-            item {
-                GlassDirectionPadCard(
-                    enabled = currentLat != null && currentLng != null,
-                    onMove = { dLat, dLng -> viewModel.nudgeSpiral(dLat, dLng) }
-                )
-            }
-
-            item {
                 CustomJumpPanel(
+                    dpadEnabled = currentLat != null && currentLng != null,
+                    onMove = { dLat, dLng -> viewModel.nudgeSpiral(dLat, dLng) },
                     coordinateText = jumpCoordinateText,
                     onCoordinateChange = { jumpCoordinateText = it },
                     onJump = {
@@ -456,6 +445,12 @@ fun LocationScreen(
                 )
             }
 
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
             item {
                 SectionHeader(title = stringResource(R.string.saved_locations))
             }
@@ -829,14 +824,6 @@ private fun TransportButtons(
         Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = stringResource(R.string.transport_walk_around), modifier = Modifier.size(iconSize))
     }
     Spacer(Modifier.width(4.dp))
-    FilledIconButton(onClick = { onFly(FLY_HELI_KMH) }, enabled = enabled, colors = colors) {
-        Icon(painterResource(R.drawable.ic_helicopter), contentDescription = stringResource(R.string.transport_heli), modifier = Modifier.size(iconSize))
-    }
-    Spacer(Modifier.width(4.dp))
-    FilledIconButton(onClick = { onFly(FLY_FLIGHT_KMH) }, enabled = enabled, colors = colors) {
-        Icon(Icons.Default.Flight, contentDescription = stringResource(R.string.transport_flight), modifier = Modifier.size(iconSize))
-    }
-    Spacer(Modifier.width(4.dp))
     FilledIconButton(onClick = { onFly(FLY_ROCKET_KMH) }, enabled = enabled, colors = colors) {
         Icon(Icons.Default.RocketLaunch, contentDescription = stringResource(R.string.transport_rocket), modifier = Modifier.size(iconSize))
     }
@@ -1054,6 +1041,12 @@ private fun AddLocationSheet(
     }
 }
 
+/**
+ * Custom-coordinate controls and the direction pad, side by side in one card:
+ * coordinate entry plus the transport buttons on the left, the D-pad on the right.
+ * Pairing them keeps this block short so the saved-locations list stays visible.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CustomJumpPanel(
     coordinateText: String,
@@ -1061,93 +1054,93 @@ private fun CustomJumpPanel(
     onJump: () -> Unit,
     onSpiral: () -> Unit,
     onFly: (Float) -> Unit,
-    onPaste: () -> Unit
+    onPaste: () -> Unit,
+    dpadEnabled: Boolean,
+    onMove: (dLat: Double, dLng: Double) -> Unit
 ) {
     val parsed = parseClipboardCoordinates(coordinateText.trim())
     val hasInput = coordinateText.isNotBlank()
     val isValid = parsed != null
     val canJump = hasInput && isValid
     GlassCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                OutlinedTextField(
-                    value = coordinateText,
-                    onValueChange = onCoordinateChange,
-                    label = { Text(stringResource(R.string.coordinate)) },
-                    placeholder = { Text("22.3168,114.0451") },
-                    isError = hasInput && !isValid,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                        focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier.weight(1f)
-                )
-                FilledIconButton(
-                    onClick = onPaste,
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.align(Alignment.CenterVertically)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Default.ContentPaste,
-                        contentDescription = stringResource(R.string.action_paste),
-                        modifier = Modifier.size(18.dp)
+                    OutlinedTextField(
+                        value = coordinateText,
+                        onValueChange = onCoordinateChange,
+                        label = { Text(stringResource(R.string.coordinate)) },
+                        placeholder = { Text("22.3168,114.0451") },
+                        isError = hasInput && !isValid,
+                        // The narrower column can't fit a full coordinate pair on one
+                        // line, so let the value wrap instead of scrolling out of view.
+                        singleLine = false,
+                        maxLines = 2,
+                        textStyle = MaterialTheme.typography.bodySmall,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                            focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilledIconButton(
+                        onClick = onPaste,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.ContentPaste,
+                            contentDescription = stringResource(R.string.action_paste),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                // Wraps to a second line when all five don't fit the narrow column.
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    TransportButtons(
+                        enabled = canJump,
+                        onJump = onJump,
+                        onSpiral = onSpiral,
+                        onFly = onFly,
+                        iconSize = 18.dp
+                    )
+                }
+
+                if (hasInput && !isValid) {
+                    Text(
+                        text = stringResource(R.string.coordinate_format_error),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TransportButtons(
-                    enabled = canJump,
-                    onJump = onJump,
-                    onSpiral = onSpiral,
-                    onFly = onFly,
-                    iconSize = 18.dp
-                )
-            }
-
-            if (hasInput && !isValid) {
-                Text(
-                    text = stringResource(R.string.coordinate_format_error),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun GlassDirectionPadCard(
-    enabled: Boolean,
-    onMove: (dLat: Double, dLng: Double) -> Unit
-) {
-    GlassCard(modifier = Modifier.fillMaxWidth(), filled = false) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Sectored circular glass direction pad
-            SectoredDpad(enabled = enabled, onMove = onMove)
+            SectoredDpad(enabled = dpadEnabled, onMove = onMove, size = 150.dp)
         }
     }
 }
@@ -1161,7 +1154,8 @@ private fun GlassDirectionPadCard(
 @Composable
 private fun SectoredDpad(
     enabled: Boolean,
-    onMove: (dLat: Double, dLng: Double) -> Unit
+    onMove: (dLat: Double, dLng: Double) -> Unit,
+    size: androidx.compose.ui.unit.Dp = 196.dp
 ) {
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val discColor = if (isDark) Color(0xFF1E2937).copy(alpha = 0.42f) else Color.White.copy(alpha = 0.40f)
@@ -1171,9 +1165,9 @@ private fun SectoredDpad(
     } else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
     val scope = rememberCoroutineScope()
 
-    val size = 196.dp
-    val centerButton = 73.dp
-    val arrowOffset = 64.dp   // distance of each chevron from the centre
+    // Keep the disc's proportions when the caller scales it down.
+    val centerButton = size * (73f / 196f)
+    val arrowOffset = size * (64f / 196f)   // distance of each chevron from the centre
 
     Box(
         modifier = Modifier.size(size),
