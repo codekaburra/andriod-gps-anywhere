@@ -119,7 +119,7 @@
     <string name="transport_rocket">Rocket (5000 km/h)</string>
 
     <!-- Walk / route screen -->
-    <string name="walk_title">Walk</string>
+    <string name="walk_title">Route</string>
     <string name="not_started">Not started</string>
     <string name="current_speed">Current Speed</string>
     <string name="base_speed">Base Speed</string>

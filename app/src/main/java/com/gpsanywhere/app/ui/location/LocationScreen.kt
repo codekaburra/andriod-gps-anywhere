@@ -85,7 +85,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -97,16 +96,17 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.zIndex
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.GlassCard
+import com.gpsanywhere.app.ui.theme.AppAccent
+import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
 import com.gpsanywhere.app.ui.components.MapViewComposable
+import com.gpsanywhere.app.ui.components.overlapAbove
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.viewmodel.LocationViewModel
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.FLY_ROCKET_KMH
@@ -132,19 +132,6 @@ private val CARD_DPAD_SIZE = 120.dp
 
 /** Fixed transport-button footprint, so the row's width doesn't depend on touch-target padding. */
 private val TRANSPORT_BUTTON_SIZE = 40.dp
-
-/**
- * Draw this composable [overlap] higher than its slot and shrink the space it
- * occupies by the same amount, so everything below moves up too. Used to let the
- * translucent coordinate card sit over the bottom of the map instead of below it.
- */
-private fun Modifier.overlapAbove(overlap: Dp) = layout { measurable, constraints ->
-    val placeable = measurable.measure(constraints)
-    val dy = overlap.roundToPx()
-    layout(placeable.width, (placeable.height - dy).coerceAtLeast(0)) {
-        placeable.place(0, -dy)
-    }
-}
 
 private fun speedToSlider(kmh: Float): Float {
     return if (kmh <= WALK_ZONE_KMH) {
@@ -355,8 +342,8 @@ fun LocationScreen(
                                 // Trim the slider's 48dp touch slot; the track is much shorter.
                                 modifier = Modifier.weight(1f).height(28.dp),
                                 colors = androidx.compose.material3.SliderDefaults.colors(
-                                    thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb.copy(alpha = 0.9f),
-                                    activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.9f),
+                                    thumbColor = AppAccent.slider.copy(alpha = 0.9f),
+                                    activeTrackColor = AppAccent.slider.copy(alpha = 0.9f),
                                     inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.9f)
                                 )
                             )
@@ -373,7 +360,7 @@ fun LocationScreen(
                             modifier = Modifier.fillMaxWidth().height(34.dp),
                             shape = RoundedCornerShape(17.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
+                                containerColor = AppAccent.stop.copy(alpha = 0.9f),
                                 contentColor = Color.White
                             ),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
@@ -409,7 +396,7 @@ fun LocationScreen(
 
                         Surface(
                             shape = CircleShape,
-                            color = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
+                            color = AppAccent.action.copy(alpha = 0.8f),
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .padding(8.dp)
@@ -418,7 +405,7 @@ fun LocationScreen(
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = stringResource(R.string.add_location),
-                                    tint = Color.White
+                                    tint = AppAccent.onAction
                                 )
                             }
                         }
@@ -430,13 +417,13 @@ fun LocationScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f)
+                            color = AppAccent.action.copy(alpha = 0.8f)
                         ) {
                             IconButton(onClick = { showAddSheet = true }) {
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = stringResource(R.string.add_location),
-                                    tint = Color.White
+                                    tint = AppAccent.onAction
                                 )
                             }
                         }
@@ -692,7 +679,7 @@ private fun LocationCard(
     onDelete: (() -> Unit)?
 ) {
     val selected = isSelected || isActive
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val isDark = LocalIsDarkTheme.current
     val nameColor = when {
         selected -> com.gpsanywhere.app.ui.theme.CardNameTextSelected
         isDark -> com.gpsanywhere.app.ui.theme.CardNameTextDark
@@ -853,10 +840,10 @@ private fun TransportButtons(
     buttonModifier: Modifier = Modifier
 ) {
     val colors = IconButtonDefaults.filledIconButtonColors(
-        containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
-        contentColor = Color.White,
-        disabledContainerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.35f),
-        disabledContentColor = Color.White.copy(alpha = 0.5f)
+        containerColor = AppAccent.action.copy(alpha = 0.8f),
+        contentColor = AppAccent.onAction,
+        disabledContainerColor = AppAccent.action.copy(alpha = 0.35f),
+        disabledContentColor = AppAccent.onAction.copy(alpha = 0.5f)
     )
     FilledIconButton(onClick = onJump, enabled = enabled, colors = colors, modifier = buttonModifier) {
         Icon(Icons.Default.DoorFront, contentDescription = stringResource(R.string.transport_jump), modifier = Modifier.size(iconSize))
@@ -1020,8 +1007,8 @@ private fun AddLocationSheet(
                         }
                     },
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
-                        contentColor = Color.White
+                        containerColor = AppAccent.action.copy(alpha = 0.8f),
+                        contentColor = AppAccent.onAction
                     )
                 ) {
                     Icon(Icons.Default.ContentPaste, contentDescription = stringResource(R.string.action_paste), modifier = Modifier.size(18.dp))
@@ -1147,8 +1134,8 @@ private fun CustomJumpPanel(
                     FilledIconButton(
                         onClick = onPaste,
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
-                            contentColor = Color.White
+                            containerColor = AppAccent.action.copy(alpha = 0.8f),
+                            contentColor = AppAccent.onAction
                         )
                     ) {
                         Icon(
@@ -1201,7 +1188,7 @@ private fun SectoredDpad(
     onMove: (dLat: Double, dLng: Double) -> Unit,
     size: androidx.compose.ui.unit.Dp = 196.dp
 ) {
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val isDark = LocalIsDarkTheme.current
     val discColor = if (isDark) Color(0xFF1E2937).copy(alpha = 0.42f) else Color.White.copy(alpha = 0.40f)
     val borderColor = if (isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.5f)
     val arrowColor = if (enabled) {
@@ -1373,8 +1360,8 @@ private fun ResetIntervalInput() {
             enabled = valid && dirty,
             modifier = Modifier.size(32.dp),
             colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.85f),
-                contentColor = Color.White
+                containerColor = AppAccent.action.copy(alpha = 0.85f),
+                contentColor = AppAccent.onAction
             )
         ) {
             Icon(Icons.Default.Check, contentDescription = stringResource(R.string.action_apply), modifier = Modifier.size(18.dp))

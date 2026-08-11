@@ -15,14 +15,33 @@ val GlassIndigoLight = LiquidOrangeBright          // primary (dark)
 val GlassGreen = Color(0xFF4CAF50)                 // start button
 val StopRed = Color(0xFFEF5350)                    // stop / error
 
+// ── Nature-inspired palette (light theme) ───────────────────────────────────
+// Soft, warm, timeless. These five drive every light-mode colour below, so the
+// theme stays coherent if one of them is retuned.
+val SageGreen = Color(0xFF98A086)
+val DustyRose = Color(0xFFA76D5E)
+val GoldenTan = Color(0xFFC4A071)
+val WarmBeige = Color(0xFFDFCCB1)
+val TerracottaBrown = Color(0xFF846044)
+
+/**
+ * Icon/label colour for content sitting on [SageGreen] or [GoldenTan]. Both are
+ * mid-tones that white fails against (2.7:1 and 2.4:1); this deep warm brown
+ * clears 4.5:1 on either.
+ */
+val OnWarmAccent = Color(0xFF3A2C1C)
+
 // ── Glass surfaces ──────────────────────────────────────────────────────────
-val GlassBackgroundLight = Color(0xFFFFF6EF)
-val GlassSurfaceLight = Color.White.copy(alpha = 0.85f)
-val GlassSurfaceVariantLight = Color.White.copy(alpha = 0.75f)
-val GlassTextLight = Color(0xFF1E2937)
-val GlassMutedLight = Color(0xFF94A3B8)
-val GlassBorderLight = Color(0xFFCBD5E1).copy(alpha = 0.6f)
-val GlassNavLight = Color.White.copy(alpha = 0.9f)
+val GlassBackgroundLight = WarmBeige
+// Warm-tinted rather than pure white, so panels sit in the palette instead of
+// looking like a cold sheet dropped on top of it.
+val GlassSurfaceLight = Color(0xFFF3E9D9).copy(alpha = 0.85f)
+val GlassSurfaceVariantLight = Color(0xFFEADCC5).copy(alpha = 0.75f)
+// Deep brown reads ~8:1 against Warm Beige; the muted tone still clears 4.5:1.
+val GlassTextLight = Color(0xFF3F2E22)
+val GlassMutedLight = Color(0xFF63503F)
+val GlassBorderLight = TerracottaBrown.copy(alpha = 0.28f)
+val GlassNavLight = Color(0xFFF3E9D9).copy(alpha = 0.92f)
 
 val GlassBackgroundDark = Color(0xFF0F172A)
 val GlassSurfaceDark = Color(0xFF1E2937).copy(alpha = 0.85f)
@@ -41,8 +60,8 @@ val CardFill = Color.White.copy(alpha = 0.20f)
 val CardFillSelected = Color.White.copy(alpha = 0.65f)
 val CardBorder = Color.White.copy(alpha = 0.30f)
 val CardBorderSelected = Color(0xFFF59E0B).copy(alpha = 0.95f)
-val CardNameText = Color(0xFF1F2937)          // light mode, non-selected name
-val CardCoordText = Color(0xFF64748B)         // light mode, non-selected coords
+val CardNameText = GlassTextLight             // light mode, non-selected name
+val CardCoordText = GlassMutedLight           // light mode, non-selected coords
 val CardNameTextDark = Color(0xFFF1F5F9)      // dark mode, non-selected name
 val CardCoordTextDark = Color(0xFFCBD5E1)     // dark mode, non-selected coords
 val CardNameTextSelected = Color(0xFF111827)  // selected name (white-ish card, both modes)
@@ -82,7 +101,6 @@ val CandyGreen = GlassGreen
 val CandyBlue = GlassIndigo
 val CandyPink = Color(0xFF8B5CF6)
 val CandyYellow = Color(0xFFF59E0B)
-val DustyRose = GlassIndigo
 val SoftPurple = GlassIndigo
 
 val CandyBackground = GlassBackgroundLight
