@@ -85,7 +85,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -844,7 +843,7 @@ private fun TransportButtons(
         containerColor = AppAccent.action.copy(alpha = 0.8f),
         contentColor = AppAccent.onAction,
         disabledContainerColor = AppAccent.action.copy(alpha = 0.35f),
-        disabledContentColor = Color.White.copy(alpha = 0.5f)
+        disabledContentColor = AppAccent.onAction.copy(alpha = 0.5f)
     )
     FilledIconButton(onClick = onJump, enabled = enabled, colors = colors, modifier = buttonModifier) {
         Icon(Icons.Default.DoorFront, contentDescription = stringResource(R.string.transport_jump), modifier = Modifier.size(iconSize))

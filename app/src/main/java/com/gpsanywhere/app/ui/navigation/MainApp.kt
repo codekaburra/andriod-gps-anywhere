@@ -47,7 +47,6 @@ import java.util.Locale
 import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
-import androidx.compose.ui.graphics.luminance
 import com.gpsanywhere.app.ui.components.TexturedBackground
 import com.gpsanywhere.app.ui.theme.AppAccent
 import com.gpsanywhere.app.ui.theme.DustyRose
@@ -58,9 +57,7 @@ import com.gpsanywhere.app.ui.theme.TerracottaBrown
 import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
 import com.gpsanywhere.app.ui.theme.GlassNavDark
 import com.gpsanywhere.app.ui.theme.GlassNavLight
-import com.gpsanywhere.app.ui.theme.NavSelected
 import com.gpsanywhere.app.ui.theme.NavUnselected
-import com.gpsanywhere.app.ui.theme.SoftPurple
 import com.gpsanywhere.app.ui.settings.SettingsScreen
 import com.gpsanywhere.app.ui.walk.WalkScreen
 import com.gpsanywhere.app.viewmodel.MainViewModel
