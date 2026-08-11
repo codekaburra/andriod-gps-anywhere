@@ -119,7 +119,7 @@
     <string name="transport_rocket">火箭(5000 km/h)</string>
 
     <!-- Walk / route screen -->
-    <string name="walk_title">步行</string>
+    <string name="walk_title">路線</string>
     <string name="not_started">未開始</string>
     <string name="current_speed">目前速度</string>
     <string name="base_speed">基礎速度</string>
