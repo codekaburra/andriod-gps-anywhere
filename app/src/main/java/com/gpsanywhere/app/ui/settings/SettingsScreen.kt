@@ -39,6 +39,7 @@ import com.gpsanywhere.app.R
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.viewmodel.MainViewModel
+import com.gpsanywhere.app.ui.theme.AppAccent
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -191,7 +192,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     onClick = { showDeleteConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
+                        containerColor = AppAccent.stop.copy(alpha = 0.9f),
                         contentColor = Color.White
                     )
                 ) {
@@ -202,7 +203,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     onClick = { showDeleteCustomConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
+                        containerColor = AppAccent.stop.copy(alpha = 0.9f),
                         contentColor = Color.White
                     )
                 ) {

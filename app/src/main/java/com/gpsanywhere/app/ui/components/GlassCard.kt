@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
+import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
 
 /**
  * Liquid Glass card — translucent frosted surface with a soft warm radial glow,
@@ -24,7 +25,7 @@ fun GlassCard(
     filled: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val isDark = LocalIsDarkTheme.current
     val borderColor = if (isDark)
         Color.White.copy(alpha = 0.22f)
     else

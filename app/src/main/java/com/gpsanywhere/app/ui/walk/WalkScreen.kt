@@ -62,6 +62,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gpsanywhere.app.R
@@ -70,6 +72,9 @@ import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.ui.components.GlassCard
+import com.gpsanywhere.app.ui.theme.AppAccent
+import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
+import com.gpsanywhere.app.ui.components.overlapAbove
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import com.gpsanywhere.app.viewmodel.WalkViewModel
 import org.osmdroid.util.GeoPoint
@@ -196,7 +201,8 @@ fun WalkScreen(
                         MapViewComposable(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(180.dp),
+                                .height(ROUTE_MAP_HEIGHT)
+                                .clipToBounds(),
                             center = GeoPoint(positionLat, positionLng),
                             zoom = 16.0,
                             waypoints = currentPin
@@ -300,8 +306,8 @@ fun WalkScreen(
                         modifier = Modifier.weight(1.5f).height(56.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.CandyGreen.copy(alpha = 0.9f),
-                            contentColor = androidx.compose.ui.graphics.Color.White
+                            containerColor = AppAccent.start.copy(alpha = 0.9f),
+                            contentColor = AppAccent.onStart
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                     ) {
@@ -334,8 +340,8 @@ fun WalkScreen(
                         modifier = Modifier.height(56.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.9f),
-                            contentColor = androidx.compose.ui.graphics.Color.White
+                            containerColor = AppAccent.action.copy(alpha = 0.9f),
+                            contentColor = AppAccent.onAction
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                     ) {
@@ -349,7 +355,7 @@ fun WalkScreen(
                         modifier = Modifier.weight(1f).height(56.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.StopRed.copy(alpha = 0.9f),
+                            containerColor = AppAccent.stop.copy(alpha = 0.9f),
                             contentColor = androidx.compose.ui.graphics.Color.White
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
@@ -378,7 +384,8 @@ fun WalkScreen(
                     MapViewComposable(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(180.dp),
+                            .height(ROUTE_MAP_HEIGHT)
+                            .clipToBounds(),
                         center = GeoPoint(positionLat, positionLng),
                         zoom = 15.0,
                         waypoints = currentPin
@@ -388,33 +395,37 @@ fun WalkScreen(
 
             // ── Speed settings ────────────────────────────────────────────────
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        stringResource(R.string.base_speed),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    Row(verticalAlignment = Alignment.Bottom) {
+                SpeedControlPanel(
+                    speed = speed,
+                    onSpeedChange = viewModel::setSpeed,
+                    // Translucent card rides up over the map's lower quarter.
+                    modifier = Modifier
+                        .zIndex(1f)
+                        .overlapAbove(ROUTE_MAP_HEIGHT * 0.25f),
+                    header = {
                         Text(
-                            "—",
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontSize = 48.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            stringResource(R.string.base_speed),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                "—",
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    fontSize = 48.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                )
                             )
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            "km/h",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "km/h",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
                     }
-                    SpeedControlPanel(
-                        speed = speed,
-                        onSpeedChange = viewModel::setSpeed
-                    )
-                }
+                )
             }
 
             // ── Saved Routes header ───────────────────────────────────────────
@@ -489,6 +500,9 @@ fun WalkScreen(
 // ── Route speed slider: 0────────20 | 100 | 300 ─────────────────────────────
 // The 0–20 km/h walking range takes up the first 80% of the track; the faster
 // presets (20→100→300) share the remaining 20%.
+/** Height of the route-screen map previews. */
+private val ROUTE_MAP_HEIGHT = 180.dp
+
 private const val ROUTE_MAX_SPEED_KMH = 300f
 private val SPEED_STOPS = floatArrayOf(0f, 20f, 100f, 300f)
 private val SPEED_FRACS = floatArrayOf(0f, 0.80f, 0.90f, 1f)
@@ -528,13 +542,17 @@ private fun formatRouteSpeed(kmh: Float): String =
 @Composable
 private fun SpeedControlPanel(
     speed: Float,
-    onSpeedChange: (Float) -> Unit
+    onSpeedChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    /** Optional readout rendered inside the card, above the slider row. */
+    header: (@Composable () -> Unit)? = null
 ) {
-    GlassCard {
+    GlassCard(modifier = modifier) {
         Column(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            header?.invoke()
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -551,8 +569,8 @@ private fun SpeedControlPanel(
                     valueRange = 0f..1f,
                     modifier = Modifier.weight(1f),
                     colors = androidx.compose.material3.SliderDefaults.colors(
-                        thumbColor = com.gpsanywhere.app.ui.theme.SliderThumb.copy(alpha = 0.9f),
-                        activeTrackColor = com.gpsanywhere.app.ui.theme.SliderActiveTrack.copy(alpha = 0.9f),
+                        thumbColor = AppAccent.slider.copy(alpha = 0.9f),
+                        activeTrackColor = AppAccent.slider.copy(alpha = 0.9f),
                         inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.9f)
                     )
                 )
@@ -578,7 +596,7 @@ private fun RouteRow(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val isDark = LocalIsDarkTheme.current
     val nameColor = if (isDark) com.gpsanywhere.app.ui.theme.CardNameTextDark else com.gpsanywhere.app.ui.theme.CardNameText
     val subColor = if (isDark) com.gpsanywhere.app.ui.theme.CardCoordTextDark else com.gpsanywhere.app.ui.theme.CardCoordText
     Card(
@@ -601,7 +619,7 @@ private fun RouteRow(
                 Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_route), tint = subColor, modifier = Modifier.size(20.dp))
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_route), tint = com.gpsanywhere.app.ui.theme.StopRed, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_route), tint = AppAccent.stop, modifier = Modifier.size(20.dp))
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null,
                 tint = subColor)

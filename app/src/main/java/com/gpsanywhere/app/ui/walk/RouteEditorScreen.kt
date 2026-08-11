@@ -56,6 +56,7 @@ import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.ui.components.GlassCard
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import org.osmdroid.util.GeoPoint
+import com.gpsanywhere.app.ui.theme.AppAccent
 
 /**
  * Full-screen editor to create a new route or edit an existing one.
@@ -285,8 +286,8 @@ fun RouteEditorScreen(
                         clipboard.getText()?.text?.let { coordText = it }
                     },
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = com.gpsanywhere.app.ui.theme.CandyYellow.copy(alpha = 0.8f),
-                        contentColor = Color.White
+                        containerColor = AppAccent.action.copy(alpha = 0.8f),
+                        contentColor = AppAccent.onAction
                     )
                 ) {
                     Icon(Icons.Default.ContentPaste, contentDescription = stringResource(R.string.action_paste), modifier = Modifier.size(18.dp))
@@ -352,7 +353,7 @@ fun RouteEditorScreen(
                             Icon(Icons.Default.KeyboardArrowDown, contentDescription = stringResource(R.string.move_down), modifier = Modifier.size(20.dp))
                         }
                         IconButton(onClick = { points.removeAt(index) }) {
-                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = com.gpsanywhere.app.ui.theme.StopRed, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = AppAccent.stop, modifier = Modifier.size(20.dp))
                         }
                     }
                 }

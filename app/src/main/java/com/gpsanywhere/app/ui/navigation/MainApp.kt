@@ -48,6 +48,14 @@ import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import androidx.compose.ui.graphics.luminance
+import com.gpsanywhere.app.ui.components.TexturedBackground
+import com.gpsanywhere.app.ui.theme.AppAccent
+import com.gpsanywhere.app.ui.theme.DustyRose
+import com.gpsanywhere.app.ui.theme.GlassBackgroundLight
+import com.gpsanywhere.app.ui.theme.GoldenTan
+import com.gpsanywhere.app.ui.theme.SageGreen
+import com.gpsanywhere.app.ui.theme.TerracottaBrown
+import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
 import com.gpsanywhere.app.ui.theme.GlassNavDark
 import com.gpsanywhere.app.ui.theme.GlassNavLight
 import com.gpsanywhere.app.ui.theme.NavSelected
@@ -90,22 +98,30 @@ fun MainApp(preferences: AppPreferences) {
 
     CompositionLocalProvider(LocalContext provides localizedContext) {
     GPSAnywhereTheme(themeMode = themeMode, colorTheme = colorTheme) {
-      val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+      val isDark = LocalIsDarkTheme.current
       Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(if (isDark) R.drawable.bg_dark else R.drawable.bg_light),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-        // Soften the background so foreground glass UI stays legible
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    (if (isDark) Color.Black.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.7f))
-                )
-        )
+        if (isDark) {
+            Image(
+                painter = painterResource(R.drawable.bg_dark),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            // Soften the artwork so the foreground glass UI stays legible.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.85f))
+            )
+        } else {
+            // Light mode draws its texture procedurally from the theme colour, so
+            // there is no bitmap to re-author when that colour changes.
+            TexturedBackground(
+                base = GlassBackgroundLight,
+                accents = listOf(SageGreen, GoldenTan, TerracottaBrown, DustyRose),
+                bloomAlpha = 0.30f
+            )
+        }
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
@@ -126,21 +142,21 @@ fun MainApp(preferences: AppPreferences) {
                         onClick = { nav(Routes.LOCATION) },
                         icon = { Icon(Icons.Default.LocationOn, contentDescription = stringResource(R.string.nav_location)) },
                         label = { Text(stringResource(R.string.nav_location)) },
-                        colors = navItemColors(SoftPurple)
+                        colors = navItemColors(AppAccent.navSelected)
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.WALK,
                         onClick = { nav(Routes.WALK) },
                         icon = { Icon(Icons.Default.Route, contentDescription = stringResource(R.string.nav_route)) },
                         label = { Text(stringResource(R.string.nav_route)) },
-                        colors = navItemColors(SoftPurple)
+                        colors = navItemColors(AppAccent.navSelected)
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.SETTINGS,
                         onClick = { nav(Routes.SETTINGS) },
                         icon = { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.nav_settings)) },
                         label = { Text(stringResource(R.string.nav_settings)) },
-                        colors = navItemColors(SoftPurple)
+                        colors = navItemColors(AppAccent.navSelected)
                     )
                 }
             }
@@ -177,9 +193,9 @@ fun MainApp(preferences: AppPreferences) {
 
 @Composable
 private fun navItemColors(activeColor: androidx.compose.ui.graphics.Color) = NavigationBarItemDefaults.colors(
-    selectedIconColor = NavSelected,
-    selectedTextColor = NavSelected,
-    indicatorColor = NavSelected.copy(alpha = 0.15f),
+    selectedIconColor = activeColor,
+    selectedTextColor = activeColor,
+    indicatorColor = activeColor.copy(alpha = 0.15f),
     unselectedIconColor = NavUnselected,
     unselectedTextColor = NavUnselected
 )
