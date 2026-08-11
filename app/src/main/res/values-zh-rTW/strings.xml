@@ -32,8 +32,8 @@
     <string name="onboarding_step_2_title">選取模擬位置應用程式</string>
     <string name="onboarding_step_2_body">開啟「開發人員選項 → 選取模擬位置應用程式」,選擇 GPS Anywhere。</string>
     <string name="onboarding_step_3_title">授予權限</string>
-    <string name="onboarding_step_3_body">在系統提示時允許位置與通知權限,自訂位置模式與狀態通知才能正常運作。</string>
-    <string name="onboarding_step_n_of">第 %1$d 步,共 %2$d 步</string>
+    <string name="onboarding_step_3_body">在系統提示時允許位置與通知權限，自訂位置模式與狀態通知才能正常運作。</string>
+    <string name="onboarding_step_n_of">第 %1$d 步，共 %2$d 步</string>
 
     <!-- Settings screen -->
     <string name="settings_title">設定</string>
@@ -45,7 +45,7 @@
     <string name="theme_light">淺色</string>
     <string name="theme_dark">深色</string>
     <string name="settings_prebuilt">預設資料</string>
-    <string name="settings_prebuilt_desc">匯入內建的範例地點或路線。現有項目會保留,匯入後也可以個別刪除。</string>
+    <string name="settings_prebuilt_desc">匯入內建的範例地點或路線。現有項目會保留，匯入後也可以個別刪除。</string>
     <string name="import_prebuilt_locations">匯入預設地點</string>
     <string name="import_prebuilt_routes">匯入預設路線</string>
     <string name="working">處理中…</string>
@@ -53,7 +53,7 @@
     <string name="delete_prebuilt_routes">刪除所有預設路線</string>
     <string name="delete_custom_data">刪除所有自訂資料</string>
     <string name="settings_dev_options">開發人員選項</string>
-    <string name="settings_dev_options_desc">開啟 Android 開發人員選項,將本 App 設為模擬位置應用程式。</string>
+    <string name="settings_dev_options_desc">開啟 Android 開發人員選項，將本 App 設為模擬位置應用程式。</string>
     <string name="open_dev_options">開啟開發人員選項</string>
     <string name="dev_options_manual_hint">請手動前往「設定 → 開發人員選項」</string>
     <string name="dev_options_step1">① 捲動到「除錯」區塊。</string>
@@ -65,19 +65,19 @@
 
     <!-- Settings dialogs / toasts -->
     <string name="dialog_import_locations_title">匯入預設地點?</string>
-    <string name="dialog_import_locations_text">會將所有內建範例地點加入清單,現有項目會保留。要繼續嗎?</string>
+    <string name="dialog_import_locations_text">會將所有內建範例地點加入清單，現有項目會保留。要繼續嗎?</string>
     <string name="dialog_import_routes_title">匯入預設路線?</string>
-    <string name="dialog_import_routes_text">會將所有內建範例路線加入清單,現有路線會保留,重複的預設路線會自動清理。要繼續嗎?</string>
+    <string name="dialog_import_routes_text">會將所有內建範例路線加入清單，現有路線會保留，重複的預設路線會自動清理。要繼續嗎?</string>
     <string name="dialog_delete_prebuilt_title">刪除所有預設地點?</string>
-    <string name="dialog_delete_prebuilt_text">會刪除所有內建範例地點,你自己建立的地點會保留。要繼續嗎?</string>
+    <string name="dialog_delete_prebuilt_text">會刪除所有內建範例地點，你自己建立的地點會保留。要繼續嗎?</string>
     <string name="dialog_delete_custom_title">刪除所有自訂資料?</string>
-    <string name="dialog_delete_custom_text">會刪除所有你自己建立的地點與路線,預設項目會保留。此動作無法復原。要繼續嗎?</string>
+    <string name="dialog_delete_custom_text">會刪除所有你自己建立的地點與路線，預設項目會保留。此動作無法復原。要繼續嗎?</string>
     <string name="toast_locations_imported">已匯入預設地點</string>
     <string name="toast_routes_imported">已匯入預設路線</string>
     <string name="toast_prebuilt_deleted">已刪除預設地點</string>
     <string name="toast_prebuilt_routes_deleted">已刪除預設路線</string>
     <string name="dialog_delete_prebuilt_routes_title">刪除所有預設路線?</string>
-    <string name="dialog_delete_prebuilt_routes_text">會刪除所有內建範例路線,你自己建立的路線會保留。要繼續嗎?</string>
+    <string name="dialog_delete_prebuilt_routes_text">會刪除所有內建範例路線，你自己建立的路線會保留。要繼續嗎?</string>
     <string name="toast_custom_deleted">已刪除自訂資料</string>
 
     <!-- Location screen -->
@@ -87,11 +87,11 @@
     <string name="filter_custom">自訂</string>
     <string name="no_locations_yet">尚無地點</string>
     <string name="no_matching_locations">沒有符合的地點</string>
-    <string name="no_locations_hint">按 + 新增地點,或從「設定」匯入預設地點</string>
+    <string name="no_locations_hint">按 + 新增地點，或從「設定」匯入預設地點</string>
     <string name="try_different_filter">試試其他篩選條件</string>
     <string name="current_position">目前位置</string>
     <string name="coordinate">座標</string>
-    <string name="coordinate_format_error">請用「緯度,經度」格式(例:22.3168,114.0451)</string>
+    <string name="coordinate_format_error">請用「緯度，經度」格式(例:22.3168,114.0451)</string>
     <string name="name">名稱</string>
     <string name="latitude">緯度</string>
     <string name="longitude">經度</string>
@@ -122,12 +122,12 @@
     <string name="walk_title">步行</string>
     <string name="not_started">未開始</string>
     <string name="current_speed">目前速度</string>
-    <string name="base_speed">基準速度</string>
+    <string name="base_speed">基礎速度</string>
     <string name="saved_routes">已儲存路線</string>
     <string name="add_route">新增路線</string>
     <string name="no_routes_yet">尚無路線</string>
-    <string name="no_routes_hint">按 + 建立路線,或從「設定」匯入預設路線</string>
-    <string name="route_meta">%1$s · %2$d 個站點</string>
+    <string name="no_routes_hint">按 + 建立路線，或從「設定」匯入預設路線</string>
+    <string name="route_meta">%1$s · %2$d 個途經點</string>
     <string name="waypoint_n">途經點 %1$d</string>
     <string name="dialog_delete_route_title">刪除路線?</string>
     <string name="dialog_delete_route_text">確定刪除「%1$s」?此動作無法復原。</string>
@@ -144,9 +144,9 @@
     <string name="csv_hint">以 CSV 編輯或貼上路線。# 開頭為中繼資料;每行資料為 latitude,longitude,name_tc,name_en。</string>
     <string name="route_csv">路線 CSV</string>
     <string name="csv_parse_error">找不到有效座標。每行需要:latitude,longitude,name_tc,name_en</string>
-    <string name="tap_map_hint">點地圖新增途經點 · %1$d 個站點</string>
-    <string name="click_map_hint">點擊地圖新增座標點</string>
-    <string name="add_point">新增座標點</string>
+    <string name="tap_map_hint">點地圖新增途經點 · 共 %1$d 個</string>
+    <string name="click_map_hint">點擊地圖新增途經點</string>
+    <string name="add_point">新增途經點</string>
     <string name="move_up">上移</string>
     <string name="move_down">下移</string>
 
@@ -159,5 +159,5 @@
 
     <!-- Permissions -->
     <string name="perm_required_title">需要定位權限</string>
-    <string name="perm_required_body">自訂位置模式需要定位權限,可到系統設定中授予。</string>
+    <string name="perm_required_body">自訂位置模式需要定位權限，可到系統設定中授予。</string>
 </resources>
