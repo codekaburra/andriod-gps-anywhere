@@ -49,15 +49,14 @@ import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import com.gpsanywhere.app.ui.components.TexturedBackground
 import com.gpsanywhere.app.ui.theme.AppAccent
-import com.gpsanywhere.app.ui.theme.DustyRose
+import com.gpsanywhere.app.ui.theme.MapleSpice
 import com.gpsanywhere.app.ui.theme.GlassBackgroundLight
-import com.gpsanywhere.app.ui.theme.GoldenTan
+import com.gpsanywhere.app.ui.theme.Gold
 import com.gpsanywhere.app.ui.theme.SageGreen
-import com.gpsanywhere.app.ui.theme.TerracottaBrown
+import com.gpsanywhere.app.ui.theme.MossGreen
 import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
 import com.gpsanywhere.app.ui.theme.GlassNavDark
 import com.gpsanywhere.app.ui.theme.GlassNavLight
-import com.gpsanywhere.app.ui.theme.NavUnselected
 import com.gpsanywhere.app.ui.settings.SettingsScreen
 import com.gpsanywhere.app.ui.walk.WalkScreen
 import com.gpsanywhere.app.viewmodel.MainViewModel
@@ -115,7 +114,7 @@ fun MainApp(preferences: AppPreferences) {
             // there is no bitmap to re-author when that colour changes.
             TexturedBackground(
                 base = GlassBackgroundLight,
-                accents = listOf(SageGreen, GoldenTan, TerracottaBrown, DustyRose),
+                accents = listOf(SageGreen, Gold, MossGreen, MapleSpice),
                 bloomAlpha = 0.30f
             )
         }
@@ -192,7 +191,7 @@ fun MainApp(preferences: AppPreferences) {
 private fun navItemColors(activeColor: androidx.compose.ui.graphics.Color) = NavigationBarItemDefaults.colors(
     selectedIconColor = activeColor,
     selectedTextColor = activeColor,
-    indicatorColor = activeColor.copy(alpha = 0.15f),
-    unselectedIconColor = NavUnselected,
-    unselectedTextColor = NavUnselected
+    indicatorColor = AppAccent.navIndicator,
+    unselectedIconColor = AppAccent.navUnselected,
+    unselectedTextColor = AppAccent.navUnselected
 )

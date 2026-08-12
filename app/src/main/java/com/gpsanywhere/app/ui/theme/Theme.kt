@@ -31,50 +31,108 @@ val LocalIsDarkTheme = staticCompositionLocalOf { false }
  * against the dark artwork.
  */
 object AppAccent {
-    /** Icon buttons and other primary actions. */
-    val action: Color
-        @Composable get() = if (LocalIsDarkTheme.current) CandyYellow else GoldenTan
+    /** A fill and the content colour that stays legible on it. */
+    data class Pair(val container: Color, val content: Color)
 
-    /** Content drawn on top of [action]. */
+    /** Map controls: the add button, paste, the D-pad. Accent role. */
+    val action: Color
+        @Composable get() = if (LocalIsDarkTheme.current) CandyYellow else LightAccent
+
+    /** Content on [action]. */
     val onAction: Color
-        @Composable get() = if (LocalIsDarkTheme.current) Color.White else OnWarmAccent
+        @Composable get() = Color.White
+
+    /** Primary buttons — the transport row, Settings imports. */
+    val primaryAction: Pair
+        @Composable get() = Pair(if (LocalIsDarkTheme.current) CandyGreen else LightPrimary, Color.White)
+
+    /** Transport buttons before a coordinate is entered. */
+    val primaryActionIdle: Color
+        @Composable get() = if (LocalIsDarkTheme.current) GlassMutedDark else LightNeutralLight
 
     /** Start / go. */
     val start: Color
-        @Composable get() = if (LocalIsDarkTheme.current) CandyGreen else SageGreen
+        @Composable get() = if (LocalIsDarkTheme.current) CandyGreen else LightPrimary
 
     /** Content drawn on top of [start]. */
     val onStart: Color
-        @Composable get() = if (LocalIsDarkTheme.current) Color.White else OnWarmAccent
+        @Composable get() = Color.White
 
-    /** Stop / delete. */
+    /** Stop and delete — the strongest colour, so destructive reads as destructive. */
     val stop: Color
-        @Composable get() = if (LocalIsDarkTheme.current) StopRed else DustyRose
+        @Composable get() = if (LocalIsDarkTheme.current) StopRed else LightPrimary
+
+    /** Edit. A step down from [stop] so the two icons are told apart. */
+    val edit: Color
+        @Composable get() = if (LocalIsDarkTheme.current) GlassIndigoLight else LightSecondary
+
+    /** Pill behind the selected navigation item. */
+    val navIndicator: Color
+        @Composable get() = if (LocalIsDarkTheme.current) NavSelected.copy(alpha = 0.15f) else SelectedPill
+
+    /** Selected list item — its border and icon. */
+    val selected: Color
+        @Composable get() = if (LocalIsDarkTheme.current) NavSelected else LightPrimary
 
     /** Selected navigation item. */
     val navSelected: Color
-        @Composable get() = if (LocalIsDarkTheme.current) NavSelected else TerracottaBrown
+        @Composable get() = if (LocalIsDarkTheme.current) NavSelected else LightPrimary
+
+    /** Unselected navigation items, and unselected icons generally. */
+    val navUnselected: Color
+        @Composable get() = if (LocalIsDarkTheme.current) GlassMutedDark else LightNeutralLight
+
+    /** Map pins and other markers. */
+    val marker: Color
+        @Composable get() = if (LocalIsDarkTheme.current) GlassIndigoLight else LightNeutralDark
+
+    /** The waypoint the walk is closest to. */
+    val nearestWaypoint: Color
+        @Composable get() = if (LocalIsDarkTheme.current) GlassIndigoLight else LightPrimary
+
+    /**
+     * Cards in a list. Translucent white rather than solid, so the textured
+     * background reads through and the cards match the glass panels above them.
+     */
+    val cardFill: Color
+        @Composable get() = if (LocalIsDarkTheme.current) CardFill else SurfaceWhite.copy(alpha = 0.42f)
+
+    /** Card outline. */
+    val cardBorder: Color
+        @Composable get() = if (LocalIsDarkTheme.current) CardBorder else BorderSubtle
+
+    /** The little tag pills on a location card. Accent role. */
+    val tagChip: Pair
+        @Composable get() = if (LocalIsDarkTheme.current) Pair(CardFill, GlassTextDark)
+        else Pair(LightAccent.copy(alpha = 0.72f), Color.White)
+
+    /** Low-emphasis buttons: back, reverse. */
+    val neutral: Pair
+        @Composable get() = if (LocalIsDarkTheme.current) Pair(GlassSurfaceDark, GlassTextDark)
+        else Pair(SurfaceWhite, LightNeutralDark)
 
     /** Slider thumb and active track. */
     val slider: Color
-        @Composable get() = if (LocalIsDarkTheme.current) SliderThumb else GoldenTan
+        @Composable get() = if (LocalIsDarkTheme.current) SliderThumb else LightAccent
 }
 
-// Light theme roles map onto the nature-inspired palette: terracotta leads,
-// sage carries the secondary actions, golden tan the tertiary accents.
+
+
+// Light theme roles map onto the autumn palette: burnt orange leads, sage carries
+// the secondary actions, gold the tertiary accents, maple spice the errors.
 private val LightColorScheme = lightColorScheme(
-    primary = TerracottaBrown,
-    onPrimary = Color(0xFFFBF4E9),
-    primaryContainer = Color(0xFFEBD9C2),
-    onPrimaryContainer = Color(0xFF3F2E22),
-    secondary = SageGreen,
-    onSecondary = Color(0xFF23281C),
-    secondaryContainer = Color(0xFFDDE3D2),
-    onSecondaryContainer = Color(0xFF2F3627),
-    tertiary = GoldenTan,
-    onTertiary = Color(0xFF3A2C17),
-    tertiaryContainer = Color(0xFFF0E1C8),
-    onTertiaryContainer = Color(0xFF4A3821),
+    primary = LightPrimary,
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFEDD8C9),
+    onPrimaryContainer = MapleSpice,
+    secondary = LightSecondary,
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFDFE2D0),
+    onSecondaryContainer = LightNeutralDark,
+    tertiary = LightAccent,
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFF2E3C6),
+    onTertiaryContainer = Color(0xFF54401A),
     background = GlassBackgroundLight,
     onBackground = GlassTextLight,
     surface = GlassSurfaceLight,
@@ -82,8 +140,8 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = GlassSurfaceVariantLight,
     onSurfaceVariant = GlassMutedLight,
     outline = GlassBorderLight,
-    outlineVariant = TerracottaBrown.copy(alpha = 0.18f),
-    error = DustyRose
+    outlineVariant = LightNeutralLight.copy(alpha = 0.4f),
+    error = LightPrimary
 )
 
 private val DarkColorScheme = darkColorScheme(

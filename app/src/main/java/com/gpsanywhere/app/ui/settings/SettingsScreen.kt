@@ -170,8 +170,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     onClick = { showImportLocationsConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFA1B5AB),
-                        contentColor = Color.White
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = 0.72f),
+                        contentColor = AppAccent.primaryAction.content
                     )
                 ) {
                     Text(stringResource(if (isImporting) R.string.working else R.string.import_prebuilt_locations))
@@ -181,8 +181,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     onClick = { showImportRoutesConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFA1B5AB),
-                        contentColor = Color.White
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = 0.72f),
+                        contentColor = AppAccent.primaryAction.content
                     )
                 ) {
                     Text(stringResource(if (isImporting) R.string.working else R.string.import_prebuilt_routes))
@@ -192,7 +192,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     onClick = { showDeleteConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppAccent.stop.copy(alpha = 0.9f),
+                        containerColor = AppAccent.stop.copy(alpha = 0.72f),
                         contentColor = Color.White
                     )
                 ) {
@@ -203,7 +203,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     onClick = { showDeleteCustomConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppAccent.stop.copy(alpha = 0.9f),
+                        containerColor = AppAccent.stop.copy(alpha = 0.72f),
                         contentColor = Color.White
                     )
                 ) {
@@ -251,8 +251,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFA1B5AB),
-                        contentColor = Color.White
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = 0.72f),
+                        contentColor = AppAccent.primaryAction.content
                     )
                 ) {
                     Text(stringResource(R.string.open_dev_options))

@@ -81,7 +81,6 @@
     <string name="toast_custom_deleted">Custom data deleted</string>
 
     <!-- Location screen -->
-    <string name="saved_locations">Saved Locations</string>
     <string name="add_location">Add Location</string>
     <string name="edit_location">Edit Location</string>
     <string name="filter_custom">Custom</string>
@@ -127,7 +126,6 @@
     <string name="not_started">Not started</string>
     <string name="current_speed">Current Speed</string>
     <string name="base_speed">Base Speed</string>
-    <string name="saved_routes">Saved Routes</string>
     <string name="add_route">Add route</string>
     <string name="no_routes_yet">No routes yet</string>
     <string name="no_routes_hint">Tap + to create a route, or import prebuilt routes from Settings</string>

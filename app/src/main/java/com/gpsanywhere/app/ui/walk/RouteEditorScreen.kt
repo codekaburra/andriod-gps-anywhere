@@ -286,7 +286,7 @@ fun RouteEditorScreen(
                         clipboard.getText()?.text?.let { coordText = it }
                     },
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = AppAccent.action.copy(alpha = 0.8f),
+                        containerColor = AppAccent.action.copy(alpha = 0.65f),
                         contentColor = AppAccent.onAction
                     )
                 ) {

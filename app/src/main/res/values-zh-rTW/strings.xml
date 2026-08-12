@@ -81,7 +81,6 @@
     <string name="toast_custom_deleted">已刪除自訂資料</string>
 
     <!-- Location screen -->
-    <string name="saved_locations">已儲存地點</string>
     <string name="add_location">新增地點</string>
     <string name="edit_location">編輯地點</string>
     <string name="filter_custom">自訂</string>
@@ -127,7 +126,6 @@
     <string name="not_started">未開始</string>
     <string name="current_speed">目前速度</string>
     <string name="base_speed">基礎速度</string>
-    <string name="saved_routes">已儲存路線</string>
     <string name="add_route">新增路線</string>
     <string name="no_routes_yet">尚無路線</string>
     <string name="no_routes_hint">按 + 建立路線，或從「設定」匯入預設路線</string>

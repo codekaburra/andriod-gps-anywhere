@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -285,8 +287,8 @@ fun WalkScreen(
                     FilledIconButton(
                         onClick = { selectedRoute = null },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
-                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
+                            containerColor = AppAccent.neutral.container.copy(alpha = 0.72f),
+                            contentColor = AppAccent.neutral.content
                         )
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
@@ -294,8 +296,8 @@ fun WalkScreen(
                     FilledIconButton(
                         onClick = { viewModel.startWalk(route, reversed = true) },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
-                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
+                            containerColor = AppAccent.neutral.container.copy(alpha = 0.72f),
+                            contentColor = AppAccent.neutral.content
                         )
                     ) {
                         Icon(Icons.Default.SwapVert, contentDescription = stringResource(R.string.reverse_direction))
@@ -305,7 +307,7 @@ fun WalkScreen(
                         modifier = Modifier.weight(1.5f).height(56.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = AppAccent.start.copy(alpha = 0.9f),
+                            containerColor = AppAccent.start.copy(alpha = 0.72f),
                             contentColor = AppAccent.onStart
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
@@ -319,8 +321,8 @@ fun WalkScreen(
                     FilledIconButton(
                         onClick = { viewModel.stop(); selectedRoute = null },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
-                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
+                            containerColor = AppAccent.neutral.container.copy(alpha = 0.72f),
+                            contentColor = AppAccent.neutral.content
                         )
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
@@ -328,8 +330,8 @@ fun WalkScreen(
                     FilledIconButton(
                         onClick = { viewModel.revertWalk(route) },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.NeutralButtonBg.copy(alpha = 0.9f),
-                            contentColor = com.gpsanywhere.app.ui.theme.NeutralButtonContent
+                            containerColor = AppAccent.neutral.container.copy(alpha = 0.72f),
+                            contentColor = AppAccent.neutral.content
                         )
                     ) {
                         Icon(Icons.Default.SwapVert, contentDescription = stringResource(R.string.reverse_direction))
@@ -339,7 +341,7 @@ fun WalkScreen(
                         modifier = Modifier.height(56.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = AppAccent.action.copy(alpha = 0.9f),
+                            containerColor = AppAccent.action.copy(alpha = 0.72f),
                             contentColor = AppAccent.onAction
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
@@ -354,7 +356,7 @@ fun WalkScreen(
                         modifier = Modifier.weight(1f).height(56.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = AppAccent.stop.copy(alpha = 0.9f),
+                            containerColor = AppAccent.stop.copy(alpha = 0.72f),
                             contentColor = androidx.compose.ui.graphics.Color.White
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
@@ -380,15 +382,36 @@ fun WalkScreen(
             // ── Current location map (matches Location view header) ───────────
             item {
                 if (positionLat != null && positionLng != null) {
-                    MapViewComposable(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(ROUTE_MAP_HEIGHT)
-                            .clipToBounds(),
-                        center = GeoPoint(positionLat, positionLng),
-                        zoom = 15.0,
-                        waypoints = currentPin
-                    )
+                            .clipToBounds()
+                    ) {
+                        MapViewComposable(
+                            modifier = Modifier.fillMaxSize(),
+                            center = GeoPoint(positionLat, positionLng),
+                            zoom = 15.0,
+                            waypoints = currentPin
+                        )
+
+                        // Floats on the map like the Location screen's add button.
+                        Surface(
+                            shape = CircleShape,
+                            color = AppAccent.action.copy(alpha = 0.65f),
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                        ) {
+                            IconButton(onClick = { editorTarget = null; editorOpen = true }) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = stringResource(R.string.add_route),
+                                    tint = AppAccent.onAction
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -428,30 +451,6 @@ fun WalkScreen(
             }
 
             // ── Saved Routes header ───────────────────────────────────────────
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        stringResource(R.string.saved_routes),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    FilledIconButton(
-                        onClick = { editorTarget = null; editorOpen = true },
-                        modifier = Modifier.size(36.dp),
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = Color(0xFFA1B5AB),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_route), modifier = Modifier.size(20.dp))
-                    }
-                }
-            }
-
             // ── Route list ────────────────────────────────────────────────────
             if (routes.isEmpty()) {
                 item {
@@ -568,8 +567,8 @@ private fun SpeedControlPanel(
                     valueRange = 0f..1f,
                     modifier = Modifier.weight(1f),
                     colors = androidx.compose.material3.SliderDefaults.colors(
-                        thumbColor = AppAccent.slider.copy(alpha = 0.9f),
-                        activeTrackColor = AppAccent.slider.copy(alpha = 0.9f),
+                        thumbColor = AppAccent.slider.copy(alpha = 0.72f),
+                        activeTrackColor = AppAccent.slider.copy(alpha = 0.72f),
                         inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.9f)
                     )
                 )
@@ -601,8 +600,8 @@ private fun RouteRow(
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = com.gpsanywhere.app.ui.theme.CardFill),
-        border = BorderStroke(1.5.dp, com.gpsanywhere.app.ui.theme.CardBorder),
+        colors = CardDefaults.cardColors(containerColor = AppAccent.cardFill),
+        border = BorderStroke(1.5.dp, AppAccent.cardBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -618,7 +617,7 @@ private fun RouteRow(
                 Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_route), tint = subColor, modifier = Modifier.size(20.dp))
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_route), tint = AppAccent.stop, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_route), tint = AppAccent.stop.copy(alpha = 0.75f), modifier = Modifier.size(20.dp))
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null,
                 tint = subColor)
@@ -642,7 +641,7 @@ private fun WaypointProgressRow(
     ) {
         Icon(
             Icons.Default.LocationOn, contentDescription = null,
-            tint = if (isNearest) com.gpsanywhere.app.ui.theme.CandyBlue
+            tint = if (isNearest) AppAccent.nearestWaypoint
                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
             modifier = Modifier.size(20.dp)
         )
