@@ -33,21 +33,25 @@ data class SavedLocation(
 ) {
     val isPreinstalled: Boolean get() = sourceId != null
 
-    /** The English name when [language] calls for it and one exists; otherwise [name]. */
+    /**
+     * The name for [language], falling back to the other one when it is blank.
+     * Either field may be empty: the editor asks for both but requires only one.
+     */
     fun displayName(language: AppLanguage): String =
-        if (!language.prefersChinese && nameEn.isNotBlank()) nameEn else name
+        if (language.prefersChinese) name.ifBlank { nameEn } else nameEn.ifBlank { name }
 
     /** Returns the tags as a list, or empty list if no tags. */
     val tagList: List<String>
         get() = tags.toTagList()
 
-    /**
-     * Tags in the language [language] asks for, falling back to [tagList] when no
-     * English set exists — user-created locations never have one, and locations
-     * saved before English tags shipped may not either.
-     */
+    /** English tags as a list, or empty when none were provided. */
+    val tagsEnList: List<String>
+        get() = tagsEn.toTagList()
+
+    /** Tags for [language], falling back to the other set when it is blank. */
     fun displayTags(language: AppLanguage): List<String> =
-        if (!language.prefersChinese && tagsEn.isNotBlank()) tagsEn.toTagList() else tagList
+        if (language.prefersChinese) tagList.ifEmpty { tagsEnList }
+        else tagsEnList.ifEmpty { tagList }
 }
 
 private fun String.toTagList(): List<String> =

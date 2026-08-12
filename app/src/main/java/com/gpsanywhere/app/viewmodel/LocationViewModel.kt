@@ -8,7 +8,6 @@ import com.gpsanywhere.app.data.AppDatabase
 import com.gpsanywhere.app.data.DefaultLocationSeeder
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
 import com.gpsanywhere.app.data.SavedLocation
-import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.SpiralWalkGenerator
 import com.gpsanywhere.app.service.SpoofService
@@ -62,49 +61,51 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun addLocation(name: String, latitude: Double, longitude: Double, tags: String = "") {
+    fun addLocation(
+        name: String,
+        nameEn: String = "",
+        latitude: Double,
+        longitude: Double,
+        tags: String = "",
+        tagsEn: String = ""
+    ) {
         viewModelScope.launch {
             dao.insert(
                 SavedLocation(
                     sourceId = null,
                     name = name.trim(),
+                    nameEn = nameEn.trim(),
                     latitude = latitude,
                     longitude = longitude,
-                    tags = tags
+                    tags = tags,
+                    tagsEn = tagsEn
                 )
             )
         }
     }
 
     /**
-     * Update [location], writing [name] and [tags] back to whichever fields were
-     * on screen.
-     *
-     * A prebuilt location carries Chinese and English names and tags, and the
-     * editor shows whichever pair matches [language]. Saving must land on those
-     * same fields — writing to [SavedLocation.name] regardless would overwrite the
-     * Chinese name with English text the moment someone edits in English.
+     * Update [location]. The editor exposes both languages for names and tags, so
+     * every field is written exactly as given.
      */
     fun updateLocation(
         location: SavedLocation,
         name: String,
+        nameEn: String = location.nameEn,
         latitude: Double,
         longitude: Double,
         tags: String = location.tags,
-        language: AppLanguage = AppLanguage.SYSTEM
+        tagsEn: String = location.tagsEn
     ) {
         viewModelScope.launch {
-            val trimmedName = name.trim()
-            val editedEnglishName = !language.prefersChinese && location.nameEn.isNotBlank()
-            val editedEnglishTags = !language.prefersChinese && location.tagsEn.isNotBlank()
             dao.update(
                 location.copy(
-                    name = if (editedEnglishName) location.name else trimmedName,
-                    nameEn = if (editedEnglishName) trimmedName else location.nameEn,
+                    name = name.trim(),
+                    nameEn = nameEn.trim(),
                     latitude = latitude,
                     longitude = longitude,
-                    tags = if (editedEnglishTags) location.tags else tags,
-                    tagsEn = if (editedEnglishTags) tags else location.tagsEn
+                    tags = tags,
+                    tagsEn = tagsEn
                 )
             )
         }

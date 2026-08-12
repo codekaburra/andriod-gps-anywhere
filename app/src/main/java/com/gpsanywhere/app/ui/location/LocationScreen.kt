@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -582,15 +583,15 @@ fun LocationScreen(
     editLocation?.let { loc ->
         AddLocationSheet(
             title = stringResource(R.string.edit_location),
-            // Edit the name the user is actually looking at; updateLocation writes
-            // it back to that same field so the other language survives.
-            initialName = loc.displayName(appLanguage),
+            initialNameTc = loc.name,
+            initialNameEn = loc.nameEn,
             initialLat = "%.6f".format(loc.latitude),
             initialLng = "%.6f".format(loc.longitude),
-            initialTags = loc.displayTags(appLanguage).joinToString(" | "),
+            initialTagsTc = loc.tagList.joinToString(" | "),
+            initialTagsEn = loc.tagsEnList.joinToString(" | "),
             onDismiss = { editLocation = null },
-            onSave = { name, lat, lng, tags ->
-                viewModel.updateLocation(loc, name, lat, lng, tags, appLanguage)
+            onSave = { nameTc, nameEn, lat, lng, tagsTc, tagsEn ->
+                viewModel.updateLocation(loc, nameTc, nameEn, lat, lng, tagsTc, tagsEn)
                 editLocation = null
             }
         )
@@ -600,8 +601,8 @@ fun LocationScreen(
         AddLocationSheet(
             title = stringResource(R.string.add_location),
             onDismiss = { showAddSheet = false },
-            onSave = { name, lat, lng, tags ->
-                viewModel.addLocation(name, lat, lng, tags)
+            onSave = { nameTc, nameEn, lat, lng, tagsTc, tagsEn ->
+                viewModel.addLocation(nameTc, nameEn, lat, lng, tagsTc, tagsEn)
                 showAddSheet = false
             }
         )
@@ -902,36 +903,47 @@ private fun EmptyState(
 @Composable
 private fun AddLocationSheet(
     onDismiss: () -> Unit,
-    onSave: (name: String, lat: Double, lng: Double, tags: String) -> Unit,
+    onSave: (nameTc: String, nameEn: String, lat: Double, lng: Double, tagsTc: String, tagsEn: String) -> Unit,
     title: String,
-    initialName: String = "",
+    initialNameTc: String = "",
+    initialNameEn: String = "",
     initialLat: String = "",
     initialLng: String = "",
-    initialTags: String = ""
+    initialTagsTc: String = "",
+    initialTagsEn: String = ""
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val clipboard = LocalClipboardManager.current
     val sheetContext = LocalContext.current
 
-    var name by remember { mutableStateOf(initialName) }
+    var nameTc by remember { mutableStateOf(initialNameTc) }
+    var nameEn by remember { mutableStateOf(initialNameEn) }
     var latText by remember { mutableStateOf(initialLat) }
     var lngText by remember { mutableStateOf(initialLng) }
-    var tagsText by remember { mutableStateOf(initialTags) }
+    var tagsTcText by remember { mutableStateOf(initialTagsTc) }
+    var tagsEnText by remember { mutableStateOf(initialTagsEn) }
     var error by remember { mutableStateOf<String?>(null) }
 
     val previewLat = latText.toDoubleOrNull()
     val previewLng = lngText.toDoubleOrNull()
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        // A fixed tall sheet rather than one sized to its content: the form is
+        // long enough that a content-sized sheet only reached halfway up.
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                // Scroll keeps the tags field and buttons reachable when the
-                // map preview + keyboard push content past the sheet height.
-                .verticalScroll(rememberScrollState())
+                .fillMaxHeight(SHEET_HEIGHT_FRACTION)
                 .imePadding()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp),
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                // Only the fields scroll, so Save and Cancel below stay reachable
+                // once the keyboard is up.
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (
@@ -950,7 +962,7 @@ private fun AddLocationSheet(
                         LocationPoint(
                             latitude = previewLat,
                             longitude = previewLng,
-                            name = name.takeIf { it.isNotBlank() }
+                            name = nameTc.ifBlank { nameEn }.takeIf { it.isNotBlank() }
                         )
                     )
                 )
@@ -966,10 +978,20 @@ private fun AddLocationSheet(
                 cursorColor = MaterialTheme.colorScheme.onSurface
             )
 
+            // Both names are offered; only one has to be filled in.
             OutlinedTextField(
-                value = name,
-                onValueChange = { name = it; error = null },
-                label = { Text(stringResource(R.string.name)) },
+                value = nameTc,
+                onValueChange = { nameTc = it; error = null },
+                label = { Text(stringResource(R.string.name_tc_label)) },
+                singleLine = true,
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = nameEn,
+                onValueChange = { nameEn = it; error = null },
+                label = { Text(stringResource(R.string.name_en_label)) },
                 singleLine = true,
                 colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
@@ -1027,11 +1049,23 @@ private fun AddLocationSheet(
                 }
             }
 
+            // Both tag sets are optional; whichever is filled in shows in that
+            // language, and displayTags() falls back when one is left empty.
             OutlinedTextField(
-                value = tagsText,
-                onValueChange = { tagsText = it },
-                label = { Text(stringResource(R.string.tags)) },
+                value = tagsTcText,
+                onValueChange = { tagsTcText = it },
+                label = { Text(stringResource(R.string.tags_tc_label)) },
                 placeholder = { Text(stringResource(R.string.tags_hint_2)) },
+                singleLine = true,
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = tagsEnText,
+                onValueChange = { tagsEnText = it },
+                label = { Text(stringResource(R.string.tags_en_label)) },
+                placeholder = { Text(stringResource(R.string.tags_hint_en)) },
                 supportingText = { Text(stringResource(R.string.tags_hint_1)) },
                 singleLine = true,
                 colors = fieldColors,
@@ -1041,9 +1075,13 @@ private fun AddLocationSheet(
             error?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
+        }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 8.dp, bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
             ) {
                 Button(
@@ -1055,19 +1093,16 @@ private fun AddLocationSheet(
                 ) { Text(stringResource(R.string.action_cancel)) }
                 Button(
                     onClick = {
-                        val n = name.trim()
+                        val tc = nameTc.trim()
+                        val en = nameEn.trim()
                         val lat = latText.trim().toDoubleOrNull()
                         val lng = lngText.trim().toDoubleOrNull()
                         when {
-                            n.isEmpty() -> error = sheetContext.getString(R.string.error_name_required)
+                            tc.isEmpty() && en.isEmpty() ->
+                                error = sheetContext.getString(R.string.error_name_required)
                             lng == null || lng !in -180.0..180.0 -> error = sheetContext.getString(R.string.error_longitude_range)
                             lat == null || lat !in -90.0..90.0 -> error = sheetContext.getString(R.string.error_latitude_range)
-                            else -> {
-                                val normTags = tagsText.split("|", ",")
-                                    .map { it.trim() }.filter { it.isNotEmpty() }
-                                    .joinToString("|")
-                                onSave(n, lat, lng, normTags)
-                            }
+                            else -> onSave(tc, en, lat, lng, normalizeTags(tagsTcText), normalizeTags(tagsEnText))
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -1076,11 +1111,16 @@ private fun AddLocationSheet(
                     )
                 ) { Text(stringResource(R.string.action_save)) }
             }
-
-            Spacer(Modifier.height(16.dp))
         }
     }
 }
+
+/** Height the add/edit sheet occupies, so the form isn't cramped into half a screen. */
+private const val SHEET_HEIGHT_FRACTION = 0.92f
+
+/** Accept either separator, drop blanks, and store the canonical pipe-separated form. */
+private fun normalizeTags(raw: String): String =
+    raw.split("|", ",").map { it.trim() }.filter { it.isNotEmpty() }.joinToString("|")
 
 /**
  * Custom-coordinate controls and the direction pad, side by side in one card:
