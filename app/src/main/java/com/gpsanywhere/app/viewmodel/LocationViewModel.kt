@@ -8,6 +8,7 @@ import com.gpsanywhere.app.data.AppDatabase
 import com.gpsanywhere.app.data.DefaultLocationSeeder
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
 import com.gpsanywhere.app.data.SavedLocation
+import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.SpiralWalkGenerator
 import com.gpsanywhere.app.service.SpoofService
@@ -75,9 +76,37 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun updateLocation(location: SavedLocation, name: String, latitude: Double, longitude: Double, tags: String = location.tags) {
+    /**
+     * Update [location], writing [name] and [tags] back to whichever fields were
+     * on screen.
+     *
+     * A prebuilt location carries Chinese and English names and tags, and the
+     * editor shows whichever pair matches [language]. Saving must land on those
+     * same fields — writing to [SavedLocation.name] regardless would overwrite the
+     * Chinese name with English text the moment someone edits in English.
+     */
+    fun updateLocation(
+        location: SavedLocation,
+        name: String,
+        latitude: Double,
+        longitude: Double,
+        tags: String = location.tags,
+        language: AppLanguage = AppLanguage.SYSTEM
+    ) {
         viewModelScope.launch {
-            dao.update(location.copy(name = name.trim(), latitude = latitude, longitude = longitude, tags = tags))
+            val trimmedName = name.trim()
+            val editedEnglishName = !language.prefersChinese && location.nameEn.isNotBlank()
+            val editedEnglishTags = !language.prefersChinese && location.tagsEn.isNotBlank()
+            dao.update(
+                location.copy(
+                    name = if (editedEnglishName) location.name else trimmedName,
+                    nameEn = if (editedEnglishName) trimmedName else location.nameEn,
+                    latitude = latitude,
+                    longitude = longitude,
+                    tags = if (editedEnglishTags) location.tags else tags,
+                    tagsEn = if (editedEnglishTags) tags else location.tagsEn
+                )
+            )
         }
     }
 

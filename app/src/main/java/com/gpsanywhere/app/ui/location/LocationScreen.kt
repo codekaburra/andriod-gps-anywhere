@@ -99,6 +99,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.data.SavedLocation
+import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
@@ -183,6 +184,7 @@ private fun activeLocationKey(
 @Composable
 fun LocationScreen(
     viewModel: LocationViewModel,
+    appLanguage: AppLanguage = AppLanguage.SYSTEM,
     modifier: Modifier = Modifier
 ) {
     val allLocations by viewModel.allLocations.observeAsState(emptyList())
@@ -204,14 +206,22 @@ fun LocationScreen(
     var selectedTag by remember { mutableStateOf<String?>(null) }
     var customOnly by remember { mutableStateOf(false) }
 
-    val allTags = remember(allLocations) {
-        buildSet { allLocations.forEach { addAll(it.tagList) } }.sorted()
+    // Chips and matching both read the language-resolved tags, so a chip picked in
+    // one language keeps matching after the language changes.
+    val allTags = remember(allLocations, appLanguage) {
+        buildSet { allLocations.forEach { addAll(it.displayTags(appLanguage)) } }.sorted()
     }
 
-    val filteredLocations = remember(allLocations, selectedTag, customOnly) {
+    // A tag selected in the other language no longer exists in this one; drop it
+    // rather than silently filtering the list down to nothing.
+    LaunchedEffect(appLanguage, allTags) {
+        if (selectedTag != null && selectedTag !in allTags) selectedTag = null
+    }
+
+    val filteredLocations = remember(allLocations, selectedTag, customOnly, appLanguage) {
         allLocations.filter { loc ->
             (!customOnly || !loc.isPreinstalled) &&
-                (selectedTag == null || selectedTag in loc.tagList)
+                (selectedTag == null || selectedTag in loc.displayTags(appLanguage))
         }
     }
 
@@ -510,10 +520,10 @@ fun LocationScreen(
             } else {
                 items(filteredLocations, key = { it.id }) { loc ->
                     LocationCard(
-                        name = loc.name,
+                        name = loc.displayName(appLanguage),
                         latitude = loc.latitude,
                         longitude = loc.longitude,
-                        tags = loc.tagList,
+                        tags = loc.displayTags(appLanguage),
                         routeHint = viewModel.routeHintFor(loc.name, loc.latitude, loc.longitude, routeHints),
                         isSelected = selectedLocation.matches(loc),
                         isActive = !selectedLocation.matches(loc) &&
@@ -539,7 +549,7 @@ fun LocationScreen(
         AlertDialog(
             onDismissRequest = { walkBreakLocation = null },
             title = { Text(stringResource(R.string.dialog_stop_walk_title)) },
-            text = { Text(stringResource(R.string.dialog_stop_walk_text, loc.name)) },
+            text = { Text(stringResource(R.string.dialog_stop_walk_text, loc.displayName(appLanguage))) },
             confirmButton = {
                 TextButton(onClick = {
                     applySpiral(loc)
@@ -556,7 +566,7 @@ fun LocationScreen(
         AlertDialog(
             onDismissRequest = { deleteLocation = null },
             title = { Text(stringResource(R.string.dialog_delete_location_title)) },
-            text = { Text(stringResource(R.string.dialog_delete_location_text, loc.name)) },
+            text = { Text(stringResource(R.string.dialog_delete_location_text, loc.displayName(appLanguage))) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteLocation(loc)
@@ -572,13 +582,15 @@ fun LocationScreen(
     editLocation?.let { loc ->
         AddLocationSheet(
             title = stringResource(R.string.edit_location),
-            initialName = loc.name,
+            // Edit the name the user is actually looking at; updateLocation writes
+            // it back to that same field so the other language survives.
+            initialName = loc.displayName(appLanguage),
             initialLat = "%.6f".format(loc.latitude),
             initialLng = "%.6f".format(loc.longitude),
-            initialTags = loc.tagList.joinToString(" | "),
+            initialTags = loc.displayTags(appLanguage).joinToString(" | "),
             onDismiss = { editLocation = null },
             onSave = { name, lat, lng, tags ->
-                viewModel.updateLocation(loc, name, lat, lng, tags)
+                viewModel.updateLocation(loc, name, lat, lng, tags, appLanguage)
                 editLocation = null
             }
         )

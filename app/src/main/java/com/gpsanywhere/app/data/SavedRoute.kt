@@ -24,7 +24,7 @@ data class SavedRoute(
 ) {
     val isPreinstalled: Boolean get() = routeId != null
 
-    /** Returns the TC name when language is TRADITIONAL_CHINESE and a TC name is available; otherwise returns [name]. */
+    /** The TC name when [language] calls for Chinese and one exists; otherwise [name]. */
     fun displayName(language: AppLanguage): String =
-        if (language == AppLanguage.TRADITIONAL_CHINESE && nameTc.isNotBlank()) nameTc else name
+        if (language.prefersChinese && nameTc.isNotBlank()) nameTc else name
 }

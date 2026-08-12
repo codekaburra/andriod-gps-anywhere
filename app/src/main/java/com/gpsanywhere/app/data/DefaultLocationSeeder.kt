@@ -6,7 +6,7 @@ import kotlinx.coroutines.withContext
 
 object DefaultLocationSeeder {
     private const val PREFS_NAME = "gpsanywhere_default_locations"
-    private const val KEY_SEEDED = "seeded_v10" // bumped: removed source_id from CSV, auto-generate from name_en
+    private const val KEY_SEEDED = "seeded_v12" // bumped: SavedLocation now stores name_en so names can follow the app language
     const val ASSET_FOLDER = "saved_locations"
 
     data class DefaultLocationPack(
@@ -21,7 +21,8 @@ object DefaultLocationSeeder {
         val nameEng: String = "",
         val latitude: Double,
         val longitude: Double,
-        val tags: String = ""
+        val tags: String = "",
+        val tagsEng: String = ""
     )
 
     /** Parse a single CSV location pack file. Returns null if malformed. */
@@ -41,14 +42,17 @@ object DefaultLocationSeeder {
                 line.startsWith("#") || line.isEmpty() -> Unit
                 !headerSkipped -> headerSkipped = true // skip header row
                 else -> {
-                    // CSV format: latitude,longitude,name_tc,name_en,tags
+                    // CSV format: latitude,longitude,name_tc,name_en,tags_tc,tags_en
+                    // A missing tags_en column just leaves the English tags blank,
+                    // which displayTags() falls back from.
                     val parts = parseCsvLine(line)
                     if (parts.size >= 4) {
                         val lat = parts[0].toDoubleOrNull() ?: continue
                         val lng = parts[1].toDoubleOrNull() ?: continue
                         val nameTc = parts[2]
                         val nameEn = parts[3]
-                        val tags = parts.getOrElse(4) { "" }
+                        val tagsTc = parts.getOrElse(4) { "" }
+                        val tagsEn = parts.getOrElse(5) { "" }
                         val sourceId = nameEn.lowercase()
                             .replace(Regex("[^a-z0-9]+"), "-")
                             .trim('-')
@@ -59,7 +63,8 @@ object DefaultLocationSeeder {
                             nameEng = nameEn,
                             latitude = lat,
                             longitude = lng,
-                            tags = tags
+                            tags = tagsTc,
+                            tagsEng = tagsEn
                         ))
                     }
                 }
@@ -131,9 +136,11 @@ object DefaultLocationSeeder {
                         SavedLocation(
                             sourceId = loc.sourceId,
                             name = loc.name,
+                            nameEn = loc.nameEng,
                             latitude = loc.latitude,
                             longitude = loc.longitude,
-                            tags = loc.tags
+                            tags = loc.tags,
+                            tagsEn = loc.tagsEng
                         )
                     )
                 }
@@ -162,9 +169,11 @@ object DefaultLocationSeeder {
                         SavedLocation(
                             sourceId = loc.sourceId,
                             name = loc.name,
+                            nameEn = loc.nameEng,
                             latitude = loc.latitude,
                             longitude = loc.longitude,
-                            tags = loc.tags
+                            tags = loc.tags,
+                            tagsEn = loc.tagsEng
                         )
                     )
                 }
