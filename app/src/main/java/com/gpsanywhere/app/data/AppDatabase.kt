@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [SavedRoute::class, SavedLocation::class],
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,6 +20,33 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `saved_locations` ADD COLUMN `tagsEn` TEXT NOT NULL DEFAULT ''")
+                // Backfill the bundled packs' tags so existing installs get English
+                // tags on update, without having to re-import from Settings. Only
+                // prebuilt rows are touched; user-written tags are left alone.
+                db.execSQL(
+                    """
+                    UPDATE `saved_locations` SET `tagsEn` = CASE `tags`
+                        WHEN '香港' THEN 'Hong Kong'
+                        WHEN '日本' THEN 'Japan'
+                        WHEN '台灣' THEN 'Taiwan'
+                        WHEN '西雅圖' THEN 'Seattle'
+                        ELSE ''
+                    END
+                    WHERE `sourceId` IS NOT NULL
+                    """.trimIndent()
+                )
+            }
+        }
+
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `saved_locations` ADD COLUMN `nameEn` TEXT NOT NULL DEFAULT ''")
+            }
+        }
 
         private val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -99,7 +126,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "gpsanywhere.db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                     .build()
                 INSTANCE = instance
                 instance

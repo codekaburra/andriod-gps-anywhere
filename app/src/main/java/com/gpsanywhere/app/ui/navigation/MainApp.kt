@@ -164,7 +164,7 @@ fun MainApp(preferences: AppPreferences) {
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Routes.LOCATION) {
-                    LocationScreen(viewModel = locationViewModel)
+                    LocationScreen(viewModel = locationViewModel, appLanguage = appLanguage)
                 }
                 composable(Routes.WALK) {
                     WalkScreen(viewModel = walkViewModel, appLanguage = appLanguage)

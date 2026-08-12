@@ -61,23 +61,53 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun addLocation(name: String, latitude: Double, longitude: Double, tags: String = "") {
+    fun addLocation(
+        name: String,
+        nameEn: String = "",
+        latitude: Double,
+        longitude: Double,
+        tags: String = "",
+        tagsEn: String = ""
+    ) {
         viewModelScope.launch {
             dao.insert(
                 SavedLocation(
                     sourceId = null,
                     name = name.trim(),
+                    nameEn = nameEn.trim(),
                     latitude = latitude,
                     longitude = longitude,
-                    tags = tags
+                    tags = tags,
+                    tagsEn = tagsEn
                 )
             )
         }
     }
 
-    fun updateLocation(location: SavedLocation, name: String, latitude: Double, longitude: Double, tags: String = location.tags) {
+    /**
+     * Update [location]. The editor exposes both languages for names and tags, so
+     * every field is written exactly as given.
+     */
+    fun updateLocation(
+        location: SavedLocation,
+        name: String,
+        nameEn: String = location.nameEn,
+        latitude: Double,
+        longitude: Double,
+        tags: String = location.tags,
+        tagsEn: String = location.tagsEn
+    ) {
         viewModelScope.launch {
-            dao.update(location.copy(name = name.trim(), latitude = latitude, longitude = longitude, tags = tags))
+            dao.update(
+                location.copy(
+                    name = name.trim(),
+                    nameEn = nameEn.trim(),
+                    latitude = latitude,
+                    longitude = longitude,
+                    tags = tags,
+                    tagsEn = tagsEn
+                )
+            )
         }
     }
 

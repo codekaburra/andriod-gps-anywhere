@@ -1,4 +1,5 @@
 # pack_name: 台灣
 # version: 1
-latitude,longitude,name_tc,name_en,tags
-23.47963001919456,120.44620385083113,嘉義市中心,Chiayi City,台灣
+latitude,longitude,name_tc,name_en,tags_tc,tags_en
+23.47963001919456,120.44620385083113,嘉義市中心,Chiayi City,台灣,Taiwan
+23.472784823545943,120.46165669148557,嘉義市立體育場旁,Chiayi City Stadium,台灣,Taiwan
