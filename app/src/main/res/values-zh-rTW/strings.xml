@@ -101,8 +101,8 @@
     <string name="tags_tc_label">標籤(中文)</string>
     <string name="tags_en_label">標籤(英文)</string>
     <string name="tags_hint_1">標籤(選填),內容不限</string>
-    <string name="tags_hint_2">咖啡廳 | 公園 | 工作</string>
-    <string name="tags_hint_en">cafe | park | work</string>
+    <string name="tags_hint_2">[] 或 [咖啡廳] 或 [咖啡廳 | 公園 | 日本]</string>
+    <string name="tags_hint_en">[] or [cafe] or [cafe | park | Japan]</string>
     <string name="error_name_required">請輸入名稱</string>
     <string name="error_longitude_range">經度須介於 -180 至 180</string>
     <string name="error_latitude_range">緯度須介於 -90 至 90</string>

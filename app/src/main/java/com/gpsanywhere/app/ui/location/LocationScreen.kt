@@ -37,11 +37,9 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentPaste
-import androidx.compose.material.icons.filled.Delete
 import com.gpsanywhere.app.R
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.DoorFront
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -49,7 +47,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -66,7 +63,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -105,6 +101,13 @@ import com.gpsanywhere.app.location.CurrentLocationProvider
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.service.SpoofService
 import com.gpsanywhere.app.ui.components.GlassCard
+import com.gpsanywhere.app.ui.components.EditIconButton
+import com.gpsanywhere.app.ui.components.DeleteIconButton
+import com.gpsanywhere.app.ui.components.PasteIconButton
+import com.gpsanywhere.app.ui.components.glassFieldColors
+import com.gpsanywhere.app.ui.components.glassSliderColors
+import com.gpsanywhere.app.ui.components.ConfirmDialog
+import com.gpsanywhere.app.ui.components.MapWithAddButton
 import com.gpsanywhere.app.ui.theme.AppAccent
 import com.gpsanywhere.app.ui.theme.SurfaceWhite
 import com.gpsanywhere.app.ui.theme.GlassTextLight
@@ -118,6 +121,11 @@ import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MAX_SPEED_KMH
 import com.gpsanywhere.app.viewmodel.LocationViewModel.Companion.MOVE_STEP_DEG
 import org.osmdroid.util.GeoPoint
 
+// The speed curve is deliberately not shared with the route screen: this slider
+// reaches 5000 km/h (the fly presets) and the route one stops at 300, so a single
+// mapping would either strand this screen below rocket speed or hand the route
+// screen a range it can't use. Walking speeds get the first 80% of the track on
+// both, and the colours come from the shared glassSliderColors().
 private const val WALK_ZONE_KMH = 20f
 private const val WALK_ZONE_FRAC = 0.8f
 
@@ -354,11 +362,7 @@ fun LocationScreen(
                                 valueRange = 0f..1f,
                                 // Trim the slider's 48dp touch slot; the track is much shorter.
                                 modifier = Modifier.weight(1f).height(28.dp),
-                                colors = androidx.compose.material3.SliderDefaults.colors(
-                                    thumbColor = AppAccent.slider.copy(alpha = 0.72f),
-                                    activeTrackColor = AppAccent.slider.copy(alpha = 0.72f),
-                                    inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.9f)
-                                )
+                                colors = glassSliderColors()
                             )
                             Text(
                                 if (spiralSpeed < 10f) "${"%.1f".format(spiralSpeed)} km/h"
@@ -392,37 +396,13 @@ fun LocationScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 if (mapCenter != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(MAP_HEIGHT)
-                            // The osmdroid MapView is an AndroidView and will paint
-                            // past its slot, covering the card below, unless clipped.
-                            .clipToBounds()
-                    ) {
-                        MapViewComposable(
-                            modifier = Modifier.fillMaxSize(),
-                            center = mapCenter,
-                            zoom = 15.0,
-                            waypoints = previewPoint?.let { listOf(it) } ?: emptyList()
-                        )
-
-                        Surface(
-                            shape = CircleShape,
-                            color = AppAccent.action.copy(alpha = 0.65f),
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                        ) {
-                            IconButton(onClick = { showAddSheet = true }) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = stringResource(R.string.add_location),
-                                    tint = AppAccent.onAction
-                                )
-                            }
-                        }
-                    }
+                    MapWithAddButton(
+                        center = mapCenter,
+                        waypoints = previewPoint?.let { listOf(it) } ?: emptyList(),
+                        onAdd = { showAddSheet = true },
+                        addContentDescription = stringResource(R.string.add_location),
+                        height = MAP_HEIGHT
+                    )
                 } else {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -546,36 +526,27 @@ fun LocationScreen(
 
     // ── Walk-break warning dialogs ────────────────────────────────────────────
     walkBreakLocation?.let { loc ->
-        AlertDialog(
-            onDismissRequest = { walkBreakLocation = null },
-            title = { Text(stringResource(R.string.dialog_stop_walk_title)) },
-            text = { Text(stringResource(R.string.dialog_stop_walk_text, loc.displayName(appLanguage))) },
-            confirmButton = {
-                TextButton(onClick = {
-                    applySpiral(loc)
-                    walkBreakLocation = null
-                }) { Text(stringResource(R.string.stop_and_start_new_walk)) }
+        ConfirmDialog(
+            title = stringResource(R.string.dialog_stop_walk_title),
+            message = stringResource(R.string.dialog_stop_walk_text, loc.displayName(appLanguage)),
+            confirmLabel = stringResource(R.string.stop_and_start_new_walk),
+            onConfirm = {
+                applySpiral(loc)
+                walkBreakLocation = null
             },
-            dismissButton = {
-                TextButton(onClick = { walkBreakLocation = null }) { Text(stringResource(R.string.action_cancel)) }
-            }
+            onDismiss = { walkBreakLocation = null }
         )
     }
 
     deleteLocation?.let { loc ->
-        AlertDialog(
-            onDismissRequest = { deleteLocation = null },
-            title = { Text(stringResource(R.string.dialog_delete_location_title)) },
-            text = { Text(stringResource(R.string.dialog_delete_location_text, loc.displayName(appLanguage))) },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteLocation(loc)
-                    deleteLocation = null
-                }) { Text(stringResource(R.string.action_delete)) }
+        ConfirmDialog(
+            title = stringResource(R.string.dialog_delete_location_title),
+            message = stringResource(R.string.dialog_delete_location_text, loc.displayName(appLanguage)),
+            onConfirm = {
+                viewModel.deleteLocation(loc)
+                deleteLocation = null
             },
-            dismissButton = {
-                TextButton(onClick = { deleteLocation = null }) { Text(stringResource(R.string.action_cancel)) }
-            }
+            onDismiss = { deleteLocation = null }
         )
     }
 
@@ -786,22 +757,16 @@ private fun LocationCard(
                 }
                 if (!showJumpButton && (onEdit != null || onDelete != null)) {
                     if (onEdit != null) {
-                        IconButton(onClick = onEdit) {
-                            Icon(
-                                Icons.Default.Edit,
-                                contentDescription = "Edit",
-                                tint = AppAccent.edit.copy(alpha = 0.75f)
-                            )
-                        }
+                        EditIconButton(
+                            onClick = onEdit,
+                            contentDescription = stringResource(R.string.edit_location)
+                        )
                     }
                     if (onDelete != null) {
-                        IconButton(onClick = onDelete) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Delete",
-                                tint = AppAccent.stop.copy(alpha = 0.75f)
-                            )
-                        }
+                        DeleteIconButton(
+                            onClick = onDelete,
+                            contentDescription = stringResource(R.string.action_delete)
+                        )
                     }
                 }
             }
@@ -964,13 +929,7 @@ private fun AddLocationSheet(
 
             Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
 
-            val fieldColors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                cursorColor = MaterialTheme.colorScheme.onSurface
-            )
+            val fieldColors = glassFieldColors()
 
             // Both names are offered; only one has to be filled in.
             OutlinedTextField(
@@ -1167,29 +1126,13 @@ private fun CustomJumpPanel(
                         maxLines = 2,
                         textStyle = MaterialTheme.typography.bodySmall,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                            focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
+                        colors = glassFieldColors(),
                         modifier = Modifier.weight(1f)
                     )
-                    FilledIconButton(
+                    PasteIconButton(
                         onClick = onPaste,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = AppAccent.action.copy(alpha = 0.65f),
-                            contentColor = AppAccent.onAction
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.ContentPaste,
-                            contentDescription = stringResource(R.string.action_paste),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                        contentDescription = stringResource(R.string.action_paste)
+                    )
                 }
 
                 // Wraps to a second line when all five don't fit the narrow column.

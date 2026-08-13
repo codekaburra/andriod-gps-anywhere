@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,9 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
@@ -36,7 +32,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
@@ -48,7 +43,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -73,6 +67,11 @@ import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.ui.components.GlassCard
+import com.gpsanywhere.app.ui.components.EditIconButton
+import com.gpsanywhere.app.ui.components.DeleteIconButton
+import com.gpsanywhere.app.ui.components.glassSliderColors
+import com.gpsanywhere.app.ui.components.ConfirmDialog
+import com.gpsanywhere.app.ui.components.MapWithAddButton
 import com.gpsanywhere.app.ui.theme.AppAccent
 import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
 import com.gpsanywhere.app.ui.components.overlapAbove
@@ -108,19 +107,14 @@ fun WalkScreen(
     var deleteRouteTarget by remember { mutableStateOf<SavedRoute?>(null) }
 
     deleteRouteTarget?.let { target ->
-        AlertDialog(
-            onDismissRequest = { deleteRouteTarget = null },
-            title = { Text(stringResource(R.string.dialog_delete_route_title)) },
-            text = { Text(stringResource(R.string.dialog_delete_route_text, target.name)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteRoute(target)
-                    deleteRouteTarget = null
-                }) { Text(stringResource(R.string.action_delete)) }
+        ConfirmDialog(
+            title = stringResource(R.string.dialog_delete_route_title),
+            message = stringResource(R.string.dialog_delete_route_text, target.name),
+            onConfirm = {
+                viewModel.deleteRoute(target)
+                deleteRouteTarget = null
             },
-            dismissButton = {
-                TextButton(onClick = { deleteRouteTarget = null }) { Text(stringResource(R.string.action_cancel)) }
-            }
+            onDismiss = { deleteRouteTarget = null }
         )
     }
 
@@ -383,34 +377,15 @@ fun WalkScreen(
             item {
                 if (positionLat != null && positionLng != null) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(ROUTE_MAP_HEIGHT)
-                            .clipToBounds()
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        MapViewComposable(
-                            modifier = Modifier.fillMaxSize(),
+                        MapWithAddButton(
                             center = GeoPoint(positionLat, positionLng),
-                            zoom = 15.0,
-                            waypoints = currentPin
+                            waypoints = currentPin,
+                            onAdd = { editorTarget = null; editorOpen = true },
+                            addContentDescription = stringResource(R.string.add_route),
+                            height = ROUTE_MAP_HEIGHT
                         )
-
-                        // Floats on the map like the Location screen's add button.
-                        Surface(
-                            shape = CircleShape,
-                            color = AppAccent.action.copy(alpha = 0.65f),
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                        ) {
-                            IconButton(onClick = { editorTarget = null; editorOpen = true }) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = stringResource(R.string.add_route),
-                                    tint = AppAccent.onAction
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -502,6 +477,9 @@ fun WalkScreen(
 private val ROUTE_MAP_HEIGHT = 180.dp
 
 private const val ROUTE_MAX_SPEED_KMH = 300f
+// Deliberately a different curve from the location screen: this tops out at
+// 300 km/h and can afford three segments, where that one squeezes 20-5000 into
+// the last 20%. Only the colours are shared, via glassSliderColors().
 private val SPEED_STOPS = floatArrayOf(0f, 20f, 100f, 300f)
 private val SPEED_FRACS = floatArrayOf(0f, 0.80f, 0.90f, 1f)
 
@@ -566,11 +544,7 @@ private fun SpeedControlPanel(
                     onValueChange = { onSpeedChange(routeSliderToSpeed(it)) },
                     valueRange = 0f..1f,
                     modifier = Modifier.weight(1f),
-                    colors = androidx.compose.material3.SliderDefaults.colors(
-                        thumbColor = AppAccent.slider.copy(alpha = 0.72f),
-                        activeTrackColor = AppAccent.slider.copy(alpha = 0.72f),
-                        inactiveTrackColor = com.gpsanywhere.app.ui.theme.SliderInactiveTrack.copy(alpha = 0.9f)
-                    )
+                    colors = glassSliderColors()
                 )
                 Text(
                     formatRouteSpeed(speed),
@@ -613,12 +587,8 @@ private fun RouteRow(
                 Text(stringResource(R.string.route_meta, distanceLabel, waypointCount), style = MaterialTheme.typography.bodySmall,
                     color = subColor)
             }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_route), tint = subColor, modifier = Modifier.size(20.dp))
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_route), tint = AppAccent.stop.copy(alpha = 0.75f), modifier = Modifier.size(20.dp))
-            }
+            EditIconButton(onClick = onEdit, contentDescription = stringResource(R.string.edit_route))
+            DeleteIconButton(onClick = onDelete, contentDescription = stringResource(R.string.delete_route))
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null,
                 tint = subColor)
         }

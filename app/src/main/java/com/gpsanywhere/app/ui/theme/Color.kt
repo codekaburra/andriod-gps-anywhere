@@ -74,9 +74,10 @@ val NavSelected = Color(0xFFF59E0B)
 
 
 // ── Slider (yellow functional accent) ───────────────────────────────────────
+// The track colours are theme-dependent, so they live on AppAccent rather than
+// here: a single constant shared by both themes leaks the light tint into dark.
 val SliderThumb = Color(0xFFF59E0B)
-val SliderActiveTrack = Color(0xFFF59E0B)
-val SliderInactiveTrack = LightAccent.copy(alpha = 0.25f)
+val SliderTrackDark = GlassMutedDark.copy(alpha = 0.35f)
 
 // ── Neutral buttons (back/revert) ───────────────────────────────────────────
 val NeutralButtonBg = SurfaceWhite
@@ -86,6 +87,10 @@ val NeutralButtonContent = LightNeutralDark
 val MapPolyline = 0xFF45492D.toInt()  // Moss Green — map markers and the route line
 
 // ── Tag colors ──────────────────────────────────────────────────────────────
+// A translucent neutral grey in both themes, so the pill reads as a soft chip
+// rather than a coloured badge. Dark mode tints white over the dark artwork;
+// light mode tints a warm charcoal, kept dark enough for white lettering.
+val TagChipFillLight = Color(0xFF55554F).copy(alpha = 0.75f)
 
 // ── Legacy aliases (keep existing code compiling during migration) ──────────
 val CandyGreen = GlassGreen

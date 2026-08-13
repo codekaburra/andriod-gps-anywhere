@@ -36,23 +36,32 @@ object AppAccent {
 
     /** Map controls: the add button, paste, the D-pad. Accent role. */
     val action: Color
-        @Composable get() = if (LocalIsDarkTheme.current) CandyYellow else LightAccent
+        @Composable get() = if (LocalIsDarkTheme.current) CandyYellow else LightNeutralLight
 
     /** Content on [action]. */
     val onAction: Color
         @Composable get() = Color.White
 
+    /**
+     * [action] as the fill of the floating add button on a map header.
+     *
+     * Solid in dark mode: the translucent version let the dark map tiles through
+     * and the button faded into them.
+     */
+    val actionSurface: Color
+        @Composable get() = if (LocalIsDarkTheme.current) action else action.copy(alpha = 0.8f)
+
     /** Primary buttons — the transport row, Settings imports. */
     val primaryAction: Pair
-        @Composable get() = Pair(if (LocalIsDarkTheme.current) CandyGreen else LightPrimary, Color.White)
+        @Composable get() = Pair(if (LocalIsDarkTheme.current) CandyGreen else LightNeutralDark, Color.White)
 
     /** Transport buttons before a coordinate is entered. */
     val primaryActionIdle: Color
-        @Composable get() = if (LocalIsDarkTheme.current) GlassMutedDark else LightNeutralLight
+        @Composable get() = if (LocalIsDarkTheme.current) GlassMutedDark else LightAccent
 
-    /** Start / go. */
+    /** Start / go. Deliberately not [stop]: the two sit next to each other. */
     val start: Color
-        @Composable get() = if (LocalIsDarkTheme.current) CandyGreen else LightPrimary
+        @Composable get() = if (LocalIsDarkTheme.current) CandyGreen else LightNeutralDark
 
     /** Content drawn on top of [start]. */
     val onStart: Color
@@ -104,7 +113,7 @@ object AppAccent {
     /** The little tag pills on a location card. Accent role. */
     val tagChip: Pair
         @Composable get() = if (LocalIsDarkTheme.current) Pair(CardFill, GlassTextDark)
-        else Pair(LightAccent.copy(alpha = 0.72f), Color.White)
+        else Pair(TagChipFillLight, Color.White)
 
     /** Low-emphasis buttons: back, reverse. */
     val neutral: Pair
@@ -113,7 +122,13 @@ object AppAccent {
 
     /** Slider thumb and active track. */
     val slider: Color
-        @Composable get() = if (LocalIsDarkTheme.current) SliderThumb else LightAccent
+        @Composable get() = if (LocalIsDarkTheme.current) SliderThumb else LightNeutralLight
+
+    /** The unfilled part of a slider track. Neutral in dark mode — the amber
+     *  thumb carries the accent there and a tinted track competes with it. */
+    val sliderTrack: Color
+        @Composable get() = if (LocalIsDarkTheme.current) SliderTrackDark
+        else LightNeutralLight.copy(alpha = 0.9f)
 }
 
 

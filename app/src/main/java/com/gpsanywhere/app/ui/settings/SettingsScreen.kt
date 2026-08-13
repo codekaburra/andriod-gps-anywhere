@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import android.widget.Toast
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,6 +38,7 @@ import com.gpsanywhere.app.R
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.viewmodel.MainViewModel
+import com.gpsanywhere.app.ui.components.ConfirmDialog
 import com.gpsanywhere.app.ui.theme.AppAccent
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
@@ -320,78 +320,62 @@ fun SettingsScreen(viewModel: MainViewModel) {
     }
 
     if (showImportLocationsConfirm) {
-        AlertDialog(
-            onDismissRequest = { showImportLocationsConfirm = false },
-            title = { Text(stringResource(R.string.dialog_import_locations_title)) },
-            text = { Text(stringResource(R.string.dialog_import_locations_text)) },
-            confirmButton = {
-                TextButton(onClick = {
+        ConfirmDialog(
+            title = stringResource(R.string.dialog_import_locations_title),
+            message = stringResource(R.string.dialog_import_locations_text),
+            confirmLabel = stringResource(R.string.action_import),
+            onConfirm = {
                     showImportLocationsConfirm = false
                     viewModel.importPrebuiltLocations {
                         Toast.makeText(context, context.getString(R.string.toast_locations_imported), Toast.LENGTH_SHORT).show()
                     }
-                }) { Text(stringResource(R.string.action_import)) }
             },
-            dismissButton = {
-                TextButton(onClick = { showImportLocationsConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
-            }
+            onDismiss = { showImportLocationsConfirm = false }
         )
     }
 
     if (showImportRoutesConfirm) {
-        AlertDialog(
-            onDismissRequest = { showImportRoutesConfirm = false },
-            title = { Text(stringResource(R.string.dialog_import_routes_title)) },
-            text = { Text(stringResource(R.string.dialog_import_routes_text)) },
-            confirmButton = {
-                TextButton(onClick = {
+        ConfirmDialog(
+            title = stringResource(R.string.dialog_import_routes_title),
+            message = stringResource(R.string.dialog_import_routes_text),
+            confirmLabel = stringResource(R.string.action_import),
+            onConfirm = {
                     showImportRoutesConfirm = false
                     viewModel.importPrebuiltRoutes {
                         Toast.makeText(context, context.getString(R.string.toast_routes_imported), Toast.LENGTH_SHORT).show()
                     }
-                }) { Text(stringResource(R.string.action_import)) }
             },
-            dismissButton = {
-                TextButton(onClick = { showImportRoutesConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
-            }
+            onDismiss = { showImportRoutesConfirm = false }
         )
     }
 
     if (showDeleteCustomConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteCustomConfirm = false },
-            title = { Text(stringResource(R.string.dialog_delete_custom_title)) },
-            text = { Text(stringResource(R.string.dialog_delete_custom_text)) },
-            confirmButton = {
-                TextButton(onClick = {
+        ConfirmDialog(
+            title = stringResource(R.string.dialog_delete_custom_title),
+            message = stringResource(R.string.dialog_delete_custom_text),
+            confirmLabel = stringResource(R.string.action_delete),
+            onConfirm = {
                     showDeleteCustomConfirm = false
                     viewModel.deleteCustom {
                         Toast.makeText(context, context.getString(R.string.toast_custom_deleted), Toast.LENGTH_SHORT).show()
                     }
-                }) { Text(stringResource(R.string.action_delete)) }
             },
-            dismissButton = {
-                TextButton(onClick = { showDeleteCustomConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
-            }
+            onDismiss = { showDeleteCustomConfirm = false }
         )
     }
 
     if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.dialog_delete_prebuilt_title)) },
-            text = { Text(stringResource(R.string.dialog_delete_prebuilt_text)) },
-            confirmButton = {
-                TextButton(onClick = {
+        ConfirmDialog(
+            title = stringResource(R.string.dialog_delete_prebuilt_title),
+            message = stringResource(R.string.dialog_delete_prebuilt_text),
+            confirmLabel = stringResource(R.string.action_delete),
+            onConfirm = {
                     showDeleteConfirm = false
                     viewModel.deletePrebuiltLocations {
                         Toast.makeText(context, context.getString(R.string.toast_prebuilt_deleted), Toast.LENGTH_SHORT).show()
                     }
-                }) { Text(stringResource(R.string.action_delete)) }
             },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
-            }
+            onDismiss = { showDeleteConfirm = false }
         )
     }
 
