@@ -12,7 +12,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import android.widget.Toast
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.DoorFront
+import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.annotation.StringRes
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,6 +49,7 @@ import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.viewmodel.MainViewModel
 import com.gpsanywhere.app.ui.components.ConfirmDialog
+import com.gpsanywhere.app.ui.components.TransportButtonLegend
 import com.gpsanywhere.app.ui.theme.AppAccent
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
@@ -272,6 +283,26 @@ fun SettingsScreen(viewModel: MainViewModel) {
             }
         }
 
+        // How-to-use section
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.settings_help),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(12.dp))
+                HelpRow(Icons.Default.DoorFront, R.string.transport_jump, R.string.help_jump)
+                HelpRow(Icons.AutoMirrored.Filled.DirectionsWalk, R.string.transport_walk_around, R.string.help_walk_around)
+                HelpRow(Icons.Default.RocketLaunch, R.string.help_rocket_label, R.string.help_rocket)
+                HelpRow(Icons.Default.Speed, R.string.help_speed_label, R.string.help_speed)
+            }
+        }
+
         // Copyright section
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -379,4 +410,36 @@ fun SettingsScreen(viewModel: MainViewModel) {
         )
     }
 
+}
+
+/**
+ * One line of the how-to-use card: the transport button's own icon, its label,
+ * and a sentence on what it does. The icons match the Location screen so the
+ * row is recognisable without naming where the button lives.
+ */
+@Composable
+private fun HelpRow(
+    icon: ImageVector,
+    @StringRes label: Int,
+    @StringRes body: Int
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        TransportButtonLegend(icon)
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(
+                stringResource(label),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                stringResource(body),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+    }
 }
