@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
@@ -30,7 +29,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,6 +54,9 @@ import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.ui.components.GlassCard
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import org.osmdroid.util.GeoPoint
+import com.gpsanywhere.app.ui.components.DeleteIconButton
+import com.gpsanywhere.app.ui.components.PasteIconButton
+import com.gpsanywhere.app.ui.components.glassFieldColors
 import com.gpsanywhere.app.ui.theme.AppAccent
 
 /**
@@ -153,10 +154,7 @@ fun RouteEditorScreen(
                 label = { Text(stringResource(R.string.route_name)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
-                )
+                colors = glassFieldColors()
             )
         }
 
@@ -179,10 +177,7 @@ fun RouteEditorScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 280.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
-                    )
+                    colors = glassFieldColors()
                 )
             }
             csvError?.let { err ->
@@ -276,22 +271,12 @@ fun RouteEditorScreen(
                     singleLine = true,
                     isError = coordText.isNotBlank() && !valid,
                     modifier = Modifier.weight(1f),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
-                    )
+                    colors = glassFieldColors()
                 )
-                FilledIconButton(
-                    onClick = {
-                        clipboard.getText()?.text?.let { coordText = it }
-                    },
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = AppAccent.action.copy(alpha = 0.8f),
-                        contentColor = AppAccent.onAction
-                    )
-                ) {
-                    Icon(Icons.Default.ContentPaste, contentDescription = stringResource(R.string.action_paste), modifier = Modifier.size(18.dp))
-                }
+                PasteIconButton(
+                    onClick = { clipboard.getText()?.text?.let { coordText = it } },
+                    contentDescription = stringResource(R.string.action_paste)
+                )
                 FilledIconButton(
                     onClick = {
                         parsed?.let {
@@ -352,9 +337,10 @@ fun RouteEditorScreen(
                         ) {
                             Icon(Icons.Default.KeyboardArrowDown, contentDescription = stringResource(R.string.move_down), modifier = Modifier.size(20.dp))
                         }
-                        IconButton(onClick = { points.removeAt(index) }) {
-                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = AppAccent.stop, modifier = Modifier.size(20.dp))
-                        }
+                        DeleteIconButton(
+                            onClick = { points.removeAt(index) },
+                            contentDescription = stringResource(R.string.action_delete)
+                        )
                     }
                 }
             }

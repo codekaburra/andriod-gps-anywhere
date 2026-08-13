@@ -81,7 +81,6 @@
     <string name="toast_custom_deleted">已刪除自訂資料</string>
 
     <!-- Location screen -->
-    <string name="saved_locations">已儲存地點</string>
     <string name="add_location">新增地點</string>
     <string name="edit_location">編輯地點</string>
     <string name="filter_custom">自訂</string>
@@ -102,8 +101,8 @@
     <string name="tags_tc_label">標籤(中文)</string>
     <string name="tags_en_label">標籤(英文)</string>
     <string name="tags_hint_1">標籤(選填),內容不限</string>
-    <string name="tags_hint_2">咖啡廳 | 公園 | 工作</string>
-    <string name="tags_hint_en">cafe | park | work</string>
+    <string name="tags_hint_2">[] 或 [咖啡廳] 或 [咖啡廳 | 公園 | 日本]</string>
+    <string name="tags_hint_en">[] or [cafe] or [cafe | park | Japan]</string>
     <string name="error_name_required">請輸入名稱</string>
     <string name="error_longitude_range">經度須介於 -180 至 180</string>
     <string name="error_latitude_range">緯度須介於 -90 至 90</string>
@@ -127,7 +126,6 @@
     <string name="not_started">未開始</string>
     <string name="current_speed">目前速度</string>
     <string name="base_speed">基礎速度</string>
-    <string name="saved_routes">已儲存路線</string>
     <string name="add_route">新增路線</string>
     <string name="no_routes_yet">尚無路線</string>
     <string name="no_routes_hint">按 + 建立路線，或從「設定」匯入預設路線</string>

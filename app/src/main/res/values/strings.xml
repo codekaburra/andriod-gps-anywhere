@@ -60,7 +60,7 @@
     <string name="dev_options_step2">② Tap "Select mock location app" → choose GPS Anywhere.</string>
     <string name="settings_version">Version %1$s</string>
     <string name="settings_last_updated">Last updated: %1$s</string>
-    <string name="settings_copyright">© 2026 eye7290. All rights reserved.</string>
+    <string name="settings_copyright">© 2026 em. All rights reserved.</string>
     <string name="settings_disclaimer">This app is intended for development and testing purposes only.</string>
 
     <!-- Settings dialogs / toasts -->
@@ -81,7 +81,6 @@
     <string name="toast_custom_deleted">Custom data deleted</string>
 
     <!-- Location screen -->
-    <string name="saved_locations">Saved Locations</string>
     <string name="add_location">Add Location</string>
     <string name="edit_location">Edit Location</string>
     <string name="filter_custom">Custom</string>
@@ -102,8 +101,8 @@
     <string name="tags_tc_label">Tags (Chinese)</string>
     <string name="tags_en_label">Tags (English)</string>
     <string name="tags_hint_1">Tags (optional) can be anything</string>
-    <string name="tags_hint_2">cafe | park | work</string>
-    <string name="tags_hint_en">cafe | park | work</string>
+    <string name="tags_hint_2">[] or [cafe] or [cafe | park | Japan]</string>
+    <string name="tags_hint_en">[] or [cafe] or [cafe | park | Japan]</string>
     <string name="error_name_required">Name is required</string>
     <string name="error_longitude_range">Longitude must be between -180 and 180</string>
     <string name="error_latitude_range">Latitude must be between -90 and 90</string>
@@ -127,7 +126,6 @@
     <string name="not_started">Not started</string>
     <string name="current_speed">Current Speed</string>
     <string name="base_speed">Base Speed</string>
-    <string name="saved_routes">Saved Routes</string>
     <string name="add_route">Add route</string>
     <string name="no_routes_yet">No routes yet</string>
     <string name="no_routes_hint">Tap + to create a route, or import prebuilt routes from Settings</string>
