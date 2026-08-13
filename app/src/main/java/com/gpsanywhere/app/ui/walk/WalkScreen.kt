@@ -400,11 +400,6 @@ fun WalkScreen(
                         .zIndex(1f)
                         .overlapAbove(ROUTE_MAP_HEIGHT * 0.25f),
                     header = {
-                        Text(
-                            stringResource(R.string.base_speed),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
                                 "—",
