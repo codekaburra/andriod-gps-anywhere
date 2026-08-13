@@ -36,9 +36,9 @@ object AppAccent {
 
     /** Map controls: the add button, paste, the D-pad. Accent role. */
     val action: Color
-        @Composable get() = if (LocalIsDarkTheme.current) CandyYellow else LightNeutralLight
+        @Composable get() = if (LocalIsDarkTheme.current) DarkPrimary else LightNeutralLight
 
-    /** Content on [action]. */
+    /** Content on [action]. White throughout, by request — on amber that is 2.2:1. */
     val onAction: Color
         @Composable get() = Color.White
 
@@ -53,15 +53,15 @@ object AppAccent {
 
     /** Primary buttons — the transport row, Settings imports. */
     val primaryAction: Pair
-        @Composable get() = Pair(if (LocalIsDarkTheme.current) CandyGreen else LightNeutralDark, Color.White)
+        @Composable get() = Pair(if (LocalIsDarkTheme.current) DarkPrimary else LightNeutralDark, Color.White)
 
     /** Transport buttons before a coordinate is entered. */
     val primaryActionIdle: Color
-        @Composable get() = if (LocalIsDarkTheme.current) GlassMutedDark else LightAccent
+        @Composable get() = if (LocalIsDarkTheme.current) DarkSurfaceBase else LightAccent
 
     /** Start / go. Deliberately not [stop]: the two sit next to each other. */
     val start: Color
-        @Composable get() = if (LocalIsDarkTheme.current) CandyGreen else LightNeutralDark
+        @Composable get() = if (LocalIsDarkTheme.current) DarkPrimary else LightNeutralDark
 
     /** Content drawn on top of [start]. */
     val onStart: Color
@@ -69,11 +69,16 @@ object AppAccent {
 
     /** Stop and delete — the strongest colour, so destructive reads as destructive. */
     val stop: Color
-        @Composable get() = if (LocalIsDarkTheme.current) StopRed else LightPrimary
+        @Composable get() = if (LocalIsDarkTheme.current) DarkDestructive else LightPrimary
+
+    /** Filled destructive buttons. Deeper than [stop], which must also work as an icon. */
+    val stopContainer: Pair
+        @Composable get() = if (LocalIsDarkTheme.current) Pair(DarkDestructiveFill, Color.White)
+        else Pair(LightPrimary, Color.White)
 
     /** Edit. A step down from [stop] so the two icons are told apart. */
     val edit: Color
-        @Composable get() = if (LocalIsDarkTheme.current) GlassIndigoLight else LightSecondary
+        @Composable get() = if (LocalIsDarkTheme.current) DarkSecondary else LightSecondary
 
     /** Pill behind the selected navigation item. */
     val navIndicator: Color
@@ -93,11 +98,11 @@ object AppAccent {
 
     /** Map pins and other markers. */
     val marker: Color
-        @Composable get() = if (LocalIsDarkTheme.current) GlassIndigoLight else LightNeutralDark
+        @Composable get() = if (LocalIsDarkTheme.current) DarkNeutralLight else LightNeutralDark
 
     /** The waypoint the walk is closest to. */
     val nearestWaypoint: Color
-        @Composable get() = if (LocalIsDarkTheme.current) GlassIndigoLight else LightPrimary
+        @Composable get() = if (LocalIsDarkTheme.current) DarkPrimary else LightPrimary
 
     /**
      * Cards in a list. Translucent white rather than solid, so the textured
@@ -133,8 +138,8 @@ object AppAccent {
 
 
 
-// Light theme roles map onto the autumn palette: burnt orange leads, sage carries
-// the secondary actions, gold the tertiary accents, maple spice the errors.
+// Light roles map onto the autumn palette, dark roles onto the ember palette.
+// Amber leads in dark. Its content is white by request; that measures 2.2:1.
 private val LightColorScheme = lightColorScheme(
     primary = LightPrimary,
     onPrimary = Color.White,
@@ -160,17 +165,17 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = GlassIndigoLight,
-    onPrimary = Color(0xFF3A1A0A),
-    primaryContainer = Color(0xFF7A3A1E),
+    primary = DarkPrimary,
+    onPrimary = DarkOnPrimary,
+    primaryContainer = Mahogany,
     onPrimaryContainer = GlassTextDark,
-    secondary = Color(0xFF6EE7B7),
-    onSecondary = Color(0xFF0F172A),
-    secondaryContainer = Color(0xFF064E3B),
+    secondary = DarkSecondary,
+    onSecondary = DarkOnPrimary,
+    secondaryContainer = Color(0xFF6B3A12),
     onSecondaryContainer = GlassTextDark,
-    tertiary = Color(0xFF22D3EE),
-    onTertiary = Color(0xFF0F172A),
-    tertiaryContainer = Color(0xFF164E63),
+    tertiary = Cornsilk,
+    onTertiary = DarkOnPrimary,
+    tertiaryContainer = Color(0xFF5C4520),
     onTertiaryContainer = GlassTextDark,
     background = GlassBackgroundDark,
     onBackground = GlassTextDark,
@@ -179,8 +184,8 @@ private val DarkColorScheme = darkColorScheme(
     surfaceVariant = GlassSurfaceVariantDark,
     onSurfaceVariant = GlassMutedDark,
     outline = GlassBorderDark,
-    outlineVariant = Color(0xFF334155),
-    error = StopRed
+    outlineVariant = DarkSurfaceBase,
+    error = DarkDestructive
 )
 
 private val AppShapes = Shapes(

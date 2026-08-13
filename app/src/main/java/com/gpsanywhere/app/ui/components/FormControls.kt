@@ -179,3 +179,12 @@ fun TransportButtonLegend(
         )
     }
 }
+
+/**
+ * Opacity of a filled button's background.
+ *
+ * One constant because these had drifted to four different values across the
+ * screens (0.65, 0.68, 0.72, and the route editor's fully opaque hardcoded green),
+ * so the same button looked different depending on where it was.
+ */
+const val BUTTON_FILL_ALPHA = 0.6f

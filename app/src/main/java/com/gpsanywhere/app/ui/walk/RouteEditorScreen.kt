@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
@@ -57,6 +58,7 @@ import org.osmdroid.util.GeoPoint
 import com.gpsanywhere.app.ui.components.DeleteIconButton
 import com.gpsanywhere.app.ui.components.PasteIconButton
 import com.gpsanywhere.app.ui.components.glassFieldColors
+import com.gpsanywhere.app.ui.components.BUTTON_FILL_ALPHA
 import com.gpsanywhere.app.ui.theme.AppAccent
 
 /**
@@ -140,8 +142,8 @@ fun RouteEditorScreen(
                     enabled = canSave,
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = com.gpsanywhere.app.ui.theme.GlassGreen,
-                        contentColor = Color.White
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = BUTTON_FILL_ALPHA),
+                        contentColor = AppAccent.primaryAction.content
                     )
                 ) { Text(stringResource(R.string.action_save)) }
             }
@@ -222,8 +224,8 @@ fun RouteEditorScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = com.gpsanywhere.app.ui.theme.GlassGreen,
-                            contentColor = Color.White
+                            containerColor = AppAccent.primaryAction.container.copy(alpha = BUTTON_FILL_ALPHA),
+                            contentColor = AppAccent.primaryAction.content
                         )
                     ) { Text(stringResource(R.string.action_apply)) }
                 }
@@ -233,7 +235,9 @@ fun RouteEditorScreen(
         }
 
         item {
-            Box(modifier = Modifier.fillMaxWidth().height(260.dp)) {
+            // clipToBounds is not optional: the osmdroid MapView is an AndroidView
+            // and paints past its slot, covering the name and coordinate fields.
+            Box(modifier = Modifier.fillMaxWidth().height(260.dp).clipToBounds()) {
                 MapViewComposable(
                     modifier = Modifier.fillMaxSize(),
                     center = center,
@@ -286,8 +290,8 @@ fun RouteEditorScreen(
                     },
                     enabled = valid,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = com.gpsanywhere.app.ui.theme.GlassGreen,
-                        contentColor = Color.White
+                        containerColor = AppAccent.action.copy(alpha = BUTTON_FILL_ALPHA),
+                        contentColor = AppAccent.onAction
                     )
                 ) {
                     Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_point), modifier = Modifier.size(18.dp))
