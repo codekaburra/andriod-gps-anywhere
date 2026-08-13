@@ -49,6 +49,7 @@
     <string name="help_jump">Teleport there and stay put.</string>
     <string name="help_walk_around">Wander in circles around the point.</string>
     <string name="help_rocket">Travel there from where you are at high speed, then wander.</string>
+    <string name="help_transport_note">The three buttons above stay disabled, in a different colour, until you pick a saved location or enter a coordinate.</string>
     <string name="help_speed_label">Speed Control</string>
     <string name="help_speed">Sets the base speed. Actual speed drifts around it.</string>
     <string name="settings_prebuilt">Prebuilt Data</string>

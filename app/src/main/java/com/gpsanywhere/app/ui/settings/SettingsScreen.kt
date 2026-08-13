@@ -48,6 +48,7 @@ import com.gpsanywhere.app.R
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.viewmodel.MainViewModel
+import com.gpsanywhere.app.ui.components.BUTTON_FILL_ALPHA
 import com.gpsanywhere.app.ui.components.ConfirmDialog
 import com.gpsanywhere.app.ui.components.TransportButtonLegend
 import com.gpsanywhere.app.ui.theme.AppAccent
@@ -174,14 +175,14 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 Text(
                     stringResource(R.string.settings_prebuilt_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = BUTTON_FILL_ALPHA)
                 )
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = { showImportLocationsConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppAccent.primaryAction.container.copy(alpha = 0.72f),
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = BUTTON_FILL_ALPHA),
                         contentColor = AppAccent.primaryAction.content
                     )
                 ) {
@@ -192,7 +193,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     onClick = { showImportRoutesConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppAccent.primaryAction.container.copy(alpha = 0.72f),
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = BUTTON_FILL_ALPHA),
                         contentColor = AppAccent.primaryAction.content
                     )
                 ) {
@@ -203,8 +204,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     onClick = { showDeleteConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppAccent.stop.copy(alpha = 0.72f),
-                        contentColor = Color.White
+                        containerColor = AppAccent.stopContainer.container.copy(alpha = BUTTON_FILL_ALPHA),
+                        contentColor = AppAccent.stopContainer.content
                     )
                 ) {
                     Text(stringResource(R.string.delete_prebuilt_locations))
@@ -214,8 +215,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     onClick = { showDeleteCustomConfirm = true },
                     enabled = !isImporting,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppAccent.stop.copy(alpha = 0.72f),
-                        contentColor = Color.White
+                        containerColor = AppAccent.stopContainer.container.copy(alpha = BUTTON_FILL_ALPHA),
+                        contentColor = AppAccent.stopContainer.content
                     )
                 ) {
                     Text(stringResource(R.string.delete_custom_data))
@@ -239,7 +240,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 Text(
                     stringResource(R.string.settings_dev_options_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = BUTTON_FILL_ALPHA)
                 )
                 Spacer(Modifier.height(12.dp))
                 val devOptionsHint = stringResource(R.string.dev_options_manual_hint)
@@ -262,7 +263,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppAccent.primaryAction.container.copy(alpha = 0.72f),
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = BUTTON_FILL_ALPHA),
                         contentColor = AppAccent.primaryAction.content
                     )
                 ) {
@@ -299,6 +300,16 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 HelpRow(Icons.Default.DoorFront, R.string.transport_jump, R.string.help_jump)
                 HelpRow(Icons.AutoMirrored.Filled.DirectionsWalk, R.string.transport_walk_around, R.string.help_walk_around)
                 HelpRow(Icons.Default.RocketLaunch, R.string.help_rocket_label, R.string.help_rocket)
+                // The three buttons above are drawn enabled; on the Location screen
+                // they sit disabled — and a different colour — until there is a
+                // coordinate to act on, which nothing else in the app explains.
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.help_transport_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = BUTTON_FILL_ALPHA)
+                )
+                Spacer(Modifier.height(12.dp))
                 HelpRow(Icons.Default.Speed, R.string.help_speed_label, R.string.help_speed)
             }
         }
@@ -322,7 +333,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 Text(
                     stringResource(R.string.settings_version, versionName),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = BUTTON_FILL_ALPHA)
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
@@ -438,7 +449,7 @@ private fun HelpRow(
             Text(
                 stringResource(body),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = BUTTON_FILL_ALPHA)
             )
         }
     }

@@ -37,6 +37,30 @@ val LightAccent = Gold
 val LightNeutralLight = SageGreen
 val LightNeutralDark = MossGreen
 
+// ── Ember palette (dark theme) ──────────────────────────────────────────────
+// Six colours, assigned by what their contrast allows rather than by taste:
+//  · DarkRed reads 1.8:1 on the background — invisible as an icon, but white on
+//    it is 10:1, so it is a filled button only.
+//  · AmberGold, Cornsilk and CarrotOrange all fail against white (2.2/1.7/2.4)
+//    and must carry dark content; they read 7–11:1 as icons on the background.
+//  · Mahogany is the only one that works both ways (3.4:1 as an icon, 5.3:1
+//    under white), so it takes the role that is drawn both ways.
+val DarkRed = Color(0xFF8B0000)
+val Cornsilk = Color(0xFFEDC373)
+val SteelBlue = Color(0xFF1A2B3C)
+val CarrotOrange = Color(0xFFED9121)
+val Mahogany = Color(0xFFC04000)
+val AmberGold = Color(0xFFF59E0B)
+
+// ── Role assignments (dark) ─────────────────────────────────────────────────
+val DarkPrimary = AmberGold          // transport, start, nav selected, slider
+val DarkOnPrimary = SteelBlue        // 6.7:1 on amber; white would be 2.2:1
+val DarkSecondary = CarrotOrange     // edit
+val DarkDestructive = Mahogany       // delete/stop, drawn as icon and as fill
+val DarkDestructiveFill = DarkRed    // the loud filled destructive buttons
+val DarkNeutralLight = Cornsilk      // markers, muted text
+val DarkSurfaceBase = SteelBlue
+
 // ── Glass surfaces ──────────────────────────────────────────────────────────
 val GlassBackgroundLight = BackgroundBase
 val GlassSurfaceLight = SurfaceWhite
@@ -47,13 +71,13 @@ val GlassMutedLight = LightNeutralLight
 val GlassBorderLight = BorderSubtle
 val GlassNavLight = BackgroundBase
 
-val GlassBackgroundDark = Color(0xFF0F172A)
-val GlassSurfaceDark = Color(0xFF1E2937).copy(alpha = 0.85f)
-val GlassSurfaceVariantDark = Color(0xFF1E2937).copy(alpha = 0.75f)
+val GlassBackgroundDark = Color(0xFF101A24)   // Steel Blue, darkened for the page ground
+val GlassSurfaceDark = DarkSurfaceBase.copy(alpha = 0.85f)
+val GlassSurfaceVariantDark = DarkSurfaceBase.copy(alpha = 0.75f)
 val GlassTextDark = Color(0xFFF1F5F9)
-val GlassMutedDark = Color(0xFF94A3B8)
+val GlassMutedDark = GlassTextDark.copy(alpha = 0.65f)
 val GlassBorderDark = Color(0xFF475569).copy(alpha = 0.5f)
-val GlassNavDark = Color(0xFF1E2937).copy(alpha = 0.95f)
+val GlassNavDark = DarkSurfaceBase.copy(alpha = 0.95f)
 
 // ── Glass card / button helpers ─────────────────────────────────────────────
 // Neutral translucent-white edge — pure glassmorphism, no colour tint.
@@ -70,14 +94,14 @@ val CardCoordTextDark = Color(0xFFCBD5E1)     // dark mode, non-selected coords
 val CardNameTextSelected = LightNeutralDark  // selected name
 val CardCoordTextSelected = LightNeutralLight // selected coords
 
-val NavSelected = Color(0xFFF59E0B)
+val NavSelected = DarkPrimary
 
 
 // ── Slider (yellow functional accent) ───────────────────────────────────────
 // The track colours are theme-dependent, so they live on AppAccent rather than
 // here: a single constant shared by both themes leaks the light tint into dark.
-val SliderThumb = Color(0xFFF59E0B)
-val SliderTrackDark = GlassMutedDark.copy(alpha = 0.35f)
+val SliderThumb = DarkPrimary
+val SliderTrackDark = DarkSurfaceBase.copy(alpha = 0.9f)
 
 // ── Neutral buttons (back/revert) ───────────────────────────────────────────
 val NeutralButtonBg = SurfaceWhite
@@ -94,7 +118,7 @@ val TagChipFillLight = Color(0xFF55554F).copy(alpha = 0.75f)
 
 // ── Legacy aliases (keep existing code compiling during migration) ──────────
 val CandyGreen = GlassGreen
-val CandyYellow = Color(0xFFF59E0B)
+val CandyYellow = DarkPrimary
 
 
 // ── Golden Hour (Dark Mode) — replaced by Glass Dark ────────────────────────
