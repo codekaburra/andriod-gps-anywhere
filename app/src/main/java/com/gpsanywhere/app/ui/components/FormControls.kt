@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -16,6 +17,12 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.ui.theme.AppAccent
@@ -126,3 +133,49 @@ fun glassFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
     unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
     cursorColor = MaterialTheme.colorScheme.onSurface
 )
+
+/** Footprint of a transport button, so callers that pin the size agree on one value. */
+val TRANSPORT_BUTTON_SIZE = 40.dp
+
+/**
+ * Fill behind a transport button. Idle (before a coordinate is entered) is a
+ * different colour from the live button, which is why this takes [enabled].
+ */
+@Composable
+fun transportContainerColor(enabled: Boolean): Color =
+    if (enabled) AppAccent.primaryAction.container.copy(alpha = 0.85f) else AppAccent.primaryActionIdle
+
+/** Colours for the real, tappable transport buttons on the Location screen. */
+@Composable
+fun transportButtonColors(): IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+    containerColor = transportContainerColor(enabled = true),
+    contentColor = AppAccent.primaryAction.content,
+    disabledContainerColor = transportContainerColor(enabled = false),
+    disabledContentColor = Color.White
+)
+
+/**
+ * A transport button's appearance without the button — same fill, size and icon,
+ * no interaction. The Settings legend draws through here rather than copying the
+ * colours, so restyling the real button restyles the legend with it.
+ */
+@Composable
+fun TransportButtonLegend(
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    iconSize: Dp = 20.dp
+) {
+    Box(
+        modifier = modifier
+            .size(TRANSPORT_BUTTON_SIZE)
+            .background(transportContainerColor(enabled = true), CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = AppAccent.primaryAction.content,
+            modifier = Modifier.size(iconSize)
+        )
+    }
+}

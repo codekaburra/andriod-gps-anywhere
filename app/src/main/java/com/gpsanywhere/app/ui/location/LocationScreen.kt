@@ -106,6 +106,7 @@ import com.gpsanywhere.app.ui.components.DeleteIconButton
 import com.gpsanywhere.app.ui.components.PasteIconButton
 import com.gpsanywhere.app.ui.components.glassFieldColors
 import com.gpsanywhere.app.ui.components.glassSliderColors
+import com.gpsanywhere.app.ui.components.transportButtonColors
 import com.gpsanywhere.app.ui.components.ConfirmDialog
 import com.gpsanywhere.app.ui.components.MapWithAddButton
 import com.gpsanywhere.app.ui.theme.AppAccent
@@ -807,15 +808,8 @@ private fun TransportButtons(
     // 48dp minimum touch target, which is what pushes buttons onto a second row.
     buttonModifier: Modifier = Modifier
 ) {
-    // One shared colour across the row, distinct from the paste/add utilities.
-    val transport = AppAccent.primaryAction
-    val colors = IconButtonDefaults.filledIconButtonColors(
-        containerColor = transport.container.copy(alpha = 0.85f),
-        contentColor = transport.content,
-        // Spec: idle transport buttons sit on sage, active on primary.
-        disabledContainerColor = AppAccent.primaryActionIdle,
-        disabledContentColor = Color.White
-    )
+    // Defined in FormControls so the Settings legend renders the same button.
+    val colors = transportButtonColors()
 
     FilledIconButton(onClick = onJump, enabled = enabled, colors = colors, modifier = buttonModifier) {
         Icon(Icons.Default.DoorFront, contentDescription = stringResource(R.string.transport_jump), modifier = Modifier.size(iconSize))

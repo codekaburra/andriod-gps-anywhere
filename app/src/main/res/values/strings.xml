@@ -44,6 +44,13 @@
     <string name="settings_theme">Colour Theme</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="settings_help">How to Use</string>
+    <string name="help_rocket_label">Max-Speed Travel</string>
+    <string name="help_jump">Teleport there and stay put.</string>
+    <string name="help_walk_around">Wander in circles around the point.</string>
+    <string name="help_rocket">Travel there from where you are at high speed, then wander.</string>
+    <string name="help_speed_label">Speed Panel</string>
+    <string name="help_speed">Sets the base speed. Actual speed drifts around it.</string>
     <string name="settings_prebuilt">Prebuilt Data</string>
     <string name="settings_prebuilt_desc">Import bundled sample locations or routes. Existing items are kept; you can delete any of them afterwards.</string>
     <string name="import_prebuilt_locations">Import Prebuilt Locations</string>
