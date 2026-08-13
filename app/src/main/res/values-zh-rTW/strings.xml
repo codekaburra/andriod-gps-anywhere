@@ -49,7 +49,7 @@
     <string name="help_jump">直接定位到該點，不移動。</string>
     <string name="help_walk_around">在該點周圍繞圈走。</string>
     <string name="help_rocket">從目前位置以高速過去，抵達後繞圈走。</string>
-    <string name="help_speed_label">速度面板</string>
+    <string name="help_speed_label">速度調整器</string>
     <string name="help_speed">調整移動基礎速度，實際移動速度以圍繞基礎速度浮動。</string>
     <string name="settings_prebuilt">預設資料</string>
     <string name="settings_prebuilt_desc">匯入內建的範例地點或路線。現有項目會保留，匯入後也可以個別刪除。</string>
