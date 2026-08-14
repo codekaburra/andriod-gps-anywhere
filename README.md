@@ -8,7 +8,7 @@
 
 ---
 
-## 📸 Overview
+## ✨ Features
 
 ### Location
 
@@ -35,11 +35,6 @@ matches the app language is what the list shows, falling back to the other if
 one is left blank. Every location — including imported prebuilt ones — can be
 edited or deleted.
 
-| | Light | Dark |
-|---|---|---|
-| **English** | <img src="docs/screenshots/location_en_light.png" width="230"> | <img src="docs/screenshots/location_en_dark.png" width="230"> |
-| **繁體中文** | <img src="docs/screenshots/location_zh_light.png" width="230"> | <img src="docs/screenshots/location_zh_dark.png" width="230"> |
-
 ### Route
 Follow a route along a series of waypoints.
 
@@ -48,11 +43,6 @@ Follow a route along a series of waypoints.
   then save. Edit or delete any route (including prebuilt ones) from the list.
 - **While walking** — Back, Revert (reverse direction from the current point),
   Pause/Resume, and Stop. Tap a waypoint name to jump there and keep walking.
-
-| | Light | Dark |
-|---|---|---|
-| **English** | <img src="docs/screenshots/route_en_light.png" width="230"> | <img src="docs/screenshots/route_en_dark.png" width="230"> |
-| **繁體中文** | <img src="docs/screenshots/route_zh_light.png" width="230"> | <img src="docs/screenshots/route_zh_dark.png" width="230"> |
 
 **Speed** — non-linear slider, deliberately tuned apart from the Location tab's:
 this one tops out at 300 km/h with 20 and 100 km/h as intermediate stops, because
@@ -71,22 +61,37 @@ a route is walked rather than jumped to.
 - **How to Use** — what each transport button does, since a door, a walking figure
   and a rocket don't explain themselves.
 
-| | Light | Dark |
-|---|---|---|
-| **English** | <img src="docs/screenshots/settings_en_light.png" width="230"> | <img src="docs/screenshots/settings_en_dark.png" width="230"> |
-| **繁體中文** | <img src="docs/screenshots/settings_zh_light.png" width="230"> | <img src="docs/screenshots/settings_zh_dark.png" width="230"> |
-
 ---
 
-### Add a location
+## 📸 Screenshots
 
-Names and tags are entered in both languages; the list shows whichever pair
-matches the app language and falls back to the other when one is blank.
+Light and dark are two separately tuned palettes rather than one inverted, and
+the language setting reaches the data as well as the interface — saved names
+and tags switch with it.
 
-| | Light | Dark |
-|---|---|---|
-| **English** | <img src="docs/screenshots/add_location_en_light.png" width="230"> | <img src="docs/screenshots/add_location_en_dark.png" width="230"> |
-| **繁體中文** | <img src="docs/screenshots/add_location_zh_light.png" width="230"> | <img src="docs/screenshots/add_location_zh_dark.png" width="230"> |
+### English · Light
+
+| Location | Route | Settings | Add a location |
+|---|---|---|---|
+| <img src="docs/screenshots/location_en_light.png" width="180"> | <img src="docs/screenshots/route_en_light.png" width="180"> | <img src="docs/screenshots/settings_en_light.png" width="180"> | <img src="docs/screenshots/add_location_en_light.png" width="180"> |
+
+### English · Dark
+
+| Location | Route | Settings | Add a location |
+|---|---|---|---|
+| <img src="docs/screenshots/location_en_dark.png" width="180"> | <img src="docs/screenshots/route_en_dark.png" width="180"> | <img src="docs/screenshots/settings_en_dark.png" width="180"> | <img src="docs/screenshots/add_location_en_dark.png" width="180"> |
+
+### 繁體中文 · 淺色
+
+| Location | Route | Settings | Add a location |
+|---|---|---|---|
+| <img src="docs/screenshots/location_zh_light.png" width="180"> | <img src="docs/screenshots/route_zh_light.png" width="180"> | <img src="docs/screenshots/settings_zh_light.png" width="180"> | <img src="docs/screenshots/add_location_zh_light.png" width="180"> |
+
+### 繁體中文 · 深色
+
+| Location | Route | Settings | Add a location |
+|---|---|---|---|
+| <img src="docs/screenshots/location_zh_dark.png" width="180"> | <img src="docs/screenshots/route_zh_dark.png" width="180"> | <img src="docs/screenshots/settings_zh_dark.png" width="180"> | <img src="docs/screenshots/add_location_zh_dark.png" width="180"> |
 
 ---
 
