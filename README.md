@@ -8,28 +8,37 @@
 
 ---
 
-## ✨ Screenshots
-
-### 📸 Screenshots & Overview
-
+## 📸 Overview
 
 ### Location
 
-Set your Android GPS location anywhere you want:
+Set your Android GPS location anywhere you want. Three transport buttons, all
+disabled until you pick a saved place or type a coordinate:
 
-- Jump directly to a saved or custom location.
-- Simulate walking in a spiral pattern from that point.
-- Fly toward a location at a preset cruising speed, then settle into a walk.
-- Nudge the spoofed position with the on-screen direction pad.
+| Button | What it does |
+|---|---|
+| **Jump** | Teleport to the point and stay there. |
+| **Walk Around** | Wander in a spiral around the point, resetting every 10 minutes. |
+| **Max-Speed Travel** | Travel there from where you are at high speed, then wander. |
 
-Add a custom location with the "+" button (name, coordinates, paste-from-clipboard,
-and tags). Every location — including imported prebuilt ones — can be edited or deleted.
-<p align="center">
-  <img src="docs/screenshots/Screenshot_202606071852_location_list.png" width="24%" alt="Location — saved list">
-  <img src="docs/screenshots/Screenshot_202606071852_location_add.png" width="24%" alt="Location — add new">
-  <img src="docs/screenshots/Screenshot_202606071852_location_selected.png" width="24%" alt="Location — selected">
-  <img src="docs/screenshots/Screenshot_202606071852_location_walking.png" width="24%" alt="Location — walking">
-</p>
+The **speed control** sets the base wander speed; the actual speed drifts around
+it by ±1 km/h so the track doesn't look machine-generated. Its slider is
+non-linear — walking speeds get the first 80% of the track, because that's the
+range worth fine-tuning. Note that Max-Speed Travel resets the control to its
+default when you tap it.
+
+Nudge the spoofed position with the on-screen direction pad.
+
+Add a custom location with the **+** button on the map: coordinates (typed or
+pasted), plus **name and tags in both Chinese and English**. Whichever pair
+matches the app language is what the list shows, falling back to the other if
+one is left blank. Every location — including imported prebuilt ones — can be
+edited or deleted.
+
+| | Light | Dark |
+|---|---|---|
+| **English** | <img src="docs/screenshots/location_en_light.png" width="230"> | <img src="docs/screenshots/location_en_dark.png" width="230"> |
+| **繁體中文** | <img src="docs/screenshots/location_zh_light.png" width="230"> | <img src="docs/screenshots/location_zh_dark.png" width="230"> |
 
 ### Route
 Follow a route along a series of waypoints.
@@ -39,22 +48,45 @@ Follow a route along a series of waypoints.
   then save. Edit or delete any route (including prebuilt ones) from the list.
 - **While walking** — Back, Revert (reverse direction from the current point),
   Pause/Resume, and Stop. Tap a waypoint name to jump there and keep walking.
-<p align="center">
-  <img src="docs/screenshots/Screenshot_202606071852_route_list.png" width="30%" alt="Route — list">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/Screenshot_202606071852_route_walking.png" width="30%" alt="Route — walking">
-</p>
 
-**Speed** — non-linear slider: the 0–20 km/h walking range fills most of the track,
-with 100 / 300 km/h presets beyond it.
+| | Light | Dark |
+|---|---|---|
+| **English** | <img src="docs/screenshots/route_en_light.png" width="230"> | <img src="docs/screenshots/route_en_dark.png" width="230"> |
+| **繁體中文** | <img src="docs/screenshots/route_zh_light.png" width="230"> | <img src="docs/screenshots/route_zh_dark.png" width="230"> |
+
+**Speed** — non-linear slider, deliberately tuned apart from the Location tab's:
+this one tops out at 300 km/h with 20 and 100 km/h as intermediate stops, because
+a route is walked rather than jumped to.
 
 ### Settings
 
-- **Theme** — Light / Dark.
+- **Language** — System / English / 繁體中文. Location and route names and tags
+  follow this setting, not just the interface text.
+- **Theme** — Light / Dark, two hand-tuned palettes rather than one inverted:
+  light is a warm autumn set on cream, dark an ember set on steel blue.
 - **Prebuilt Data** — the app ships with sample locations & routes but does **not**
   import them automatically. Use **Import Prebuilt Locations & Routes** to add them,
   or the delete buttons to clear prebuilt locations / all custom data.
 - **Open Developer Options** — shortcut to pick this app as the mock-location app.
+- **How to Use** — what each transport button does, since a door, a walking figure
+  and a rocket don't explain themselves.
+
+| | Light | Dark |
+|---|---|---|
+| **English** | <img src="docs/screenshots/settings_en_light.png" width="230"> | <img src="docs/screenshots/settings_en_dark.png" width="230"> |
+| **繁體中文** | <img src="docs/screenshots/settings_zh_light.png" width="230"> | <img src="docs/screenshots/settings_zh_dark.png" width="230"> |
+
+---
+
+### Add a location
+
+Names and tags are entered in both languages; the list shows whichever pair
+matches the app language and falls back to the other when one is blank.
+
+| | Light | Dark |
+|---|---|---|
+| **English** | <img src="docs/screenshots/add_location_en_light.png" width="230"> | <img src="docs/screenshots/add_location_en_dark.png" width="230"> |
+| **繁體中文** | <img src="docs/screenshots/add_location_zh_light.png" width="230"> | <img src="docs/screenshots/add_location_zh_dark.png" width="230"> |
 
 ---
 
@@ -70,7 +102,7 @@ with 100 / 300 km/h presets beyond it.
    **Settings → Prebuilt Data → Import Prebuilt Locations & Routes** to load the
    bundled places and routes. You can delete them anytime.
 5. **Spoof a location** — on the **Location** tab, tap a place (or add your own with **+**),
-   then choose **Jump**, **Walk Around** (spiral), or **Fly**. Use the direction pad to nudge.
+   then choose **Jump**, **Walk Around**, or **Max-Speed Travel**. Use the direction pad to nudge.
 6. **Walk a route** — on the **Route** tab, pick a route and press **Start**, or tap **+**
    to create your own by tapping the map / pasting coordinates. While walking you can
    Pause, Revert direction, or tap a stop to jump ahead.
@@ -90,7 +122,7 @@ with 100 / 300 km/h presets beyond it.
 ### 1. Clone
 
 ```bash
-git clone https://github.com/your-username/gpsanywhere.git
+git clone https://github.com/codekaburra/andriod-gps-anywhere.git
 ```
 
 ### 2. Configure Your Device
@@ -133,7 +165,27 @@ Or hit **Run** in Android Studio.
 ## 📁 Project Structure
 
 ```
-Fill in later
+app/src/main/
+├── assets/
+│   ├── saved_locations/     # bundled sample places (CSV, bilingual)
+│   └── saved_routes/        # bundled sample routes (CSV, bilingual)
+├── java/com/gpsanywhere/app/
+│   ├── data/                # Room entities, DAOs, migrations, CSV seeders
+│   ├── location/            # real-GPS provider
+│   ├── routes/              # waypoint model, OSRM client, spiral generator
+│   ├── service/             # SpoofService — the foreground mock-location service
+│   ├── settings/            # language & theme preferences
+│   ├── ui/
+│   │   ├── components/      # shared controls: buttons, dialogs, map header, fields
+│   │   ├── location/        # Location tab
+│   │   ├── walk/            # Route tab and the route editor
+│   │   ├── settings/        # Settings tab
+│   │   ├── onboarding/      # first-run setup dialog
+│   │   ├── navigation/      # scaffold and bottom bar
+│   │   └── theme/           # Color.kt / Theme.kt — every colour role
+│   ├── util/                # clipboard coordinate parsing
+│   └── viewmodel/
+└── res/                     # strings in values/ and values-zh-rTW/
 ```
 
 ---
@@ -152,8 +204,6 @@ The app requests the following Android permissions.
 | `POST_NOTIFICATIONS` | Persistent notification on Android 13+ |
 | `INTERNET` | Map tiles + OSRM route fetching |
 | `ACCESS_NETWORK_STATE` | Pre-flight connectivity check |
-| `android.permission.health.READ_STEPS` | Read Health Connect step data |
-| `android.permission.health.WRITE_STEPS` | Write simulated step data to Health Connect |
 
 ---
 

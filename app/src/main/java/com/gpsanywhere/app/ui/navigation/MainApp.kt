@@ -45,6 +45,7 @@ import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
 import java.util.Locale
 import com.gpsanywhere.app.ui.location.LocationScreen
+import com.gpsanywhere.app.ui.components.LocalAppLocaleContext
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
 import com.gpsanywhere.app.ui.components.TexturedBackground
@@ -92,7 +93,12 @@ fun MainApp(preferences: AppPreferences) {
         )
     }
 
-    CompositionLocalProvider(LocalContext provides localizedContext) {
+    // LocalAppLocaleContext carries the same wrapper across window boundaries,
+    // where the Android locals — LocalContext among them — are re-provided.
+    CompositionLocalProvider(
+        LocalContext provides localizedContext,
+        LocalAppLocaleContext provides localizedContext.takeIf { it !== baseContext }
+    ) {
     GPSAnywhereTheme(themeMode = themeMode, colorTheme = colorTheme) {
       val isDark = LocalIsDarkTheme.current
       Box(modifier = Modifier.fillMaxSize()) {

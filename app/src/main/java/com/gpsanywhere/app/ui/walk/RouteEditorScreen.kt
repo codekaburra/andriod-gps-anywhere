@@ -84,6 +84,7 @@ fun RouteEditorScreen(
     var csvText by remember { mutableStateOf("") }
     var csvError by remember { mutableStateOf<String?>(null) }
     val csvParseError = stringResource(R.string.csv_parse_error)
+    val defaultRouteName = stringResource(R.string.csv_default_route_name)
 
     fun applyCsv() {
         val parsed = DefaultSavedRouteSeeder.parseCsv(csvText)
@@ -129,7 +130,7 @@ fun RouteEditorScreen(
                             csvMode = false
                             csvError = null
                         } else {
-                            csvText = buildRouteCsv(name, points)
+                            csvText = buildRouteCsv(name, points, defaultRouteName)
                             csvError = null
                             csvMode = true
                         }
@@ -362,8 +363,8 @@ private fun csvEscape(field: String): String =
  * Render the current editor state as CSV. When the route has no points yet, a couple
  * of example rows are included as a starting skeleton for the user to overwrite.
  */
-private fun buildRouteCsv(name: String, points: List<LocationPoint>): String = buildString {
-    appendLine("# route_name: ${name.trim().ifBlank { "My Route" }}")
+private fun buildRouteCsv(name: String, points: List<LocationPoint>, defaultName: String): String = buildString {
+    appendLine("# route_name: ${name.trim().ifBlank { defaultName }}")
     appendLine("latitude,longitude,name_tc,name_en")
     if (points.isEmpty()) {
         appendLine("22.294270,114.169930,尖沙咀鐘樓,Clock Tower")
