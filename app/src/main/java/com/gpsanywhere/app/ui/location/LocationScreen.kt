@@ -121,6 +121,7 @@ import com.gpsanywhere.app.ui.theme.SageGreen
 import com.gpsanywhere.app.ui.theme.Gold
 import com.gpsanywhere.app.ui.theme.MossGreen
 import com.gpsanywhere.app.ui.theme.MapleSpice
+import com.gpsanywhere.app.ui.theme.DarkSurfaceBase
 import com.gpsanywhere.app.ui.theme.GlassBackgroundLight
 import com.gpsanywhere.app.ui.theme.GlassTextLight
 import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
@@ -913,9 +914,10 @@ private fun AddLocationSheet(
                 .fillMaxWidth()
                 .fillMaxHeight(SHEET_HEIGHT_FRACTION)
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                .background(
-                    if (isDarkSheet) MaterialTheme.colorScheme.surface else GlassBackgroundLight
-                )
+                // Opaque on purpose: colorScheme.surface carries 0.85 alpha in dark
+                // mode, and with the sheet drawing its own background that let the
+                // list behind read straight through the form.
+                .background(if (isDarkSheet) DarkSurfaceBase else GlassBackgroundLight)
         ) {
         // The sheet is its own window, so the texture painted behind the app
         // cannot reach it however transparent this is — it gets its own copy.
