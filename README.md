@@ -156,11 +156,10 @@ Or hit **Run** in Android Studio.
 | Language | Kotlin + Jetpack Compose |
 | UI | Jetpack Compose + Material 3 |
 | Maps | OSMDroid — no Google Play Services dependency |
-| Routing | OSRM (free, no API key) |
 | Database | Room with KSP |
 | Mock GPS | `LocationManager.addTestProvider()` |
 | Background | Android Foreground Service |
-| Networking | OkHttp + Gson |
+| JSON | Gson — waypoint serialisation only |
 | Build | AGP 9, Gradle version catalog |
 
 **Target SDK:** 36 &nbsp;|&nbsp; **Min SDK:** 26 (Android 8.0)
@@ -177,7 +176,7 @@ app/src/main/
 ├── java/com/gpsanywhere/app/
 │   ├── data/                # Room entities, DAOs, migrations, CSV seeders
 │   ├── location/            # real-GPS provider
-│   ├── routes/              # waypoint model, OSRM client, spiral generator
+│   ├── routes/              # waypoint model, spiral generator
 │   ├── service/             # SpoofService — the foreground mock-location service
 │   ├── settings/            # language & theme preferences
 │   ├── ui/
@@ -207,7 +206,7 @@ The app requests the following Android permissions.
 | `FOREGROUND_SERVICE` | Keep spoofing alive in background |
 | `FOREGROUND_SERVICE_LOCATION` | Required on Android 10+ |
 | `POST_NOTIFICATIONS` | Persistent notification on Android 13+ |
-| `INTERNET` | Map tiles + OSRM route fetching |
+| `INTERNET` | Map tiles |
 | `ACCESS_NETWORK_STATE` | Pre-flight connectivity check |
 
 ---
@@ -229,4 +228,4 @@ This project uses **AGP 9 + the Compose compiler plugin**, which has some sharp 
 Educational and internal testing use only. Do not use it to bypass location restrictions or misrepresent your location to services that rely on it. 
 Respect the terms of any apps or services you interact with while using simulated locations.
 
-GPS Anywhere uses OSMDroid for maps and OSRM for route data. The public OSRM server is free and does not need an API key, but it is rate-limited and intended for light usage. For heavy or commercial use, self-host OSRM or switch to a routing backend you control.
+GPS Anywhere uses OSMDroid for maps, which downloads tiles from the OpenStreetMap Foundation's public servers. Those servers are free but rate-limited and intended for light usage; heavy or commercial use should point at a tile source you control. Map tiles are the app's only outbound request — there is no backend, no account and no analytics.
