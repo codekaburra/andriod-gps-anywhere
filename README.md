@@ -71,27 +71,27 @@ and tags switch with it.
 
 ### English · Light
 
-| Location | Route | Route editor | Settings | Add a location |
+| Location | Route | Settings | Location Editor | Route Editor |
 |---|---|---|---|---|
-| <img src="docs/screenshots/location_en_light.png" width="180"> | <img src="docs/screenshots/route_en_light.png" width="180"> | <img src="docs/screenshots/route_editor_en_light.png" width="180"> | <img src="docs/screenshots/settings_en_light.png" width="180"> | <img src="docs/screenshots/add_location_en_light.png" width="180"> |
+| <img src="docs/screenshots/location_en_light.png" width="180"> | <img src="docs/screenshots/route_en_light.png" width="180"> | <img src="docs/screenshots/settings_en_light.png" width="180"> | <img src="docs/screenshots/add_location_en_light.png" width="180"> | <img src="docs/screenshots/route_editor_en_light.png" width="180"> |
 
 ### English · Dark
 
-| Location | Route | Route editor | Settings | Add a location |
+| Location | Route | Settings | Location Editor | Route Editor |
 |---|---|---|---|---|
-| <img src="docs/screenshots/location_en_dark.png" width="180"> | <img src="docs/screenshots/route_en_dark.png" width="180"> | <img src="docs/screenshots/route_editor_en_dark.png" width="180"> | <img src="docs/screenshots/settings_en_dark.png" width="180"> | <img src="docs/screenshots/add_location_en_dark.png" width="180"> |
+| <img src="docs/screenshots/location_en_dark.png" width="180"> | <img src="docs/screenshots/route_en_dark.png" width="180"> | <img src="docs/screenshots/settings_en_dark.png" width="180"> | <img src="docs/screenshots/add_location_en_dark.png" width="180"> | <img src="docs/screenshots/route_editor_en_dark.png" width="180"> |
 
 ### 繁體中文 · 淺色
 
-| Location | Route | Route editor | Settings | Add a location |
+| Location | Route | Settings | Location Editor | Route Editor |
 |---|---|---|---|---|
-| <img src="docs/screenshots/location_zh_light.png" width="180"> | <img src="docs/screenshots/route_zh_light.png" width="180"> | <img src="docs/screenshots/route_editor_zh_light.png" width="180"> | <img src="docs/screenshots/settings_zh_light.png" width="180"> | <img src="docs/screenshots/add_location_zh_light.png" width="180"> |
+| <img src="docs/screenshots/location_zh_light.png" width="180"> | <img src="docs/screenshots/route_zh_light.png" width="180"> | <img src="docs/screenshots/settings_zh_light.png" width="180"> | <img src="docs/screenshots/add_location_zh_light.png" width="180"> | <img src="docs/screenshots/route_editor_zh_light.png" width="180"> |
 
 ### 繁體中文 · 深色
 
-| Location | Route | Route editor | Settings | Add a location |
+| Location | Route | Settings | Location Editor | Route Editor |
 |---|---|---|---|---|
-| <img src="docs/screenshots/location_zh_dark.png" width="180"> | <img src="docs/screenshots/route_zh_dark.png" width="180"> | <img src="docs/screenshots/route_editor_zh_dark.png" width="180"> | <img src="docs/screenshots/settings_zh_dark.png" width="180"> | <img src="docs/screenshots/add_location_zh_dark.png" width="180"> |
+| <img src="docs/screenshots/location_zh_dark.png" width="180"> | <img src="docs/screenshots/route_zh_dark.png" width="180"> | <img src="docs/screenshots/settings_zh_dark.png" width="180"> | <img src="docs/screenshots/add_location_zh_dark.png" width="180"> | <img src="docs/screenshots/route_editor_zh_dark.png" width="180"> |
 
 ---
 
