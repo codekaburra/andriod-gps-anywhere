@@ -108,6 +108,8 @@
     <string name="clipboard_invalid_format">Invalid format [%1$s]. Clipboard must be latitude, longitude</string>
     <string name="tags_tc_label">Tags (Chinese)</string>
     <string name="tags_en_label">Tags (English)</string>
+    <string name="tags_placeholder_tc">Tags (Chinese, optional) — anything goes</string>
+    <string name="tags_placeholder_en">Tags (English, optional) — anything goes</string>
     <string name="tags_hint_1">Tags (optional) can be anything</string>
     <string name="tags_hint_2">[] or [cafe] or [cafe | park | Japan]</string>
     <string name="tags_hint_en">[] or [cafe] or [cafe | park | Japan]</string>
@@ -123,6 +125,10 @@
     <string name="minutes_short">min</string>
     <string name="speed">Speed</string>
     <string name="kmh">km/h</string>
+    <string name="dpad_north">Move north</string>
+    <string name="dpad_south">Move south</string>
+    <string name="dpad_west">Move west</string>
+    <string name="dpad_east">Move east</string>
     <string name="transport_jump">Jump</string>
     <string name="transport_walk_around">Walk Around</string>
     <string name="transport_heli">Helicopter (200 km/h)</string>
@@ -152,6 +158,7 @@
     <string name="editor_map">Map</string>
     <string name="editor_csv">CSV</string>
     <string name="csv_hint">Edit or paste the route as CSV. Lines starting with # are metadata; each data row is latitude,longitude,name_tc,name_en.</string>
+    <string name="csv_default_route_name">My Route</string>
     <string name="route_csv">Route CSV</string>
     <string name="csv_parse_error">No valid coordinates found. Each row needs: latitude,longitude,name_tc,name_en</string>
     <string name="tap_map_hint">Tap the map to add a waypoint · %1$d stop(s)</string>

@@ -108,6 +108,8 @@ import com.gpsanywhere.app.ui.components.glassFieldColors
 import com.gpsanywhere.app.ui.components.glassSliderColors
 import com.gpsanywhere.app.ui.components.transportButtonColors
 import com.gpsanywhere.app.ui.components.ConfirmDialog
+import com.gpsanywhere.app.ui.components.ProvideAppLocale
+import com.gpsanywhere.app.ui.components.BUTTON_FILL_ALPHA
 import com.gpsanywhere.app.ui.components.MapWithAddButton
 import com.gpsanywhere.app.ui.theme.AppAccent
 import com.gpsanywhere.app.ui.theme.SurfaceWhite
@@ -881,6 +883,7 @@ private fun AddLocationSheet(
     val previewLng = lngText.toDoubleOrNull()
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+      ProvideAppLocale {
         // A fixed tall sheet rather than one sized to its content: the form is
         // long enough that a content-sized sheet only reached halfway up.
         Column(
@@ -998,11 +1001,16 @@ private fun AddLocationSheet(
 
             // Both tag sets are optional; whichever is filled in shows in that
             // language, and displayTags() falls back when one is left empty.
+            // The format example stays in supportingText, which is always drawn;
+            // the "optional, anything goes" note sits in the placeholder, which
+            // Material only paints once the field has focus.
             OutlinedTextField(
                 value = tagsTcText,
                 onValueChange = { tagsTcText = it },
-                label = { Text(stringResource(R.string.tags_tc_label)) },
-                placeholder = { Text(stringResource(R.string.tags_hint_2)) },
+                // No label: Material hides an unfocused placeholder behind the
+                // label, and this hint has to read without tapping in first.
+                placeholder = { Text(stringResource(R.string.tags_placeholder_tc)) },
+                supportingText = { Text(stringResource(R.string.tags_hint_2)) },
                 singleLine = true,
                 colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
@@ -1011,9 +1019,8 @@ private fun AddLocationSheet(
             OutlinedTextField(
                 value = tagsEnText,
                 onValueChange = { tagsEnText = it },
-                label = { Text(stringResource(R.string.tags_en_label)) },
-                placeholder = { Text(stringResource(R.string.tags_hint_en)) },
-                supportingText = { Text(stringResource(R.string.tags_hint_1)) },
+                placeholder = { Text(stringResource(R.string.tags_placeholder_en)) },
+                supportingText = { Text(stringResource(R.string.tags_hint_en)) },
                 singleLine = true,
                 colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
@@ -1053,12 +1060,13 @@ private fun AddLocationSheet(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = com.gpsanywhere.app.ui.theme.GlassGreen,
-                        contentColor = Color.White
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = BUTTON_FILL_ALPHA),
+                        contentColor = AppAccent.primaryAction.content
                     )
                 ) { Text(stringResource(R.string.action_save)) }
             }
         }
+      }
     }
 }
 
@@ -1243,22 +1251,22 @@ private fun SectoredDpad(
 
         // Chevron arrows (visual only — taps handled by the Canvas below)
         Icon(
-            Icons.Default.KeyboardArrowUp, "North",
+            Icons.Default.KeyboardArrowUp, stringResource(R.string.dpad_north),
             tint = arrowColor,
             modifier = Modifier.size(24.dp).align(Alignment.Center).offset(y = -arrowOffset)
         )
         Icon(
-            Icons.Default.KeyboardArrowDown, "South",
+            Icons.Default.KeyboardArrowDown, stringResource(R.string.dpad_south),
             tint = arrowColor,
             modifier = Modifier.size(24.dp).align(Alignment.Center).offset(y = arrowOffset)
         )
         Icon(
-            Icons.AutoMirrored.Filled.KeyboardArrowLeft, "West",
+            Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.dpad_west),
             tint = arrowColor,
             modifier = Modifier.size(24.dp).align(Alignment.Center).offset(x = -arrowOffset)
         )
         Icon(
-            Icons.AutoMirrored.Filled.KeyboardArrowRight, "East",
+            Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.dpad_east),
             tint = arrowColor,
             modifier = Modifier.size(24.dp).align(Alignment.Center).offset(x = arrowOffset)
         )

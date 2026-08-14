@@ -27,13 +27,15 @@ fun ConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { Text(message) },
+        title = { ProvideAppLocale { Text(title) } },
+        text = { ProvideAppLocale { Text(message) } },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text(confirmLabel) }
+            ProvideAppLocale { TextButton(onClick = onConfirm) { Text(confirmLabel) } }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            ProvideAppLocale {
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            }
         }
     )
 }

@@ -108,6 +108,8 @@
     <string name="clipboard_invalid_format">格式錯誤 [%1$s]。剪貼簿內容須為「緯度, 經度」</string>
     <string name="tags_tc_label">標籤(中文)</string>
     <string name="tags_en_label">標籤(英文)</string>
+    <string name="tags_placeholder_tc">標籤(中文,選填),內容不限</string>
+    <string name="tags_placeholder_en">標籤(英文,選填),內容不限</string>
     <string name="tags_hint_1">標籤(選填),內容不限</string>
     <string name="tags_hint_2">[] 或 [咖啡廳] 或 [咖啡廳 | 公園 | 日本]</string>
     <string name="tags_hint_en">[] or [cafe] or [cafe | park | Japan]</string>
@@ -123,6 +125,10 @@
     <string name="minutes_short">分鐘</string>
     <string name="speed">速度</string>
     <string name="kmh">km/h</string>
+    <string name="dpad_north">往北移動</string>
+    <string name="dpad_south">往南移動</string>
+    <string name="dpad_west">往西移動</string>
+    <string name="dpad_east">往東移動</string>
     <string name="transport_jump">瞬移</string>
     <string name="transport_walk_around">繞圈步行</string>
     <string name="transport_heli">直升機(200 km/h)</string>
@@ -152,6 +158,7 @@
     <string name="editor_map">地圖</string>
     <string name="editor_csv">CSV</string>
     <string name="csv_hint">以 CSV 編輯或貼上路線。# 開頭為中繼資料;每行資料為 latitude,longitude,name_tc,name_en。</string>
+    <string name="csv_default_route_name">我的路線</string>
     <string name="route_csv">路線 CSV</string>
     <string name="csv_parse_error">找不到有效座標。每行需要:latitude,longitude,name_tc,name_en</string>
     <string name="tap_map_hint">點地圖新增途經點 · 共 %1$d 個</string>
