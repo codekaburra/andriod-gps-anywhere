@@ -226,7 +226,7 @@ This project uses **AGP 9 + the Compose compiler plugin**, which has some sharp 
 
 ## 📄 Usage Notice, Responsible Use, Disclaimer
 
-Educational and internal testing use only. Do not use it to bypass location restrictions, misrepresent your location to services, or gain unfair advantages in apps or games. 
+Educational and internal testing use only. Do not use it to bypass location restrictions or misrepresent your location to services that rely on it. 
 Respect the terms of any apps or services you interact with while using simulated locations.
 
 GPS Anywhere uses OSMDroid for maps and OSRM for route data. The public OSRM server is free and does not need an API key, but it is rate-limited and intended for light usage. For heavy or commercial use, self-host OSRM or switch to a routing backend you control.
