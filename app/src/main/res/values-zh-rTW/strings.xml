@@ -100,6 +100,9 @@
     <string name="coordinate">座標</string>
     <string name="coordinate_format_error">請用「緯度，經度」格式(例:22.3168,114.0451)</string>
     <string name="name">名稱</string>
+    <string name="section_name">名稱 / Name</string>
+    <string name="section_coordinates">座標 / Coordinates</string>
+    <string name="section_tags">標籤 / Tags</string>
     <string name="name_tc_label">名稱(中文)</string>
     <string name="name_en_label">名稱(英文)</string>
     <string name="latitude">緯度</string>

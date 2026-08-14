@@ -109,7 +109,7 @@ object AppAccent {
      * background reads through and the cards match the glass panels above them.
      */
     val cardFill: Color
-        @Composable get() = if (LocalIsDarkTheme.current) CardFill else SurfaceWhite.copy(alpha = 0.42f)
+        @Composable get() = if (LocalIsDarkTheme.current) CardFill else SurfaceWhite.copy(alpha = 0.3f)
 
     /** Card outline. */
     val cardBorder: Color

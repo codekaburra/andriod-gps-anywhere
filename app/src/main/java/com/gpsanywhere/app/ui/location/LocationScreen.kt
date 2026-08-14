@@ -1,5 +1,6 @@
 package com.gpsanywhere.app.ui.location
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -92,6 +94,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
@@ -110,9 +113,15 @@ import com.gpsanywhere.app.ui.components.transportButtonColors
 import com.gpsanywhere.app.ui.components.ConfirmDialog
 import com.gpsanywhere.app.ui.components.ProvideAppLocale
 import com.gpsanywhere.app.ui.components.BUTTON_FILL_ALPHA
+import com.gpsanywhere.app.ui.components.TexturedBackground
 import com.gpsanywhere.app.ui.components.MapWithAddButton
 import com.gpsanywhere.app.ui.theme.AppAccent
 import com.gpsanywhere.app.ui.theme.SurfaceWhite
+import com.gpsanywhere.app.ui.theme.SageGreen
+import com.gpsanywhere.app.ui.theme.Gold
+import com.gpsanywhere.app.ui.theme.MossGreen
+import com.gpsanywhere.app.ui.theme.MapleSpice
+import com.gpsanywhere.app.ui.theme.GlassBackgroundLight
 import com.gpsanywhere.app.ui.theme.GlassTextLight
 import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
 import com.gpsanywhere.app.ui.components.MapViewComposable
@@ -882,16 +891,57 @@ private fun AddLocationSheet(
     val previewLat = latText.toDoubleOrNull()
     val previewLng = lngText.toDoubleOrNull()
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    // Material defaults the sheet to colorScheme.surface, which is pure white in
+    // light mode — brighter than the cream the rest of the app sits on. Use the
+    // app background so the sheet does not glare, and so the translucent cards
+    // inside it have something to read against.
+    val isDarkSheet = LocalIsDarkTheme.current
+    // Transparent container and no built-in handle: Material would paint both in
+    // a flat colour above our background, leaving an untextured strip along the
+    // top. Owning the whole surface lets the texture run edge to edge.
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Color.Transparent,
+        dragHandle = null
+    ) {
       ProvideAppLocale {
         // A fixed tall sheet rather than one sized to its content: the form is
         // long enough that a content-sized sheet only reached halfway up.
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(SHEET_HEIGHT_FRACTION)
+                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .background(
+                    if (isDarkSheet) MaterialTheme.colorScheme.surface else GlassBackgroundLight
+                )
+        ) {
+        // The sheet is its own window, so the texture painted behind the app
+        // cannot reach it however transparent this is — it gets its own copy.
+        if (!isDarkSheet) {
+            TexturedBackground(
+                base = GlassBackgroundLight,
+                accents = listOf(SageGreen, Gold, MossGreen, MapleSpice),
+                bloomAlpha = 0.30f
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .imePadding()
         ) {
+            // Stand-in for the handle Material would have drawn.
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 32.dp, height = 4.dp)
+                        .background(AppAccent.navUnselected, RoundedCornerShape(2.dp))
+                )
+            }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -928,103 +978,104 @@ private fun AddLocationSheet(
 
             val fieldColors = glassFieldColors()
 
-            // Both names are offered; only one has to be filled in.
-            OutlinedTextField(
-                value = nameTc,
-                onValueChange = { nameTc = it; error = null },
-                label = { Text(stringResource(R.string.name_tc_label)) },
-                singleLine = true,
-                colors = fieldColors,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = nameEn,
-                onValueChange = { nameEn = it; error = null },
-                label = { Text(stringResource(R.string.name_en_label)) },
-                singleLine = true,
-                colors = fieldColors,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Text(
-                stringResource(R.string.coordinate_format_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            // Grouped into three cards so the eight fields read as three
+            // decisions. Headers are bilingual because the fields inside are
+            // per-language and the tag fields carry no label of their own.
+            FormSection(stringResource(R.string.section_name)) {
+                // Both names are offered; only one has to be filled in.
                 OutlinedTextField(
-                    value = latText,
-                    onValueChange = { latText = it; error = null },
-                    label = { Text(stringResource(R.string.latitude)) },
-                    placeholder = { Text(stringResource(R.string.latitude)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    value = nameTc,
+                    onValueChange = { nameTc = it; error = null },
+                    label = { Text(stringResource(R.string.name_tc_label)) },
                     singleLine = true,
                     colors = fieldColors,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
+
                 OutlinedTextField(
-                    value = lngText,
-                    onValueChange = { lngText = it; error = null },
-                    label = { Text(stringResource(R.string.longitude)) },
-                    placeholder = { Text(stringResource(R.string.longitude)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    value = nameEn,
+                    onValueChange = { nameEn = it; error = null },
+                    label = { Text(stringResource(R.string.name_en_label)) },
                     singleLine = true,
                     colors = fieldColors,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
-                FilledIconButton(
-                    onClick = {
-                        val raw = clipboard.getText()?.text?.trim().orEmpty()
-                        val parsed = parseClipboardCoordinates(raw)
-                        if (parsed == null) {
-                            error = sheetContext.getString(R.string.clipboard_invalid_format, raw)
-                        } else {
-                            lngText = parsed.first.toBigDecimal().stripTrailingZeros().toPlainString()
-                            latText = parsed.second.toBigDecimal().stripTrailingZeros().toPlainString()
-                            error = null
-                        }
-                    },
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = AppAccent.action.copy(alpha = 0.65f),
-                        contentColor = AppAccent.onAction
-                    )
+            }
+
+            FormSection(stringResource(R.string.section_coordinates)) {
+                Text(
+                    stringResource(R.string.coordinate_format_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.ContentPaste, contentDescription = stringResource(R.string.action_paste), modifier = Modifier.size(18.dp))
+                    OutlinedTextField(
+                        value = latText,
+                        onValueChange = { latText = it; error = null },
+                        label = { Text(stringResource(R.string.latitude)) },
+                        placeholder = { Text(stringResource(R.string.latitude)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        colors = fieldColors,
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = lngText,
+                        onValueChange = { lngText = it; error = null },
+                        label = { Text(stringResource(R.string.longitude)) },
+                        placeholder = { Text(stringResource(R.string.longitude)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        colors = fieldColors,
+                        modifier = Modifier.weight(1f)
+                    )
+                    PasteIconButton(
+                        onClick = {
+                            val raw = clipboard.getText()?.text?.trim().orEmpty()
+                            val parsed = parseClipboardCoordinates(raw)
+                            if (parsed == null) {
+                                error = sheetContext.getString(R.string.clipboard_invalid_format, raw)
+                            } else {
+                                lngText = parsed.first.toBigDecimal().stripTrailingZeros().toPlainString()
+                                latText = parsed.second.toBigDecimal().stripTrailingZeros().toPlainString()
+                                error = null
+                            }
+                        },
+                        contentDescription = stringResource(R.string.action_paste)
+                    )
                 }
             }
 
-            // Both tag sets are optional; whichever is filled in shows in that
-            // language, and displayTags() falls back when one is left empty.
-            // The format example stays in supportingText, which is always drawn;
-            // the "optional, anything goes" note sits in the placeholder, which
-            // Material only paints once the field has focus.
-            OutlinedTextField(
-                value = tagsTcText,
-                onValueChange = { tagsTcText = it },
-                // No label: Material hides an unfocused placeholder behind the
-                // label, and this hint has to read without tapping in first.
-                placeholder = { Text(stringResource(R.string.tags_placeholder_tc)) },
-                supportingText = { Text(stringResource(R.string.tags_hint_2)) },
-                singleLine = true,
-                colors = fieldColors,
-                modifier = Modifier.fillMaxWidth()
-            )
+            FormSection(stringResource(R.string.section_tags)) {
+                // Both tag sets are optional; whichever is filled in shows in that
+                // language, and displayTags() falls back when one is left empty.
+                // No label on these two: Material hides an unfocused placeholder
+                // behind the label, and the hint has to read without tapping in.
+                OutlinedTextField(
+                    value = tagsTcText,
+                    onValueChange = { tagsTcText = it },
+                    placeholder = { Text(stringResource(R.string.tags_placeholder_tc)) },
+                    supportingText = { Text(stringResource(R.string.tags_hint_2)) },
+                    singleLine = true,
+                    colors = fieldColors,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            OutlinedTextField(
-                value = tagsEnText,
-                onValueChange = { tagsEnText = it },
-                placeholder = { Text(stringResource(R.string.tags_placeholder_en)) },
-                supportingText = { Text(stringResource(R.string.tags_hint_en)) },
-                singleLine = true,
-                colors = fieldColors,
-                modifier = Modifier.fillMaxWidth()
-            )
+                OutlinedTextField(
+                    value = tagsEnText,
+                    onValueChange = { tagsEnText = it },
+                    placeholder = { Text(stringResource(R.string.tags_placeholder_en)) },
+                    supportingText = { Text(stringResource(R.string.tags_hint_en)) },
+                    singleLine = true,
+                    colors = fieldColors,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             error?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
@@ -1065,6 +1116,7 @@ private fun AddLocationSheet(
                     )
                 ) { Text(stringResource(R.string.action_save)) }
             }
+        }
         }
       }
     }
@@ -1356,6 +1408,35 @@ private fun ResetIntervalInput() {
             )
         ) {
             Icon(Icons.Default.Check, contentDescription = stringResource(R.string.action_apply), modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+/**
+ * One titled group of fields in the add/edit sheet, drawn on the same card as
+ * the rest of the app's panels.
+ */
+@Composable
+private fun FormSection(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = AppAccent.cardFill),
+        border = BorderStroke(1.dp, AppAccent.cardBorder)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            content()
         }
     }
 }
