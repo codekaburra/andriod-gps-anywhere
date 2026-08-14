@@ -34,12 +34,11 @@ pasted), plus **name and tags in both Chinese and English**. Whichever pair
 matches the app language is what the list shows, falling back to the other if
 one is left blank. Every location — including imported prebuilt ones — can be
 edited or deleted.
-<p align="center">
-  <img src="docs/screenshots/Screenshot_202606071852_location_list.png" width="24%" alt="Location — saved list">
-  <img src="docs/screenshots/Screenshot_202606071852_location_add.png" width="24%" alt="Location — add new">
-  <img src="docs/screenshots/Screenshot_202606071852_location_selected.png" width="24%" alt="Location — selected">
-  <img src="docs/screenshots/Screenshot_202606071852_location_walking.png" width="24%" alt="Location — walking">
-</p>
+
+| | Light | Dark |
+|---|---|---|
+| **English** | <img src="docs/screenshots/location_en_light.png" width="230"> | <img src="docs/screenshots/location_en_dark.png" width="230"> |
+| **繁體中文** | <img src="docs/screenshots/location_zh_light.png" width="230"> | <img src="docs/screenshots/location_zh_dark.png" width="230"> |
 
 ### Route
 Follow a route along a series of waypoints.
@@ -49,11 +48,11 @@ Follow a route along a series of waypoints.
   then save. Edit or delete any route (including prebuilt ones) from the list.
 - **While walking** — Back, Revert (reverse direction from the current point),
   Pause/Resume, and Stop. Tap a waypoint name to jump there and keep walking.
-<p align="center">
-  <img src="docs/screenshots/Screenshot_202606071852_route_list.png" width="30%" alt="Route — list">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/Screenshot_202606071852_route_walking.png" width="30%" alt="Route — walking">
-</p>
+
+| | Light | Dark |
+|---|---|---|
+| **English** | <img src="docs/screenshots/route_en_light.png" width="230"> | <img src="docs/screenshots/route_en_dark.png" width="230"> |
+| **繁體中文** | <img src="docs/screenshots/route_zh_light.png" width="230"> | <img src="docs/screenshots/route_zh_dark.png" width="230"> |
 
 **Speed** — non-linear slider, deliberately tuned apart from the Location tab's:
 this one tops out at 300 km/h with 20 and 100 km/h as intermediate stops, because
@@ -71,6 +70,23 @@ a route is walked rather than jumped to.
 - **Open Developer Options** — shortcut to pick this app as the mock-location app.
 - **How to Use** — what each transport button does, since a door, a walking figure
   and a rocket don't explain themselves.
+
+| | Light | Dark |
+|---|---|---|
+| **English** | <img src="docs/screenshots/settings_en_light.png" width="230"> | <img src="docs/screenshots/settings_en_dark.png" width="230"> |
+| **繁體中文** | <img src="docs/screenshots/settings_zh_light.png" width="230"> | <img src="docs/screenshots/settings_zh_dark.png" width="230"> |
+
+---
+
+### Add a location
+
+Names and tags are entered in both languages; the list shows whichever pair
+matches the app language and falls back to the other when one is blank.
+
+| | Light | Dark |
+|---|---|---|
+| **English** | <img src="docs/screenshots/add_location_en_light.png" width="230"> | <img src="docs/screenshots/add_location_en_dark.png" width="230"> |
+| **繁體中文** | <img src="docs/screenshots/add_location_zh_light.png" width="230"> | <img src="docs/screenshots/add_location_zh_dark.png" width="230"> |
 
 ---
 
