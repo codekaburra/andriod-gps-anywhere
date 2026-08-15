@@ -22,6 +22,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GPSAnywhere">
 
+        <!-- AdMob. Google's sample application id, which serves test ads only.
+             Replace with the real id from the AdMob console before shipping. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

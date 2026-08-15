@@ -118,6 +118,9 @@ dependencies {
     // Gson
     implementation(libs.gson)
 
+    // AdMob
+    implementation(libs.play.services.ads)
+
     // Preferences
     implementation(libs.androidx.preference)
 

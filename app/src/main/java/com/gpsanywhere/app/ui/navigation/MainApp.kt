@@ -48,6 +48,7 @@ import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.components.LocalAppLocaleContext
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
 import com.gpsanywhere.app.ui.theme.GPSAnywhereTheme
+import com.gpsanywhere.app.ui.components.AdBanner
 import com.gpsanywhere.app.ui.components.TexturedBackground
 import com.gpsanywhere.app.ui.theme.AppAccent
 import com.gpsanywhere.app.ui.theme.MapleSpice
@@ -126,6 +127,7 @@ fun MainApp(preferences: AppPreferences) {
         }
         Scaffold(
             containerColor = Color.Transparent,
+            topBar = { AdBanner() },
             bottomBar = {
                 val navIsDark = isDark
                 NavigationBar(
