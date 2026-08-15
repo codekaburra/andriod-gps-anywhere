@@ -41,10 +41,10 @@ It uses Android's own test-provider API, so it only works once you have enabled 
 WHAT IT DOES
 
 • Jump — place the device at any coordinate and hold it there.
-• Walk Around — wander in a spiral around a point, so the device looks occupied rather than frozen at one pixel.
+• Walk Around — wander in a spiral around a point, so your code receives a stream of slightly different fixes, the way it would from a real GPS, instead of one coordinate repeated.
 • Max-Speed Travel — travel from where you are to a target at high speed, then settle into a wander at the far end.
 • Routes — walk a series of waypoints. Pause, resume, reverse direction, or tap a waypoint to jump ahead. Build routes by tapping the map, pasting coordinates, or editing them as CSV.
-• Speed control — a non-linear slider that gives walking speeds most of its travel, because that is the range worth fine-tuning. Real speed drifts around the value you set, so tracks do not look machine-generated.
+• Speed control — a non-linear slider that gives walking speeds most of its travel, because that is the range worth fine-tuning. Real speed drifts around the value you set, so speed and distance filters get realistic input rather than a constant.
 • Direction pad — nudge the position by small steps without retyping anything.
 
 SAVED PLACES
@@ -68,7 +68,7 @@ IMPORTANT
 This app is intended for development and testing purposes only. Simulating your location may breach the terms of service of other apps and services, and may be restricted by law where you live. You are responsible for how you use it. Do not use it to misrepresent your location to services that rely on it.
 ```
 
-*2,408 characters.*
+*2,509 characters.*
 
 ---
 
@@ -100,10 +100,10 @@ GPS Anywhere 是給開發者與測試人員使用的模擬定位工具。開發�
 功能
 
 • 瞬移 — 直接把裝置定位到指定座標，停在那裡不動。
-• 繞圈步行 — 在該點周圍繞圈走，讓裝置看起來是有人在使用，而不是釘死在一個點。
+• 繞圈步行 — 在該點周圍繞圈走，讓你的程式收到會微幅變動的定位資料，像真實 GPS 一樣，而不是同一個座標重複出現。
 • 極速移動 — 從目前位置以高速前往目標，抵達後自動接上繞圈步行。
 • 路線 — 沿著一連串途經點行走，可暫停、繼續、反向，或點某個途經點直接跳過去。建立路線可以點地圖、貼上座標，或直接編輯 CSV。
-• 速度調整器 — 非線性滑桿，走路速度佔了大部分行程，因為那才是需要細調的範圍。實際速度會在設定值附近浮動，軌跡不會像機器產生的。
+• 速度調整器 — 非線性滑桿，走路速度佔了大部分行程，因為那才是需要細調的範圍。實際速度會在設定值附近浮動，讓速度與距離的過濾邏輯拿到接近真實的輸入，而不是固定值。
 • 方向鍵 — 小幅度微調位置，不必重新輸入座標。
 
 儲存地點
@@ -127,7 +127,7 @@ Android 8.0 以上，並需啟用開發人員選項。App 內附設定教學與�
 本 App 僅供開發與測試用途。模擬定位可能違反其他 App 或服務的服務條款，在部分地區也可能受法律限制。使用方式與後果由你自行負責。請勿用於對依賴定位的服務謊報所在位置。
 ```
 
-*880 characters.*
+*916 characters.*
 
 ---
 
