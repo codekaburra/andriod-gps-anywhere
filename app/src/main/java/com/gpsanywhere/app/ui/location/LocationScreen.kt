@@ -455,26 +455,26 @@ fun LocationScreen(
                     onJump = {
                         val parsed = parseClipboardCoordinates(jumpCoordinateText.trim())
                         if (parsed != null) {
-                            viewModel.startSpoofing(parsed.second, parsed.first)
+                            viewModel.startSpoofing(parsed.latitude, parsed.longitude)
                         }
                     },
                     onSpiral = {
                         val parsed = parseClipboardCoordinates(jumpCoordinateText.trim())
                         if (parsed != null) {
-                            viewModel.startSpiralWalk(parsed.second, parsed.first)
+                            viewModel.startSpiralWalk(parsed.latitude, parsed.longitude)
                         }
                     },
                     onFly = { speed ->
                         val parsed = parseClipboardCoordinates(jumpCoordinateText.trim())
                         if (parsed != null) {
-                            viewModel.flyTo(parsed.second, parsed.first, speed)
+                            viewModel.flyTo(parsed.latitude, parsed.longitude, speed)
                         }
                     },
                     onPaste = {
                         val raw = clipboardManager.getText()?.text?.trim().orEmpty()
                         val parsed = parseClipboardCoordinates(raw)
                         if (parsed != null) {
-                            jumpCoordinateText = "%.6f,%.6f".format(parsed.second, parsed.first)
+                            jumpCoordinateText = "%.6f,%.6f".format(parsed.latitude, parsed.longitude)
                         } else {
                             jumpCoordinateText = raw
                         }
@@ -1049,8 +1049,8 @@ private fun AddLocationSheet(
                             if (parsed == null) {
                                 error = sheetContext.getString(R.string.clipboard_invalid_format, raw)
                             } else {
-                                lngText = parsed.first.toBigDecimal().stripTrailingZeros().toPlainString()
-                                latText = parsed.second.toBigDecimal().stripTrailingZeros().toPlainString()
+                                lngText = parsed.longitude.toBigDecimal().stripTrailingZeros().toPlainString()
+                                latText = parsed.latitude.toBigDecimal().stripTrailingZeros().toPlainString()
                                 error = null
                             }
                         },

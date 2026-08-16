@@ -68,9 +68,10 @@ object CurrentLocationProvider {
     private fun resolveCoordinate(isLat: Boolean): Double? {
         val running = SpoofService.isRunning.value == true
         val paused = SpoofService.isPaused.value == true
-        val spoofLat = SpoofService.currentLat.value ?: 0.0
-        val spoofLng = SpoofService.currentLng.value ?: 0.0
-        val hasSpoof = spoofLat != 0.0 || spoofLng != 0.0
+        val spoofLat = SpoofService.currentLat.value
+        val spoofLng = SpoofService.currentLng.value
+        // Both present or neither: a position is a pair, and (0, 0) is a place.
+        val hasSpoof = spoofLat != null && spoofLng != null
         val spoofCoord = if (isLat) spoofLat else spoofLng
         val deviceCoord = if (isLat) _deviceLat.value else _deviceLng.value
         return when {
@@ -81,16 +82,33 @@ object CurrentLocationProvider {
         }
     }
 
+    /**
+     * Starts listening for the device's real position with whatever location
+     * permission was actually granted.
+     *
+     * The permission prompt accepts coarse as well as fine, so requiring fine
+     * here meant a coarse-only grant returned immediately and the real-position
+     * features stayed dead with nothing to explain why. GPS needs fine; the
+     * network provider works on coarse, so a coarse grant now gets network
+     * updates rather than nothing.
+     */
     private fun startDeviceLocationUpdates(context: Context) {
         if (locationListener != null) return
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
+
+        val fine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+        val coarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+        if (!fine && !coarse) return
+
         val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         locationManager = lm
-        val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+
+        val providers = buildList {
+            if (fine) add(LocationManager.GPS_PROVIDER)
+            add(LocationManager.NETWORK_PROVIDER)
+        }
+
         for (provider in providers) {
             if (!lm.isProviderEnabled(provider)) continue
             try {
@@ -98,28 +116,21 @@ object CurrentLocationProvider {
             } catch (_: SecurityException) {
             }
         }
+
         val listener = LocationListener { postDeviceLocation(it) }
         locationListener = listener
-        try {
-            if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        for (provider in providers) {
+            if (!lm.isProviderEnabled(provider)) continue
+            try {
                 lm.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
+                    provider,
                     2_000L,
                     5f,
                     listener,
                     android.os.Looper.getMainLooper()
                 )
+            } catch (_: SecurityException) {
             }
-            if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                lm.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER,
-                    2_000L,
-                    5f,
-                    listener,
-                    android.os.Looper.getMainLooper()
-                )
-            }
-        } catch (_: SecurityException) {
         }
     }
 

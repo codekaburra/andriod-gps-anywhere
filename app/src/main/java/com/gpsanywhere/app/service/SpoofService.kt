@@ -52,11 +52,19 @@ class SpoofService : Service() {
         private val _isRunning = MutableLiveData(false)
         val isRunning: LiveData<Boolean> = _isRunning
 
-        private val _currentLat = MutableLiveData(0.0)
-        val currentLat: LiveData<Double> = _currentLat
+        /**
+         * The spoofed position, or null when nothing is being spoofed.
+         *
+         * Null rather than 0.0: zero is a real coordinate. Using it as the
+         * "no position" marker made the Gulf of Guinea — and anywhere on the
+         * equator or the prime meridian paired with a zero — read as not
+         * spoofing at all.
+         */
+        private val _currentLat = MutableLiveData<Double?>(null)
+        val currentLat: LiveData<Double?> = _currentLat
 
-        private val _currentLng = MutableLiveData(0.0)
-        val currentLng: LiveData<Double> = _currentLng
+        private val _currentLng = MutableLiveData<Double?>(null)
+        val currentLng: LiveData<Double?> = _currentLng
 
         private val _currentSpeedKmh = MutableLiveData(0f)
         val currentSpeedKmh: LiveData<Float> = _currentSpeedKmh
@@ -204,10 +212,15 @@ class SpoofService : Service() {
                 if (!startForegroundSafely(localizedContext().getString(R.string.notif_fixed, "$lat, $lng"))) {
                     return START_NOT_STICKY
                 }
-                setupTestProvider()
+                if (!setupTestProvider()) return START_NOT_STICKY
                 startPushLoop()
                 _isRunning.postValue(true)
                 _isWalkMode.postValue(false)
+                // A start clears any pause left over from the previous session.
+                // "Stop" during a walk restarts as fixed spoofing rather than
+                // stopping the service, so without this a walk paused and then
+                // stopped stayed paused, and the fixed position was never pushed.
+                _isPaused.postValue(false)
                 _currentLat.postValue(lat)
                 _currentLng.postValue(lng)
             }
@@ -233,11 +246,12 @@ class SpoofService : Service() {
                 if (!startForegroundSafely(localizedContext().getString(R.string.notif_walking, "%.1f".format(speedKmh)))) {
                     return START_NOT_STICKY
                 }
-                setupTestProvider()
+                if (!setupTestProvider()) return START_NOT_STICKY
                 startPushLoop()
                 startWalkJob(lats, lngs, loop, resetIntervalMs, spiralAfterKmh)
                 _isRunning.postValue(true)
                 _isWalkMode.postValue(true)
+                _isPaused.postValue(false)
                 _currentLat.postValue(lastLat)
                 _currentLng.postValue(lastLng)
             }
@@ -268,7 +282,12 @@ class SpoofService : Service() {
                 )
             }
         }
-        return START_STICKY
+        // Not START_STICKY. A sticky restart hands onStartCommand a null intent,
+        // which matches no branch here: the service would come back with no
+        // foreground notification, no route and no position, holding a mock
+        // provider registration it never set up. Restarting is only worth doing
+        // once there is a persisted session to restore.
+        return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -282,7 +301,14 @@ class SpoofService : Service() {
         super.onDestroy()
     }
 
-    private fun setupTestProvider() {
+    /**
+     * Registers the app as the mock location provider.
+     *
+     * @return false when the system refused — the app is not selected as the
+     * mock location provider — in which case spoofing has already been stopped
+     * and the caller must not carry on as though it started.
+     */
+    private fun setupTestProvider(): Boolean {
         for (provider in providers) {
             try {
                 locationManager?.removeTestProvider(provider)
@@ -309,10 +335,15 @@ class SpoofService : Service() {
                 }
                 locationManager?.setTestProviderEnabled(provider, true)
             } catch (e: SecurityException) {
+                // Not selected as the mock location provider in developer options.
+                // The caller has to abort too: returning only from here left it
+                // starting the push loop and publishing isRunning = true, so the
+                // UI showed spoofing as active while nothing was being pushed.
                 stopSpoofing()
-                return
+                return false
             } catch (_: Exception) {}
         }
+        return true
     }
 
     /** Invalidate and cancel any running walk loop. */
@@ -540,8 +571,8 @@ class SpoofService : Service() {
         _isRunning.postValue(false)
         _isWalkMode.postValue(false)
         _isPaused.postValue(false)
-        _currentLat.postValue(0.0)
-        _currentLng.postValue(0.0)
+        _currentLat.postValue(null)
+        _currentLng.postValue(null)
         _currentSpeedKmh.postValue(0f)
         _resetDeadlineMs.postValue(0L)
         stopForeground(STOP_FOREGROUND_REMOVE)
