@@ -91,11 +91,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * alongside hand-added ones and are removed by "delete custom data" rather
      * than by the prebuilt delete.
      *
-     * Rows matching something already stored — same name and the same position
-     * to five decimal places, about a metre — are skipped rather than inserted.
-     * Room's IGNORE conflict strategy cannot do this on its own: it keys off the
-     * unique sourceId index, which is null for every row here, so re-pasting the
-     * same CSV twice would otherwise double every location.
+     * Rows already stored — see [LocationCsvImport.isSameAs] for the match rule —
+     * are skipped rather than inserted. Room's IGNORE conflict strategy cannot do
+     * this on its own: it keys off the unique sourceId index, which is null for
+     * every row here, so re-pasting the same CSV twice would otherwise double
+     * every location.
      */
     fun importLocationsFromCsv(
         rows: List<LocationCsvImport.Row>,
@@ -111,11 +111,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 var skipped = 0
 
                 rows.forEach { row ->
-                    val duplicate = existing.any { e ->
-                        e.name.trim().equals(row.name.trim(), ignoreCase = true) &&
-                            kotlin.math.abs(e.latitude - row.latitude) < 1e-5 &&
-                            kotlin.math.abs(e.longitude - row.longitude) < 1e-5
-                    }
+                    val duplicate = existing.any { with(LocationCsvImport) { row.isSameAs(it) } }
                     if (duplicate) {
                         skipped++
                         return@forEach

@@ -135,4 +135,100 @@ class LocationCsvImportTest {
         assertTrue(result.rows.isEmpty())
         assertTrue(result.problems.isEmpty())
     }
+
+    @Test
+    fun `the shipped example parses cleanly`() {
+        // Guards the "fill in example" button: if someone edits EXAMPLE into
+        // something the parser rejects, the button starts handing users errors.
+        val result = LocationCsvImport.parse(LocationCsvImport.EXAMPLE)
+
+        assertTrue(result.problems.isEmpty())
+        assertEquals(2, result.rows.size)
+        assertEquals("香港藝術館", result.rows[0].name)
+        assertEquals("Kinkaku-ji", result.rows[1].nameEn)
+        // Every column populated, which is the point of showing it as a sample.
+        assertTrue(result.rows.all { it.tags.isNotBlank() && it.tagsEn.isNotBlank() })
+    }
+
+    @Test
+    fun `a bad latitude on the very first line is reported, not eaten as a header`() {
+        val result = LocationCsvImport.parse("abc,114.18,銅鑼灣")
+
+        assertTrue(result.rows.isEmpty())
+        assertEquals(LocationCsvImport.Reason.BAD_LATITUDE, result.problems.single().reason)
+        assertEquals(1, result.problems.single().lineNumber)
+    }
+
+    @Test
+    fun `a broken first line does not vanish when good rows follow`() {
+        val result = LocationCsvImport.parse(
+            """
+            abc,114.18,壞
+            22.28,114.18,好
+            """.trimIndent()
+        )
+
+        assertEquals(1, result.rows.size)
+        assertEquals(1, result.problems.single().lineNumber)
+    }
+
+    @Test
+    fun `a non-english header is still recognised`() {
+        val result = LocationCsvImport.parse(
+            """
+            緯度,經度,名稱
+            22.28,114.18,銅鑼灣
+            """.trimIndent()
+        )
+
+        assertTrue(result.problems.isEmpty())
+        assertEquals(1, result.rows.size)
+    }
+
+    @Test
+    fun `coordinate bounds are inclusive`() {
+        val result = LocationCsvImport.parse(
+            """
+            90,180,北
+            -90,-180,南
+            """.trimIndent()
+        )
+
+        assertTrue(result.problems.isEmpty())
+        assertEquals(2, result.rows.size)
+    }
+
+    @Test
+    fun `whitespace around fields is trimmed`() {
+        val result = LocationCsvImport.parse("  22.28 , 114.18 ,  銅鑼灣  ,  Causeway Bay  ")
+
+        assertEquals("銅鑼灣", result.rows[0].name)
+        assertEquals("Causeway Bay", result.rows[0].nameEn)
+        assertEquals(22.28, result.rows[0].latitude, 1e-9)
+    }
+
+    @Test
+    fun `windows line endings are handled`() {
+        // What a paste out of Excel or Notepad actually carries.
+        val result = LocationCsvImport.parse("22.28,114.18,甲\r\n22.32,114.17,乙\r\n")
+
+        assertTrue(result.problems.isEmpty())
+        assertEquals(2, result.rows.size)
+    }
+
+    @Test
+    fun `columns beyond the sixth are ignored`() {
+        val result = LocationCsvImport.parse("22.28,114.18,甲,A,tagTc,tagEn,junk,more")
+
+        assertEquals("tagTc", result.rows[0].tags)
+        assertEquals("tagEn", result.rows[0].tagsEn)
+    }
+
+    @Test
+    fun `a header with no rows under it imports nothing and complains about nothing`() {
+        val result = LocationCsvImport.parse("latitude,longitude,name_tc,name_en")
+
+        assertTrue(result.rows.isEmpty())
+        assertTrue(result.problems.isEmpty())
+    }
 }

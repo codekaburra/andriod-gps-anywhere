@@ -78,7 +78,7 @@ object LocationCsvImport {
 
             // A header row only counts as one before any data has been read;
             // later junk is a broken row and should be reported as such.
-            if (!seenData && parts.firstOrNull()?.toDoubleOrNull() == null) {
+            if (!seenData && isHeaderRow(parts)) {
                 seenData = true
                 return@forEachIndexed
             }
@@ -122,5 +122,44 @@ object LocationCsvImport {
         }
 
         return Result(rows, problems)
+    }
+
+    /**
+     * True when the first line is column names rather than a location.
+     *
+     * Both of the first two fields have to be non-numeric. Testing only the
+     * first one looks equivalent and is not: a real row whose latitude has a
+     * typo — `abc,114.18,銅鑼灣` — then reads as a header and disappears without
+     * a word, which is the silent drop this parser exists to avoid. Its
+     * longitude is still a number, so requiring both keeps it a reported row.
+     *
+     * Language-agnostic on purpose: `緯度,經度,名稱` is as much a header as
+     * `latitude,longitude,name_tc`. A first line that is non-numeric in both
+     * columns and *not* a header is unrecoverably ambiguous, and dropping it is
+     * the better of the two guesses.
+     */
+    private fun isHeaderRow(parts: List<String>): Boolean =
+        parts.getOrNull(0)?.toDoubleOrNull() == null &&
+            parts.getOrNull(1)?.toDoubleOrNull() == null
+
+    /**
+     * How close two positions must be to count as the same place: about a metre.
+     */
+    const val DUPLICATE_EPSILON = 1e-5
+
+    /**
+     * True when [existing] is already this row's location.
+     *
+     * Position has to match, and so does at least one of the two names — a
+     * blank name is not evidence of anything, so it never counts as a match.
+     * Comparing only the Chinese name would fuse two different English-only
+     * locations that happen to share coordinates, since both carry `name = ""`.
+     */
+    fun Row.isSameAs(existing: SavedLocation): Boolean {
+        if (kotlin.math.abs(existing.latitude - latitude) >= DUPLICATE_EPSILON) return false
+        if (kotlin.math.abs(existing.longitude - longitude) >= DUPLICATE_EPSILON) return false
+        val tcMatches = name.isNotBlank() && existing.name.trim().equals(name.trim(), ignoreCase = true)
+        val enMatches = nameEn.isNotBlank() && existing.nameEn.trim().equals(nameEn.trim(), ignoreCase = true)
+        return tcMatches || enMatches
     }
 }
