@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.gpsanywhere.app.data.AppDatabase
 import com.gpsanywhere.app.data.DefaultLocationSeeder
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
+import com.gpsanywhere.app.data.LocationCsvImport
+import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.AppPreferences
@@ -78,6 +80,65 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             _isImporting.value = false
             onDone()
+        }
+    }
+
+    /** Rows inserted, and rows skipped for already being in the database. */
+    data class CsvImportOutcome(val inserted: Int, val skippedDuplicates: Int)
+
+    /**
+     * Insert [rows] as user-created locations (sourceId null), so they sit
+     * alongside hand-added ones and are removed by "delete custom data" rather
+     * than by the prebuilt delete.
+     *
+     * Rows matching something already stored — same name and the same position
+     * to five decimal places, about a metre — are skipped rather than inserted.
+     * Room's IGNORE conflict strategy cannot do this on its own: it keys off the
+     * unique sourceId index, which is null for every row here, so re-pasting the
+     * same CSV twice would otherwise double every location.
+     */
+    fun importLocationsFromCsv(
+        rows: List<LocationCsvImport.Row>,
+        onDone: (CsvImportOutcome) -> Unit = {}
+    ) {
+        if (_isImporting.value == true) return
+        _isImporting.value = true
+        viewModelScope.launch {
+            val outcome = withContext(Dispatchers.IO) {
+                val dao = AppDatabase.getInstance(getApplication()).savedLocationDao()
+                val existing = dao.getAll().toMutableList()
+                var inserted = 0
+                var skipped = 0
+
+                rows.forEach { row ->
+                    val duplicate = existing.any { e ->
+                        e.name.trim().equals(row.name.trim(), ignoreCase = true) &&
+                            kotlin.math.abs(e.latitude - row.latitude) < 1e-5 &&
+                            kotlin.math.abs(e.longitude - row.longitude) < 1e-5
+                    }
+                    if (duplicate) {
+                        skipped++
+                        return@forEach
+                    }
+                    val location = SavedLocation(
+                        sourceId = null,
+                        name = row.name.trim(),
+                        nameEn = row.nameEn.trim(),
+                        latitude = row.latitude,
+                        longitude = row.longitude,
+                        tags = row.tags.trim(),
+                        tagsEn = row.tagsEn.trim()
+                    )
+                    dao.insert(location)
+                    // Tracked locally so duplicates *within* one paste are caught
+                    // too, without re-reading the table on every row.
+                    existing += location
+                    inserted++
+                }
+                CsvImportOutcome(inserted, skipped)
+            }
+            _isImporting.value = false
+            onDone(outcome)
         }
     }
 

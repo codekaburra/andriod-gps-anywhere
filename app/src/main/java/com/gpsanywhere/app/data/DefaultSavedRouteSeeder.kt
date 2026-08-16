@@ -94,32 +94,6 @@ object DefaultSavedRouteSeeder {
         )
     }
 
-    /**
-     * Split a CSV line into fields, respecting double-quoted fields that may contain commas.
-     * e.g. "\"My, Place\",22.5,114.1" → ["My, Place", "22.5", "114.1"]
-     */
-    private fun parseCsvLine(line: String): List<String> {
-        val fields = mutableListOf<String>()
-        val sb = StringBuilder()
-        var inQuotes = false
-        var i = 0
-        while (i < line.length) {
-            val ch = line[i]
-            when {
-                ch == '"' && !inQuotes -> inQuotes = true
-                ch == '"' && inQuotes -> {
-                    if (i + 1 < line.length && line[i + 1] == '"') { sb.append('"'); i++ } // escaped ""
-                    else inQuotes = false
-                }
-                ch == ',' && !inQuotes -> { fields.add(sb.toString()); sb.clear() }
-                else -> sb.append(ch)
-            }
-            i++
-        }
-        fields.add(sb.toString())
-        return fields
-    }
-
     /** Load all bundled CSV routes from assets/saved_routes/. */
     fun loadAllAssets(context: Context): List<DefaultRouteAsset> {
         val appContext = context.applicationContext
