@@ -62,6 +62,7 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gpsanywhere.app.R
+import com.gpsanywhere.app.ads.rememberInterstitialAd
 import com.gpsanywhere.app.data.SavedRoute
 import com.gpsanywhere.app.data.WaypointJson
 import com.gpsanywhere.app.routes.LocationPoint
@@ -104,6 +105,10 @@ fun WalkScreen(
     // Route editor state: when active, the editor screen replaces the list/walk view.
     var editorOpen by remember { mutableStateOf(false) }
     var editorTarget by remember { mutableStateOf<SavedRoute?>(null) }
+
+    // Declared above the editor's early return so the preload runs whether or not
+    // the editor is the branch being composed.
+    val showInterstitial = rememberInterstitialAd()
     var deleteRouteTarget by remember { mutableStateOf<SavedRoute?>(null) }
 
     deleteRouteTarget?.let { target ->
@@ -128,6 +133,7 @@ fun WalkScreen(
                 viewModel.saveCustomRoute(name, points, editorTarget)
                 editorOpen = false
                 editorTarget = null
+                showInterstitial()
             },
             modifier = modifier
         )
