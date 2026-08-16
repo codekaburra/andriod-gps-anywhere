@@ -64,6 +64,12 @@
     <string name="settings_dev_options_desc">開啟 Android 開發人員選項，將本 App 設為模擬位置應用程式。</string>
     <string name="open_dev_options">開啟開發人員選項</string>
     <string name="dev_options_manual_hint">請手動前往「設定 → 開發人員選項」</string>
+    <string name="dev_options_enable_title">第一次設定？先啟用開發人員選項</string>
+    <string name="dev_options_enable_step1">① 開啟手機的「設定」。</string>
+    <string name="dev_options_enable_step2">② 點選「關於手機」或「關於裝置」。</string>
+    <string name="dev_options_enable_step3">③ 點選「軟體資訊」。如果主畫面已經看到「版本號碼」，可略過這一步。</string>
+    <string name="dev_options_enable_step4">④ 找到「版本號碼」，快速連按 7 次，直到看到「你現在已是開發人員！」。</string>
+    <string name="dev_options_select_title">接著選取 GPS Anywhere</string>
     <string name="dev_options_step1">① 捲動到「除錯」區塊。</string>
     <string name="dev_options_step2">② 點「選取模擬位置應用程式」→ 選擇 GPS Anywhere。</string>
     <string name="settings_version">版本 %1$s</string>

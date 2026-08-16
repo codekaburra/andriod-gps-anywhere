@@ -20,17 +20,17 @@ GPS Anywhere
 ### Short description (80)
 
 ```
-Mock your device location for app testing — jump, walk routes, control speed.
+Test Android location features with mock coordinates, routes and movement.
 ```
 
-*77 characters.*
+*74 characters.*
 
 ### Full description (4000)
 
 ```
-GPS Anywhere is a mock-location tool for developers and QA testers who need to
-put an Android device somewhere else — and keep it moving realistically — while
-they work on location-aware features.
+GPS Anywhere is a mock-location tool for developers and QA testers. Use it to
+test how an Android app handles selected coordinates, route movement, repeated
+location updates, and changing speeds.
 
 It uses Android's own test-provider API, so it only works once you have enabled
 Developer Options and selected GPS Anywhere as the mock location app. Nothing is
@@ -39,16 +39,14 @@ hidden or automatic; you turn it on deliberately.
 WHAT IT DOES
 
 • Jump — place the device at any coordinate and hold it there.
-• Walk Around — wander in a spiral around a point, so the device looks occupied
-  rather than frozen at one pixel.
-• Max-Speed Travel — travel from where you are to a target at high speed, then
-  settle into a wander at the far end.
+• Walk Around — simulate repeated location updates in a spiral around a point.
+• Route simulation — simulate movement from one point to another, then continue
+  with location updates around the destination.
 • Routes — walk a series of waypoints. Pause, resume, reverse direction, or tap
   a waypoint to jump ahead. Build routes by tapping the map, pasting
   coordinates, or editing them as CSV.
-• Speed control — a non-linear slider that gives walking speeds most of its
-  travel, because that is the range worth fine-tuning. Real speed drifts around
-  the value you set, so tracks do not look machine-generated.
+• Speed control — set a base speed and optionally vary it while testing how an
+  app handles changing location-update speeds.
 • Direction pad — nudge the position by small steps without retyping anything.
 
 SAVED PLACES
@@ -62,10 +60,10 @@ BUILT FOR THE JOB
 
 • Runs as a foreground service with a persistent notification, so a long walk
   survives the screen going off.
-• OpenStreetMap tiles — no Google Play Services dependency.
+• OpenStreetMap tiles for map display.
 • Light and dark themes, both hand-tuned rather than one inverted.
 • English and 繁體中文 throughout, including saved data.
-• No account, no sign-in, no analytics. Your places stay on your device.
+• No account or sign-in. Saved places and routes stay on your device.
 
 REQUIREMENTS
 
@@ -93,14 +91,14 @@ GPS Anywhere
 ### 簡短說明 (80)
 
 ```
-為 App 測試模擬裝置定位：瞬移、走路線、調整速度。
+模擬 Android 定位，測試座標、路線與移動控制。
 ```
 
 ### 完整說明 (4000)
 
 ```
-GPS Anywhere 是給開發者與測試人員使用的模擬定位工具。開發需要位置的功能時，可
-以把裝置放到任何座標，並讓它以合理的方式持續移動。
+GPS Anywhere 是給開發者與測試人員使用的模擬定位工具。可用來測試 Android App
+如何處理指定座標、路線移動、持續的位置更新與速度變化。
 
 它使用 Android 內建的 test provider 機制，因此必須先啟用「開發人員選項」並把
 GPS Anywhere 設為模擬位置應用程式才會生效。沒有任何隱藏或自動啟動的行為，一切
@@ -109,12 +107,11 @@ GPS Anywhere 設為模擬位置應用程式才會生效。沒有任何隱藏或�
 功能
 
 • 瞬移 — 直接把裝置定位到指定座標，停在那裡不動。
-• 繞圈步行 — 在該點周圍繞圈走，讓裝置看起來是有人在使用，而不是釘死在一個點。
-• 極速移動 — 從目前位置以高速前往目標，抵達後自動接上繞圈步行。
+• 繞圈步行 — 在指定點周圍以螺旋路徑模擬持續的位置更新。
+• 路線模擬 — 模擬從一點移動至另一點，抵達後在目標附近繼續更新位置。
 • 路線 — 沿著一連串途經點行走，可暫停、繼續、反向，或點某個途經點直接跳過去。
   建立路線可以點地圖、貼上座標，或直接編輯 CSV。
-• 速度調整器 — 非線性滑桿，走路速度佔了大部分行程，因為那才是需要細調的範圍。
-  實際速度會在設定值附近浮動，軌跡不會像機器產生的。
+• 速度調整器 — 設定基礎速度，並可在測試 App 如何處理速度變化時加入可控的速度浮動。
 • 方向鍵 — 小幅度微調位置，不必重新輸入座標。
 
 儲存地點
@@ -125,10 +122,10 @@ GPS Anywhere 設為模擬位置應用程式才會生效。沒有任何隱藏或�
 其他
 
 • 以前景服務執行並顯示常駐通知，長時間行走不會因為螢幕關閉而中斷。
-• 使用 OpenStreetMap 圖磚，不依賴 Google Play 服務。
+• 使用 OpenStreetMap 圖磚顯示地圖。
 • 淺色與深色主題各自調校，不是把同一組顏色反轉。
 • 介面與資料皆支援 English 與繁體中文。
-• 不需註冊、不需登入、不做分析追蹤，你的地點只留在裝置上。
+• 不需註冊、不需登入；儲存的地點與路線只留在裝置上。
 
 系統需求
 
@@ -149,12 +146,12 @@ Android 8.0 以上，並需啟用開發人員選項。App 內附設定教學與�
 |---|---|
 | Category | Tools |
 | Tags | Developer tools, Testing |
-| Content rating | Everyone — no user-generated content, no ads, no purchases |
-| Ads | No |
+| Content rating | Everyone — no user-generated content or purchases |
+| Ads | Yes — banner and interstitial ads are shown through Google Mobile Ads SDK. |
 | In-app purchases | No |
-| Data safety — collected | None. Saved places and routes stay in a local Room database; nothing is uploaded. |
-| Data safety — shared | None |
-| Data safety — location | Accessed to centre the map on the real position; not collected or transmitted |
+| Data safety — collected | Complete this from the Google Mobile Ads SDK's current Play Console guidance. Saved places and routes remain in a local Room database. |
+| Data safety — shared | Complete this from the Google Mobile Ads SDK's current Play Console guidance. |
+| Data safety — location | Used to centre the map on the device's position. Declare any SDK data handling accurately in Play Console. |
 | Target audience | 18+ (a developer tool, not aimed at children) |
 | Privacy policy | Required — a URL must be hosted before the listing can be submitted |
 
@@ -163,4 +160,4 @@ Android 8.0 以上，並需啟用開發人員選項。App 內附設定教學與�
 - **512 × 512 app icon** (PNG, 32-bit)
 - **1024 × 500 feature graphic**
 - **Phone screenshots** — the 20 in `docs/screenshots/` are 1080 × 2424, within Play's limits; pick 2–8
-- **Privacy policy URL** — must state that location is read locally and nothing is collected
+- **Privacy policy URL** — must cover local location handling and the advertising SDK's data practices

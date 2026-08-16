@@ -313,6 +313,32 @@ fun SettingsScreen(
                 }
                 Spacer(Modifier.height(10.dp))
                 Text(
+                    stringResource(R.string.dev_options_enable_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                listOf(
+                    R.string.dev_options_enable_step1,
+                    R.string.dev_options_enable_step2,
+                    R.string.dev_options_enable_step3,
+                    R.string.dev_options_enable_step4
+                ).forEach { step ->
+                    Text(
+                        stringResource(step),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Spacer(Modifier.height(2.dp))
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    stringResource(R.string.dev_options_select_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
                     stringResource(R.string.dev_options_step1),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
