@@ -64,6 +64,12 @@
     <string name="settings_dev_options_desc">Open Android Developer Options to select this app as the mock location app.</string>
     <string name="open_dev_options">Open Developer Options</string>
     <string name="dev_options_manual_hint">Please go to Settings → Developer Options manually</string>
+    <string name="dev_options_enable_title">First time? Enable Developer Options</string>
+    <string name="dev_options_enable_step1">① Open your phone's Settings.</string>
+    <string name="dev_options_enable_step2">② Tap About phone or About device.</string>
+    <string name="dev_options_enable_step3">③ Tap Software information. Skip this if Build number is already visible.</string>
+    <string name="dev_options_enable_step4">④ Find Build number, then tap it 7 times quickly until you see “You are now a developer!”.</string>
+    <string name="dev_options_select_title">Then select GPS Anywhere</string>
     <string name="dev_options_step1">① Scroll to the "Debugging" section.</string>
     <string name="dev_options_step2">② Tap "Select mock location app" → choose GPS Anywhere.</string>
     <string name="settings_version">Version %1$s</string>
