@@ -21,8 +21,10 @@ val commitCount: Int = providers.exec {
 // invalid traffic is what gets an AdMob account suspended.
 val admobAppIdTest = "ca-app-pub-3940256099942544~3347511713"
 val admobBannerTest = "ca-app-pub-3940256099942544/6300978111"
+val admobInterstitialTest = "ca-app-pub-3940256099942544/1033173712"
 val admobAppIdLive = "ca-app-pub-6038890007283978~3972333313"
 val admobBannerLive = "ca-app-pub-6038890007283978/8297491052"
+val admobInterstitialLive = "ca-app-pub-6038890007283978/7949128388"
 
 // Release signing is read from keystore.properties (git-ignored) when present,
 // so CI/dev builds without it still succeed (producing an unsigned release).
@@ -44,6 +46,7 @@ android {
 
         manifestPlaceholders["admobAppId"] = admobAppIdTest
         buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"" + admobBannerTest + "\"")
+        buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT_ID", "\"" + admobInterstitialTest + "\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -66,6 +69,7 @@ android {
             }
             manifestPlaceholders["admobAppId"] = admobAppIdLive
             buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"" + admobBannerLive + "\"")
+            buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT_ID", "\"" + admobInterstitialLive + "\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

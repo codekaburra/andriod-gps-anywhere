@@ -23,8 +23,8 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.MobileAds
 import com.gpsanywhere.app.BuildConfig
+import com.gpsanywhere.app.ads.AdsSdk
 
 private const val TAG = "AdBanner"
 
@@ -38,7 +38,7 @@ private val BANNER_UNIT_ID: String get() = BuildConfig.ADMOB_BANNER_UNIT_ID
 /**
  * The banner at the top of every screen.
  *
- * The AdView is created only after [MobileAds.initialize] reports back. Building
+ * The AdView is created only after [AdsSdk] reports the SDK ready. Building
  * it during composition looks equivalent but is not: an AndroidView factory runs
  * while the tree is being composed, whereas a LaunchedEffect runs after, so
  * loadAd() went out roughly a third of a second before the SDK was initialised
@@ -61,12 +61,7 @@ fun AdBanner(
 
     var initialised by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        MobileAds.initialize(context.applicationContext) { status ->
-            status.adapterStatusMap.forEach { (adapter, state) ->
-                Log.i(TAG, "adapter $adapter: ${state.initializationState} ${state.description}")
-            }
-            initialised = true
-        }
+        AdsSdk.whenReady(context) { initialised = true }
     }
 
     val adSize = remember(widthDp) {

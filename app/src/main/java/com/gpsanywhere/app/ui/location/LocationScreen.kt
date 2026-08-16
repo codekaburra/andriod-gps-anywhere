@@ -98,6 +98,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
+import com.gpsanywhere.app.ads.rememberInterstitialAd
 import com.gpsanywhere.app.data.SavedLocation
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.location.CurrentLocationProvider
@@ -221,6 +222,10 @@ fun LocationScreen(
     val spiralSpeed by viewModel.spiralSpeedKmh.collectAsState()
     val liveSpeedKmh by SpoofService.currentSpeedKmh.observeAsState(0f)
 
+
+    // Loaded while the screen is open so the ad is ready by the time a location
+    // is saved; shown after the save, never in place of it.
+    val showInterstitial = rememberInterstitialAd()
 
     var showAddSheet by remember { mutableStateOf(false) }
     var selectedLocation by remember { mutableStateOf<SavedLocation?>(null) }
@@ -587,6 +592,7 @@ fun LocationScreen(
             onSave = { nameTc, nameEn, lat, lng, tagsTc, tagsEn ->
                 viewModel.addLocation(nameTc, nameEn, lat, lng, tagsTc, tagsEn)
                 showAddSheet = false
+                showInterstitial()
             }
         )
     }
