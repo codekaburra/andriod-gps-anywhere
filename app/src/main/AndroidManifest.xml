@@ -22,11 +22,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GPSAnywhere">
 
-        <!-- AdMob. Google's sample application id, which serves test ads only.
-             Replace with the real id from the AdMob console before shipping. -->
+        <!-- AdMob application id, supplied per build type from build.gradle.kts:
+             the sample id for debug, the real one for release. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="${admobAppId}" />
 
         <activity
             android:name=".MainActivity"
