@@ -142,11 +142,11 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     fun flyTo(lat: Double, lng: Double, speedKmh: Float = MAX_SPEED_KMH) {
         // The slider reflects the sustained speed: the spiral the app settles into after arrival.
         _spiralSpeedKmh.value = FLY_SPIRAL_KMH
-        val spoofLat = SpoofService.currentLat.value ?: 0.0
-        val spoofLng = SpoofService.currentLng.value ?: 0.0
+        val spoofLat = SpoofService.currentLat.value
+        val spoofLng = SpoofService.currentLng.value
         val fromLat: Double
         val fromLng: Double
-        if (spoofLat != 0.0 || spoofLng != 0.0) {
+        if (spoofLat != null && spoofLng != null) {
             fromLat = spoofLat
             fromLng = spoofLng
         } else {
@@ -171,11 +171,11 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         flyTo(location.latitude, location.longitude, speedKmh)
 
     fun nudgeSpiral(dLatDeg: Double, dLngDeg: Double) {
-        val spoofLat = SpoofService.currentLat.value ?: 0.0
-        val spoofLng = SpoofService.currentLng.value ?: 0.0
+        val spoofLat = SpoofService.currentLat.value
+        val spoofLng = SpoofService.currentLng.value
         val baseLat: Double
         val baseLng: Double
-        if (spoofLat != 0.0 || spoofLng != 0.0) {
+        if (spoofLat != null && spoofLng != null) {
             baseLat = spoofLat
             baseLng = spoofLng
         } else {
