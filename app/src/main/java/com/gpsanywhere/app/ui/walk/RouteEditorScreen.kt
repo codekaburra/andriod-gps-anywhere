@@ -285,7 +285,7 @@ fun RouteEditorScreen(
                 FilledIconButton(
                     onClick = {
                         parsed?.let {
-                            points.add(LocationPoint(it.first, it.second))
+                            points.add(LocationPoint(it.latitude, it.longitude))
                             coordText = ""
                         }
                     },
