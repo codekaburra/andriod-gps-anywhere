@@ -75,31 +75,6 @@ object DefaultLocationSeeder {
         return DefaultLocationPack(packName = packName, version = version, locations = locations)
     }
 
-    /**
-     * Split a CSV line into fields, respecting double-quoted fields that may contain commas.
-     */
-    private fun parseCsvLine(line: String): List<String> {
-        val fields = mutableListOf<String>()
-        val sb = StringBuilder()
-        var inQuotes = false
-        var i = 0
-        while (i < line.length) {
-            val ch = line[i]
-            when {
-                ch == '"' && !inQuotes -> inQuotes = true
-                ch == '"' && inQuotes -> {
-                    if (i + 1 < line.length && line[i + 1] == '"') { sb.append('"'); i++ }
-                    else inQuotes = false
-                }
-                ch == ',' && !inQuotes -> { fields.add(sb.toString()); sb.clear() }
-                else -> sb.append(ch)
-            }
-            i++
-        }
-        fields.add(sb.toString())
-        return fields
-    }
-
     /** Load all bundled CSV location packs from assets/saved_locations/. */
     fun loadAllPacks(context: Context): List<DefaultLocationPack> {
         val appContext = context.applicationContext

@@ -170,6 +170,25 @@
     <string name="move_up">上移</string>
     <string name="move_down">下移</string>
 
+    <!-- Bulk location import from pasted CSV -->
+    <string name="import_locations_csv">以 CSV 匯入地點</string>
+    <string name="import_locations_csv_desc">貼上 CSV 清單，一次新增多個地點。</string>
+    <string name="import_csv_title">以 CSV 匯入地點</string>
+    <string name="import_csv_hint">每行貼上一個地點。只有前三欄是必填；# 開頭的行會被忽略。</string>
+    <string name="import_csv_columns">欄位：%1$s</string>
+    <string name="import_csv_label">地點 CSV</string>
+    <string name="import_csv_fill_example">填入範例</string>
+    <string name="action_clear">清除</string>
+    <string name="import_csv_ready">%1$d 個地點可以匯入</string>
+    <string name="import_csv_nothing">尚未有可匯入的地點</string>
+    <string name="import_csv_problems">%1$d 行會被略過</string>
+    <string name="import_csv_problem_columns">第 %1$d 行：至少需要緯度、經度和名稱</string>
+    <string name="import_csv_problem_latitude">第 %1$d 行：緯度必須是 -90 至 90 之間的數字</string>
+    <string name="import_csv_problem_longitude">第 %1$d 行：經度必須是 -180 至 180 之間的數字</string>
+    <string name="import_csv_problem_name">第 %1$d 行：至少需要一種語言的名稱</string>
+    <string name="import_csv_done">已匯入 %1$d 個地點</string>
+    <string name="import_csv_done_with_duplicates">已匯入 %1$d 個地點，略過 %2$d 個已存在的</string>
+
     <!-- Spoof service notification -->
     <string name="notif_channel_name">自訂位置</string>
     <string name="notif_channel_desc">使用自訂位置時顯示</string>

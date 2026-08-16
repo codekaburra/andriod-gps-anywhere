@@ -44,6 +44,7 @@ import com.gpsanywhere.app.settings.AppPreferences
 import com.gpsanywhere.app.settings.ColorTheme
 import com.gpsanywhere.app.settings.ThemeMode
 import java.util.Locale
+import com.gpsanywhere.app.ui.location.ImportLocationsScreen
 import com.gpsanywhere.app.ui.location.LocationScreen
 import com.gpsanywhere.app.ui.components.LocalAppLocaleContext
 import com.gpsanywhere.app.ui.onboarding.OnboardingDialog
@@ -156,7 +157,10 @@ fun MainApp(preferences: AppPreferences) {
                         colors = navItemColors(AppAccent.navSelected)
                     )
                     NavigationBarItem(
-                        selected = currentRoute == Routes.SETTINGS,
+                        // The CSV import is a Settings sub-page, so the tab stays
+                        // lit while it is open rather than leaving none selected.
+                        selected = currentRoute == Routes.SETTINGS ||
+                            currentRoute == Routes.IMPORT_LOCATIONS_CSV,
                         onClick = { nav(Routes.SETTINGS) },
                         icon = { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.nav_settings)) },
                         label = { Text(stringResource(R.string.nav_settings)) },
@@ -177,7 +181,16 @@ fun MainApp(preferences: AppPreferences) {
                     WalkScreen(viewModel = walkViewModel, appLanguage = appLanguage)
                 }
                 composable(Routes.SETTINGS) {
-                    SettingsScreen(viewModel = mainViewModel)
+                    SettingsScreen(
+                        viewModel = mainViewModel,
+                        onImportLocationsCsv = { navController.navigate(Routes.IMPORT_LOCATIONS_CSV) }
+                    )
+                }
+                composable(Routes.IMPORT_LOCATIONS_CSV) {
+                    ImportLocationsScreen(
+                        viewModel = mainViewModel,
+                        onDone = { navController.popBackStack() }
+                    )
                 }
             }
         }

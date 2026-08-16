@@ -170,6 +170,25 @@
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
 
+    <!-- Bulk location import from pasted CSV -->
+    <string name="import_locations_csv">Import Locations from CSV</string>
+    <string name="import_locations_csv_desc">Paste a CSV list to add many locations at once.</string>
+    <string name="import_csv_title">Import Locations from CSV</string>
+    <string name="import_csv_hint">Paste one location per line. Only the first three columns are required; lines starting with # are ignored.</string>
+    <string name="import_csv_columns">Columns: %1$s</string>
+    <string name="import_csv_label">Location CSV</string>
+    <string name="import_csv_fill_example">Fill in example</string>
+    <string name="action_clear">Clear</string>
+    <string name="import_csv_ready">%1$d location(s) ready to import</string>
+    <string name="import_csv_nothing">Nothing to import yet</string>
+    <string name="import_csv_problems">%1$d line(s) will be skipped</string>
+    <string name="import_csv_problem_columns">line %1$d: needs at least latitude, longitude and a name</string>
+    <string name="import_csv_problem_latitude">line %1$d: latitude must be a number between -90 and 90</string>
+    <string name="import_csv_problem_longitude">line %1$d: longitude must be a number between -180 and 180</string>
+    <string name="import_csv_problem_name">line %1$d: needs a name in at least one language</string>
+    <string name="import_csv_done">Imported %1$d location(s)</string>
+    <string name="import_csv_done_with_duplicates">Imported %1$d location(s), skipped %2$d already saved</string>
+
     <!-- Spoof service notification -->
     <string name="notif_channel_name">Custom Location</string>
     <string name="notif_channel_desc">Shows when using a custom location</string>

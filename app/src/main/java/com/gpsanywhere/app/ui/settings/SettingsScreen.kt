@@ -56,7 +56,10 @@ import com.gpsanywhere.app.ui.theme.AppAccent
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(viewModel: MainViewModel) {
+fun SettingsScreen(
+    viewModel: MainViewModel,
+    onImportLocationsCsv: () -> Unit = {}
+) {
     val themeMode by viewModel.themeMode.observeAsState(ThemeMode.LIGHT)
     val appLanguage by viewModel.appLanguage.observeAsState(AppLanguage.SYSTEM)
     val context = LocalContext.current
@@ -161,6 +164,39 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             }
                         )
                     }
+                }
+            }
+        }
+
+        // Bulk import from a pasted CSV. Its own card rather than a fourth button
+        // in the prebuilt section below: that one manages the data shipped with
+        // the app, this one adds the user's own.
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.import_locations_csv),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.import_locations_csv_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = BUTTON_FILL_ALPHA)
+                )
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = onImportLocationsCsv,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = BUTTON_FILL_ALPHA),
+                        contentColor = AppAccent.primaryAction.content
+                    )
+                ) {
+                    Text(stringResource(R.string.action_import))
                 }
             }
         }
