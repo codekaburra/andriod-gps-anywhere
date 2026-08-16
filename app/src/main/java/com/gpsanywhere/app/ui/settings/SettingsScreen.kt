@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import com.gpsanywhere.app.R
+import com.gpsanywhere.app.ads.rememberInterstitialAd
 import com.gpsanywhere.app.settings.AppLanguage
 import com.gpsanywhere.app.settings.ThemeMode
 import com.gpsanywhere.app.viewmodel.MainViewModel
@@ -63,6 +64,11 @@ fun SettingsScreen(viewModel: MainViewModel) {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     val isImporting by viewModel.isImporting.observeAsState(false)
+
+    // Shown from the completion callbacks below, not from onConfirm: an import
+    // runs asynchronously, so confirming it only starts the work.
+    val showInterstitial = rememberInterstitialAd()
+
     var showImportLocationsConfirm by remember { mutableStateOf(false) }
     var showImportRoutesConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
@@ -370,6 +376,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     showImportLocationsConfirm = false
                     viewModel.importPrebuiltLocations {
                         Toast.makeText(context, context.getString(R.string.toast_locations_imported), Toast.LENGTH_SHORT).show()
+                        showInterstitial()
                     }
             },
             onDismiss = { showImportLocationsConfirm = false }
@@ -385,6 +392,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     showImportRoutesConfirm = false
                     viewModel.importPrebuiltRoutes {
                         Toast.makeText(context, context.getString(R.string.toast_routes_imported), Toast.LENGTH_SHORT).show()
+                        showInterstitial()
                     }
             },
             onDismiss = { showImportRoutesConfirm = false }
@@ -415,6 +423,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     showDeleteConfirm = false
                     viewModel.deletePrebuiltLocations {
                         Toast.makeText(context, context.getString(R.string.toast_prebuilt_deleted), Toast.LENGTH_SHORT).show()
+                        showInterstitial()
                     }
             },
             onDismiss = { showDeleteConfirm = false }
