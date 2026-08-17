@@ -143,7 +143,7 @@ val TRANSPORT_BUTTON_SIZE = 40.dp
  */
 @Composable
 fun transportContainerColor(enabled: Boolean): Color =
-    if (enabled) AppAccent.primaryAction.container.copy(alpha = 0.85f) else AppAccent.primaryActionIdle
+    if (enabled) AppAccent.transportActive.copy(alpha = 0.85f) else AppAccent.transportIdle
 
 /** Colours for the real, tappable transport buttons on the Location screen. */
 @Composable
