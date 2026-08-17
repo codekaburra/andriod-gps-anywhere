@@ -1171,33 +1171,27 @@ private fun CustomJumpPanel(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = coordinateText,
-                        onValueChange = onCoordinateChange,
-                        label = { Text(stringResource(R.string.coordinate)) },
-                        placeholder = { Text("22.3168,114.0451") },
-                        isError = hasInput && !isValid,
-                        // The narrower column can't fit a full coordinate pair on one
-                        // line, so let the value wrap instead of scrolling out of view.
-                        singleLine = false,
-                        maxLines = 2,
-                        textStyle = MaterialTheme.typography.bodySmall,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                        colors = glassFieldColors(),
-                        modifier = Modifier.weight(1f)
-                    )
-                    PasteIconButton(
-                        onClick = onPaste,
-                        contentDescription = stringResource(R.string.action_paste)
-                    )
-                }
+                // The field gets the column to itself; paste sits with the
+                // transport buttons below. Beside the field it cost the width of
+                // an icon button from the one control that has to show a full
+                // coordinate pair.
+                OutlinedTextField(
+                    value = coordinateText,
+                    onValueChange = onCoordinateChange,
+                    label = { Text(stringResource(R.string.coordinate)) },
+                    placeholder = { Text("22.3168,114.0451") },
+                    isError = hasInput && !isValid,
+                    // Still narrower than the screen, with the D-pad alongside, so
+                    // a long pair wraps rather than scrolling out of view.
+                    singleLine = false,
+                    maxLines = 2,
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    colors = glassFieldColors(),
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-                // Wraps to a second line when all five don't fit the narrow column.
+                // Wraps to a second line when they don't all fit the narrow column.
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -1210,6 +1204,12 @@ private fun CustomJumpPanel(
                         onFly = onFly,
                         iconSize = 18.dp,
                         buttonModifier = Modifier.size(TRANSPORT_BUTTON_SIZE)
+                    )
+                    PasteIconButton(
+                        onClick = onPaste,
+                        contentDescription = stringResource(R.string.action_paste),
+                        // Sized to the transport buttons so the row reads as one strip.
+                        modifier = Modifier.size(TRANSPORT_BUTTON_SIZE)
                     )
                 }
 
