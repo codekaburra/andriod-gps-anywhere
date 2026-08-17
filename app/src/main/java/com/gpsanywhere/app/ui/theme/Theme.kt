@@ -55,9 +55,20 @@ object AppAccent {
     val primaryAction: Pair
         @Composable get() = Pair(if (LocalIsDarkTheme.current) DarkPrimary else LightNeutralDark, Color.White)
 
+    /**
+     * Transport buttons once there is a coordinate to act on.
+     *
+     * The warm colour in both themes — AmberGold in dark, Gold in light — so the
+     * button you can actually press is the one that draws the eye. Light mode
+     * used to have this the other way round, with the live state in dark moss
+     * and the idle state in gold.
+     */
+    val transportActive: Color
+        @Composable get() = if (LocalIsDarkTheme.current) DarkPrimary else LightAccent
+
     /** Transport buttons before a coordinate is entered. */
-    val primaryActionIdle: Color
-        @Composable get() = if (LocalIsDarkTheme.current) DarkSurfaceBase else LightAccent
+    val transportIdle: Color
+        @Composable get() = if (LocalIsDarkTheme.current) DarkSurfaceBase else LightNeutralDark
 
     /** Start / go. Deliberately not [stop]: the two sit next to each other. */
     val start: Color
