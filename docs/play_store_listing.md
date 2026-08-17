@@ -3,6 +3,12 @@
 Short, testing-focused copy for Google Play. Paste only the text inside each
 code block into Play Console.
 
+**Keep it positioned as a developer and QA tool.** Google Play allows
+mock-location apps as testing utilities, but rejects listings that pitch them as
+a way to misrepresent your location to other services. Nothing here promises
+that, and the disclaimer stays in the full description — check both still hold
+before editing the copy below.
+
 Field limits: app name 30 characters, short description 80, full description 4000.
 
 ---
@@ -60,6 +66,8 @@ GPS Anywhere
 ```
 供 Android 開發與 QA 測試使用的模擬定位工具。
 ```
+
+*24 characters.*
 
 ### 完整說明 (4000)
 
