@@ -129,14 +129,15 @@ object LocationCsvImport {
      *
      * Both of the first two fields have to be non-numeric. Testing only the
      * first one looks equivalent and is not: a real row whose latitude has a
-     * typo — `abc,114.18,銅鑼灣` — then reads as a header and disappears without
-     * a word, which is the silent drop this parser exists to avoid. Its
+     * typo — `abc,114.18,Central` — then reads as a header and disappears
+     * without a word, which is the silent drop this parser exists to avoid. Its
      * longitude is still a number, so requiring both keeps it a reported row.
      *
-     * Language-agnostic on purpose: `緯度,經度,名稱` is as much a header as
-     * `latitude,longitude,name_tc`. A first line that is non-numeric in both
-     * columns and *not* a header is unrecoverably ambiguous, and dropping it is
-     * the better of the two guesses.
+     * Language-agnostic on purpose: a header in any script is recognised, since
+     * the rule never reads the words — there is a test covering a Traditional
+     * Chinese one. A first line that is non-numeric in both columns and *not* a
+     * header is unrecoverably ambiguous, and dropping it is the better of the
+     * two guesses.
      */
     private fun isHeaderRow(parts: List<String>): Boolean =
         parts.getOrNull(0)?.toDoubleOrNull() == null &&
