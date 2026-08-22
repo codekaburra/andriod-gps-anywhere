@@ -58,6 +58,17 @@ class SpeedBandTest {
     }
 
     @Test
+    fun `inverted bounds still yield a usable range`() {
+        // coerceIn(min, max) throws when min > max. Deriving both ends from the
+        // base means lo <= base <= hi always holds, so this cannot blow up in a
+        // coroutine where the crash would be invisible.
+        val band = speedBand(base = kmh(50f), min = kmh(20f), max = kmh(10f))
+
+        assertTrue(band.start <= band.endInclusive)
+        assertTrue(kmh(50f) in band)
+    }
+
+    @Test
     fun `a speed set at the route maximum survives`() {
         val band = speedBand(base = kmh(300f), min = kmh(0f), max = kmh(300f))
 

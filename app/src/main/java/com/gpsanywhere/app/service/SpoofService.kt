@@ -176,11 +176,16 @@ class SpoofService : Service() {
      */
     @Volatile private var walkGeneration = 0
     private var currentBearing: Float = 0f
-    private var currentSpeedMps: Float = 0f
-    private var baseSpeedMps: Float = 0f
-    private var minSpeedMps: Float = 0f
-    private var maxSpeedMps: Float = 20f * 1000f / 3600f
-    private var varyMps: Float = 0f
+
+    // Written from onStartCommand on the main thread, read by the walk and
+    // variation coroutines on Dispatchers.Default. Volatile for the same reason
+    // walkGeneration is: without it there is no guarantee the coroutine ever sees
+    // a speed change, which is precisely what ACTION_UPDATE_SPEED depends on.
+    @Volatile private var currentSpeedMps: Float = 0f
+    @Volatile private var baseSpeedMps: Float = 0f
+    @Volatile private var minSpeedMps: Float = 0f
+    @Volatile private var maxSpeedMps: Float = 20f * 1000f / 3600f
+    @Volatile private var varyMps: Float = 0f
 
     override fun onCreate() {
         super.onCreate()
