@@ -268,9 +268,17 @@ class SpoofService : Service() {
             }
             ACTION_PAUSE -> {
                 _isPaused.postValue(true)
+                // A paused walk is standing still, so it reports standing still.
+                // The push loop stamps currentSpeedMps onto every fix and does not
+                // pause with the walk, so leaving it alone published a fixed
+                // position carrying the speed it would resume at.
+                currentSpeedMps = 0f
+                _currentSpeedKmh.postValue(0f)
             }
             ACTION_RESUME -> {
                 _isPaused.postValue(false)
+                currentSpeedMps = baseSpeedMps
+                _currentSpeedKmh.postValue(baseSpeedMps * 3600f / 1000f)
             }
             ACTION_STOP -> {
                 stopSpoofing()
@@ -373,7 +381,9 @@ class SpoofService : Service() {
             launch {
                 while (isActive && walkGeneration == gen) {
                     delay(Random.nextLong(1000L, 3001L))
-                    if (varyMps > 0f) {
+                    // Not while paused: the pause handler has already published a
+                    // speed of zero, and jittering would overwrite it every tick.
+                    if (varyMps > 0f && _isPaused.value != true) {
                         val delta = (Random.nextFloat() * 2f - 1f) * varyMps
                         val band = speedBand(baseSpeedMps, minSpeedMps, maxSpeedMps)
                         currentSpeedMps = (baseSpeedMps + delta).coerceIn(band.start, band.endInclusive)
