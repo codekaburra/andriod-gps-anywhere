@@ -370,7 +370,8 @@ class SpoofService : Service() {
                     delay(Random.nextLong(1000L, 3001L))
                     if (varyMps > 0f) {
                         val delta = (Random.nextFloat() * 2f - 1f) * varyMps
-                        currentSpeedMps = (baseSpeedMps + delta).coerceIn(minSpeedMps, maxSpeedMps)
+                        val band = speedBand(baseSpeedMps, minSpeedMps, maxSpeedMps)
+                        currentSpeedMps = (baseSpeedMps + delta).coerceIn(band.start, band.endInclusive)
                         _currentSpeedKmh.postValue(currentSpeedMps * 3600f / 1000f)
                     }
                 }
@@ -636,3 +637,19 @@ class SpoofService : Service() {
             .build()
     }
 }
+
+/**
+ * The range the varying walk speed is allowed to wander in, around [base].
+ *
+ * [min] and [max] are captured once, when the walk starts, and nothing moves
+ * them afterwards — ACTION_UPDATE_SPEED changes the base speed alone. Clamping
+ * to them as given therefore dragged any base above the ceiling back down to it
+ * on the next variation tick, one to three seconds later: a route set to 300
+ * km/h dropped to the default 20 and stayed there.
+ *
+ * Widening the band to contain [base] keeps min/max doing their real job —
+ * bounding the jitter — without letting them override the speed the user asked
+ * for.
+ */
+internal fun speedBand(base: Float, min: Float, max: Float): ClosedFloatingPointRange<Float> =
+    min.coerceAtMost(base)..max.coerceAtLeast(base)
