@@ -26,14 +26,29 @@
     <string name="action_add">Add</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_title">Setup GPS Anywhere</string>
+    <string name="onboarding_title">GPS Anywhere guide</string>
     <string name="onboarding_step_1_title">Enable Developer Options</string>
-    <string name="onboarding_step_1_body">Go to Settings → About Phone → tap Build Number 7 times to enable Developer Options.</string>
+    <string name="onboarding_step_1_body">On a Pixel: Settings → About phone → tap Build number 7 times.</string>
     <string name="onboarding_step_2_title">Select Mock Location App</string>
     <string name="onboarding_step_2_body">Open Developer Options → Select Mock Location App → choose GPS Anywhere.</string>
-    <string name="onboarding_step_3_title">Grant Permissions</string>
-    <string name="onboarding_step_3_body">Allow location and notification permissions when prompted so custom location mode and the status notification work correctly.</string>
+    <string name="onboarding_step_3_title">Import sample locations</string>
+    <string name="onboarding_step_3_body">In the Settings tab, tap Import Prebuilt Locations to add examples you can use right away.</string>
+    <string name="onboarding_step_4_title">選擇地點 / Choose a location</string>
+    <string name="onboarding_step_4_body">點選下方地點項目，顯示移動按鈕。\nTap a saved location to reveal its move buttons.</string>
+    <string name="onboarding_step_5_title">自訂座標 / Custom coordinates</string>
+    <string name="onboarding_step_5_body">貼上按鈕會讀取剪貼簿座標；方向鍵在定位啟動後可微調位置。\nPaste reads clipboard coordinates; the D-pad nudges an active location.</string>
+    <string name="onboarding_step_6_title">速度 / Speed</string>
+    <string name="onboarding_step_6_body">在路線頁拖動速度條，行走中也能調整。\nDrag the Route speed slider, even while walking.</string>
+    <string name="onboarding_step_7_title">路線 / Routes</string>
+    <string name="onboarding_step_7_body">點選已儲存路線，或按＋新增。\nTap a saved route, or tap + to add one.</string>
+    <string name="onboarding_step_8_title">新增地點 / Add a location</string>
+    <string name="onboarding_step_8_body">填一種名稱與經緯度，然後儲存。\nEnter either name and the coordinates, then save.</string>
+    <string name="onboarding_step_9_title">新增或編輯路線 / Add or edit a route</string>
+    <string name="onboarding_step_9_body">命名路線，加入至少兩個途經點後儲存。\nName the route, add at least two stops, then save.</string>
+    <string name="onboarding_step_10_title">用 CSV 匯入路線 / Import a route with CSV</string>
+    <string name="onboarding_step_10_body">貼上路線 CSV，按「套用」回地圖，再按「儲存」。\nPaste route CSV, tap Apply to return to the map, then Save.</string>
     <string name="onboarding_step_n_of">Step %1$d of %2$d</string>
+    <string name="onboarding_go_to_settings">Go to Settings</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>
@@ -45,6 +60,9 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="settings_help">How to Use</string>
+    <string name="settings_tutorial">Illustrated Guide</string>
+    <string name="settings_tutorial_desc">Browse the illustrated setup and app guides from the first page.</string>
+    <string name="settings_replay_tutorial">View Tutorial Images</string>
     <string name="help_rocket_label">Max-Speed Travel</string>
     <string name="help_jump">Teleport there and stay put.</string>
     <string name="help_walk_around">Wander in circles around the point.</string>

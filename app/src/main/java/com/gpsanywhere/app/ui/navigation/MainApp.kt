@@ -183,7 +183,8 @@ fun MainApp(preferences: AppPreferences) {
                 composable(Routes.SETTINGS) {
                     SettingsScreen(
                         viewModel = mainViewModel,
-                        onImportLocationsCsv = { navController.navigate(Routes.IMPORT_LOCATIONS_CSV) }
+                        onImportLocationsCsv = { navController.navigate(Routes.IMPORT_LOCATIONS_CSV) },
+                        onReplayTutorial = { showOnboarding = true }
                     )
                 }
                 composable(Routes.IMPORT_LOCATIONS_CSV) {
@@ -197,9 +198,13 @@ fun MainApp(preferences: AppPreferences) {
 
         if (showOnboarding) {
             OnboardingDialog(
-                onDismiss = {
+                onComplete = {
                     preferences.onboardingShown = true
                     showOnboarding = false
+                    navController.navigate(Routes.SETTINGS) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
