@@ -95,16 +95,20 @@ private val Ink = Color(0xFF493A32)
 private val Sage = Color(0xFF697E67)
 
 @Composable
-fun OnboardingDialog(onComplete: () -> Unit) {
+fun OnboardingDialog(
+    isReplay: Boolean = false,
+    onDismiss: () -> Unit = {},
+    onComplete: () -> Unit
+) {
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
 
     Dialog(
-        onDismissRequest = {},
+        onDismissRequest = onDismiss,
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false,
-            dismissOnBackPress = false,
+            dismissOnBackPress = true,
             dismissOnClickOutside = false
         )
     ) {
@@ -127,7 +131,7 @@ fun OnboardingDialog(onComplete: () -> Unit) {
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 19.sp
                     )
-                    TextButton(onClick = onComplete) {
+                    TextButton(onClick = onDismiss) {
                         Text(stringResource(R.string.action_skip), color = Sage)
                     }
                 }
@@ -212,10 +216,10 @@ fun OnboardingDialog(onComplete: () -> Unit) {
                 ) {
                     Text(
                         text = stringResource(
-                            if (pagerState.currentPage == pages.lastIndex) {
-                                R.string.onboarding_go_to_settings
-                            } else {
-                                R.string.action_next
+                            when {
+                                pagerState.currentPage != pages.lastIndex -> R.string.action_next
+                                isReplay -> R.string.onboarding_done
+                                else -> R.string.onboarding_go_to_settings
                             }
                         ),
                         fontSize = 17.sp,

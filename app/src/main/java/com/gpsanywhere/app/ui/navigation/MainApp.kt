@@ -197,13 +197,21 @@ fun MainApp(preferences: AppPreferences) {
         }
 
         if (showOnboarding) {
+            val isReplay = preferences.onboardingShown
             OnboardingDialog(
+                isReplay = isReplay,
+                onDismiss = {
+                    preferences.onboardingShown = true
+                    showOnboarding = false
+                },
                 onComplete = {
                     preferences.onboardingShown = true
                     showOnboarding = false
-                    navController.navigate(Routes.SETTINGS) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                        launchSingleTop = true
+                    if (!isReplay) {
+                        navController.navigate(Routes.SETTINGS) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                        }
                     }
                 }
             )

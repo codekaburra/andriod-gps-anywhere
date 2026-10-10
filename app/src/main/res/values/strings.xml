@@ -49,6 +49,7 @@
     <string name="onboarding_step_10_body">貼上路線 CSV，按「套用」回地圖，再按「儲存」。\nPaste route CSV, tap Apply to return to the map, then Save.</string>
     <string name="onboarding_step_n_of">Step %1$d of %2$d</string>
     <string name="onboarding_go_to_settings">Go to Settings</string>
+    <string name="onboarding_done">Done</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>

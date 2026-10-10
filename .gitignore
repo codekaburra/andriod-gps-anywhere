@@ -27,3 +27,7 @@ keystore.properties
 # Go route formatter generated output
 go-route-formater/output/
 go-route-formater/cmd/json2iframe/output/
+
+# AdMob app-ads.txt — deployed to Cloudflare Pages, not part of the app build
+site/
+.wrangler/
