@@ -70,7 +70,8 @@ android {
             manifestPlaceholders["admobAppId"] = admobAppIdLive
             buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"" + admobBannerLive + "\"")
             buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT_ID", "\"" + admobInterstitialLive + "\"")
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
