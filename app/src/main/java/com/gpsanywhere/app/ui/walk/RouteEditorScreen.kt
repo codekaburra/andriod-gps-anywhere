@@ -56,6 +56,7 @@ import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.ui.components.GlassCard
 import com.gpsanywhere.app.ui.components.MapViewComposable
 import org.osmdroid.util.GeoPoint
+import java.util.Locale
 import com.gpsanywhere.app.ui.components.DeleteIconButton
 import com.gpsanywhere.app.ui.components.PasteIconButton
 import com.gpsanywhere.app.ui.components.glassFieldColors
@@ -72,10 +73,15 @@ fun RouteEditorScreen(
     initialPoints: List<LocationPoint>,
     mapCenter: GeoPoint?,
     onCancel: () -> Unit,
-    onSave: (name: String, points: List<LocationPoint>) -> Unit,
+    onSave: (name: String, nameTc: String, points: List<LocationPoint>) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var name by remember { mutableStateOf(initial?.name ?: "") }
+    // There is no field for the Chinese name, yet the Chinese UI shows it in place of [name],
+    // so it is kept only while the name it arrived with is left unchanged.
+    var nameTc by remember { mutableStateOf(initial?.nameTc.orEmpty()) }
+    var nameTcBelongsTo by remember { mutableStateOf(initial?.name.orEmpty()) }
+    fun currentNameTc() = if (name.trim() == nameTcBelongsTo.trim()) nameTc.trim() else ""
     var coordText by remember { mutableStateOf("") }
     val points = remember { mutableStateListOf<LocationPoint>().apply { addAll(initialPoints) } }
     val center = mapCenter ?: points.firstOrNull()?.let { GeoPoint(it.latitude, it.longitude) }
@@ -96,6 +102,8 @@ fun RouteEditorScreen(
         points.clear()
         points.addAll(parsed.toLocationPoints())
         if (parsed.routeName.isNotBlank()) name = parsed.routeName
+        nameTc = parsed.routeNameTc.orEmpty()
+        nameTcBelongsTo = name
         csvError = null
         csvMode = false
     }
@@ -131,7 +139,7 @@ fun RouteEditorScreen(
                             csvMode = false
                             csvError = null
                         } else {
-                            csvText = buildRouteCsv(name, points, defaultRouteName)
+                            csvText = buildRouteCsv(name, currentNameTc(), points, defaultRouteName)
                             csvError = null
                             csvMode = true
                         }
@@ -140,7 +148,7 @@ fun RouteEditorScreen(
                 ) { Text(stringResource(if (csvMode) R.string.editor_map else R.string.editor_csv)) }
                 Spacer(Modifier.width(8.dp))
                 Button(
-                    onClick = { if (canSave) onSave(name.trim(), points.toList()) },
+                    onClick = { if (canSave) onSave(name.trim(), currentNameTc(), points.toList()) },
                     enabled = canSave,
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -360,15 +368,16 @@ fun RouteEditorScreen(
  * Render the current editor state as CSV. When the route has no points yet, a couple
  * of example rows are included as a starting skeleton for the user to overwrite.
  */
-private fun buildRouteCsv(name: String, points: List<LocationPoint>, defaultName: String): String = buildString {
+private fun buildRouteCsv(name: String, nameTc: String, points: List<LocationPoint>, defaultName: String): String = buildString {
     appendLine("# route_name: ${name.trim().ifBlank { defaultName }}")
+    if (nameTc.isNotBlank()) appendLine("# route_name_tc: $nameTc")
     appendLine("latitude,longitude,name_tc,name_en")
     if (points.isEmpty()) {
         appendLine("22.294270,114.169930,尖沙咀鐘樓,Clock Tower")
         appendLine("22.293720,114.173190,星光大道,Avenue of Stars")
     } else {
         points.forEach { p ->
-            appendLine("${"%.6f".format(p.latitude)},${"%.6f".format(p.longitude)},${csvEscape(p.name.orEmpty())},")
+            appendLine("${"%.6f".format(Locale.US, p.latitude)},${"%.6f".format(Locale.US, p.longitude)},${csvEscape(p.name.orEmpty())},")
         }
     }
 }
