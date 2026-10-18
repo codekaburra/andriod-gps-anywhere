@@ -59,6 +59,8 @@ import com.gpsanywhere.app.ui.theme.AppAccent
 fun SettingsScreen(
     viewModel: MainViewModel,
     onImportLocationsCsv: () -> Unit = {},
+    onExportLocationsCsv: () -> Unit = {},
+    onExportRoutesCsv: () -> Unit = {},
     onReplayTutorial: () -> Unit = {}
 ) {
     val themeMode by viewModel.themeMode.observeAsState(ThemeMode.LIGHT)
@@ -229,6 +231,46 @@ fun SettingsScreen(
                     )
                 ) {
                     Text(stringResource(R.string.action_import))
+                }
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.settings_export),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.settings_export_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = BUTTON_FILL_ALPHA)
+                )
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = onExportLocationsCsv,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = BUTTON_FILL_ALPHA),
+                        contentColor = AppAccent.primaryAction.content
+                    )
+                ) {
+                    Text(stringResource(R.string.export_locations))
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = onExportRoutesCsv,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppAccent.primaryAction.container.copy(alpha = BUTTON_FILL_ALPHA),
+                        contentColor = AppAccent.primaryAction.content
+                    )
+                ) {
+                    Text(stringResource(R.string.export_routes))
                 }
             }
         }

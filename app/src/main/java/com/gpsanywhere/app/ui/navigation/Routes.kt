@@ -7,4 +7,6 @@ object Routes {
 
     /** Reached from Settings, not from the bottom bar. */
     const val IMPORT_LOCATIONS_CSV = "import_locations_csv"
+    const val EXPORT_LOCATIONS_CSV = "export_locations_csv"
+    const val EXPORT_ROUTES_CSV = "export_routes_csv"
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.gpsanywhere.app.data.AppDatabase
+import com.gpsanywhere.app.data.CsvExport
 import com.gpsanywhere.app.data.DefaultLocationSeeder
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
 import com.gpsanywhere.app.data.LocationCsvImport
@@ -164,6 +165,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _isImporting.value = false
             onDone()
         }
+    }
+
+    suspend fun exportLocationsCsv(): String = withContext(Dispatchers.IO) {
+        val dao = AppDatabase.getInstance(getApplication()).savedLocationDao()
+        CsvExport.locations(dao.getAll().sortedBy { it.name.ifBlank { it.nameEn }.lowercase() })
+    }
+
+    suspend fun exportRoutesCsv(): String = withContext(Dispatchers.IO) {
+        CsvExport.routes(AppDatabase.getInstance(getApplication()).routeDao().getAll())
     }
 
     private val _themeMode = MutableLiveData(prefs.themeMode)

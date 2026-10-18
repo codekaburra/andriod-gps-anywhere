@@ -129,8 +129,8 @@ fun WalkScreen(
             initialPoints = editorTarget?.let { viewModel.waypointsOf(it) } ?: emptyList(),
             mapCenter = mapCenterLat?.let { lat -> mapCenterLng?.let { lng -> GeoPoint(lat, lng) } },
             onCancel = { editorOpen = false; editorTarget = null },
-            onSave = { name, points ->
-                viewModel.saveCustomRoute(name, points, editorTarget)
+            onSave = { name, nameTc, points ->
+                viewModel.saveCustomRoute(name, nameTc, points, editorTarget)
                 editorOpen = false
                 editorTarget = null
                 showInterstitial()

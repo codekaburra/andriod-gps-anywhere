@@ -195,6 +195,17 @@
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
 
+    <!-- CSV export -->
+    <string name="settings_export">Export Data</string>
+    <string name="settings_export_desc">Show your saved locations or routes as CSV, in the same format the app imports.</string>
+    <string name="export_locations">Export Saved Locations</string>
+    <string name="export_routes">Export Saved Routes</string>
+    <string name="export_locations_title">Saved Locations CSV</string>
+    <string name="export_routes_title">Saved Routes CSV</string>
+    <string name="export_locations_hint">Paste this into Import Locations from CSV to add these locations again, on this phone or another.</string>
+    <string name="export_routes_hint">Each route is one block starting with # route_name. To recreate a route, add a new route, switch to CSV and paste its block.</string>
+    <string name="export_csv_copied">CSV copied</string>
+
     <!-- Bulk location import from pasted CSV -->
     <string name="import_locations_csv">Import Locations from CSV</string>
     <string name="import_locations_csv_desc">Paste a CSV list to add many locations at once.</string>

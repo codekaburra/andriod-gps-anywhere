@@ -60,6 +60,7 @@ import com.gpsanywhere.app.ui.theme.MossGreen
 import com.gpsanywhere.app.ui.theme.LocalIsDarkTheme
 import com.gpsanywhere.app.ui.theme.GlassNavDark
 import com.gpsanywhere.app.ui.theme.GlassNavLight
+import com.gpsanywhere.app.ui.settings.ExportCsvScreen
 import com.gpsanywhere.app.ui.settings.SettingsScreen
 import com.gpsanywhere.app.ui.walk.WalkScreen
 import com.gpsanywhere.app.viewmodel.MainViewModel
@@ -160,7 +161,9 @@ fun MainApp(preferences: AppPreferences) {
                         // The CSV import is a Settings sub-page, so the tab stays
                         // lit while it is open rather than leaving none selected.
                         selected = currentRoute == Routes.SETTINGS ||
-                            currentRoute == Routes.IMPORT_LOCATIONS_CSV,
+                            currentRoute == Routes.IMPORT_LOCATIONS_CSV ||
+                            currentRoute == Routes.EXPORT_LOCATIONS_CSV ||
+                            currentRoute == Routes.EXPORT_ROUTES_CSV,
                         onClick = { nav(Routes.SETTINGS) },
                         icon = { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.nav_settings)) },
                         label = { Text(stringResource(R.string.nav_settings)) },
@@ -184,12 +187,30 @@ fun MainApp(preferences: AppPreferences) {
                     SettingsScreen(
                         viewModel = mainViewModel,
                         onImportLocationsCsv = { navController.navigate(Routes.IMPORT_LOCATIONS_CSV) },
+                        onExportLocationsCsv = { navController.navigate(Routes.EXPORT_LOCATIONS_CSV) },
+                        onExportRoutesCsv = { navController.navigate(Routes.EXPORT_ROUTES_CSV) },
                         onReplayTutorial = { showOnboarding = true }
                     )
                 }
                 composable(Routes.IMPORT_LOCATIONS_CSV) {
                     ImportLocationsScreen(
                         viewModel = mainViewModel,
+                        onDone = { navController.popBackStack() }
+                    )
+                }
+                composable(Routes.EXPORT_LOCATIONS_CSV) {
+                    ExportCsvScreen(
+                        title = R.string.export_locations_title,
+                        hint = R.string.export_locations_hint,
+                        loadCsv = mainViewModel::exportLocationsCsv,
+                        onDone = { navController.popBackStack() }
+                    )
+                }
+                composable(Routes.EXPORT_ROUTES_CSV) {
+                    ExportCsvScreen(
+                        title = R.string.export_routes_title,
+                        hint = R.string.export_routes_hint,
+                        loadCsv = mainViewModel::exportRoutesCsv,
                         onDone = { navController.popBackStack() }
                     )
                 }
