@@ -195,6 +195,17 @@
     <string name="move_up">上移</string>
     <string name="move_down">下移</string>
 
+    <!-- CSV export -->
+    <string name="settings_export">匯出資料</string>
+    <string name="settings_export_desc">以 CSV 顯示已儲存的地點或路線，格式與 App 匯入的相同。</string>
+    <string name="export_locations">匯出已儲存地點</string>
+    <string name="export_routes">匯出已儲存路線</string>
+    <string name="export_locations_title">已儲存地點 CSV</string>
+    <string name="export_routes_title">已儲存路線 CSV</string>
+    <string name="export_locations_hint">貼到「以 CSV 匯入地點」即可重新加入這些地點，本機或其他手機都可以。</string>
+    <string name="export_routes_hint">每條路線是一段，以 # route_name 開頭。要重建路線：新增路線，切換到 CSV，貼上該段。</string>
+    <string name="export_csv_copied">已複製 CSV</string>
+
     <!-- Bulk location import from pasted CSV -->
     <string name="import_locations_csv">以 CSV 匯入地點</string>
     <string name="import_locations_csv_desc">貼上 CSV 清單，一次新增多個地點。</string>

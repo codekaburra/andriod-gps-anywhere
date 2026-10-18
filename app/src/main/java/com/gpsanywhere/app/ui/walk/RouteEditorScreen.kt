@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import com.gpsanywhere.app.R
 import com.gpsanywhere.app.data.DefaultSavedRouteSeeder
 import com.gpsanywhere.app.data.SavedRoute
+import com.gpsanywhere.app.data.csvEscape
 import com.gpsanywhere.app.routes.LocationPoint
 import com.gpsanywhere.app.util.parseClipboardCoordinates
 import com.gpsanywhere.app.ui.components.GlassCard
@@ -354,10 +355,6 @@ fun RouteEditorScreen(
         item { Spacer(Modifier.height(24.dp)) }
     }
 }
-
-/** Quote a CSV field when it contains a comma or quote. */
-private fun csvEscape(field: String): String =
-    if (field.contains(',') || field.contains('"')) "\"${field.replace("\"", "\"\"")}\"" else field
 
 /**
  * Render the current editor state as CSV. When the route has no points yet, a couple

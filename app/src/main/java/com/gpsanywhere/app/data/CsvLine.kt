@@ -30,3 +30,7 @@ internal fun parseCsvLine(line: String): List<String> {
     fields.add(sb.toString())
     return fields
 }
+
+/** Quote a CSV field when it contains a comma or quote; the inverse of [parseCsvLine]. */
+internal fun csvEscape(field: String): String =
+    if (field.contains(',') || field.contains('"')) "\"${field.replace("\"", "\"\"")}\"" else field
