@@ -63,6 +63,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // A separate app id, so installing a debug build never replaces (and wipes) the Play-installed app.
+            applicationIdSuffix = ".debug"
+        }
         release {
             if (keystorePropsFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
